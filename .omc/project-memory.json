@@ -1,0 +1,66 @@
+{
+  "version": "1.0.0",
+  "lastScanned": 1777048561568,
+  "projectRoot": "/Users/soundariyanvenkatachalam/Desktop/Biahama/web_v1",
+  "techStack": {
+    "languages": [],
+    "frameworks": [],
+    "packageManager": null,
+    "runtime": null
+  },
+  "build": {
+    "buildCommand": null,
+    "testCommand": null,
+    "lintCommand": null,
+    "devCommand": null,
+    "scripts": {}
+  },
+  "conventions": {
+    "namingStyle": null,
+    "importStyle": null,
+    "testPattern": null,
+    "fileOrganization": null
+  },
+  "structure": {
+    "isMonorepo": false,
+    "workspaces": [],
+    "mainDirectories": [],
+    "gitBranches": null
+  },
+  "customNotes": [],
+  "directoryMap": {
+    "biahama": {
+      "path": "biahama",
+      "purpose": null,
+      "fileCount": 11,
+      "lastAccessed": 1777048561551,
+      "keyFiles": [
+        "AGENTS.md",
+        "CLAUDE.md",
+        "README.md",
+        "eslint.config.mjs",
+        "next-env.d.ts"
+      ]
+    },
+    "biahama/app": {
+      "path": "biahama/app",
+      "purpose": "Application code",
+      "fileCount": 4,
+      "lastAccessed": 1777048561551,
+      "keyFiles": [
+        "favicon.ico",
+        "globals.css",
+        "layout.tsx"
+      ]
+    },
+    "biahama/node_modules": {
+      "path": "biahama/node_modules",
+      "purpose": "Dependencies",
+      "fileCount": 1,
+      "lastAccessed": 1777048561553,
+      "keyFiles": []
+    }
+  },
+  "hotPaths": [],
+  "userDirectives": []
+}

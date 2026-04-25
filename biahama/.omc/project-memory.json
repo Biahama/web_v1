@@ -1,0 +1,423 @@
+{
+  "version": "1.0.0",
+  "lastScanned": 1777148327844,
+  "projectRoot": "/Users/soundariyanvenkatachalam/Desktop/Biahama/web_v1/biahama",
+  "techStack": {
+    "languages": [
+      {
+        "name": "JavaScript/TypeScript",
+        "version": null,
+        "confidence": "high",
+        "markers": [
+          "package.json"
+        ]
+      },
+      {
+        "name": "TypeScript",
+        "version": null,
+        "confidence": "high",
+        "markers": [
+          "tsconfig.json"
+        ]
+      }
+    ],
+    "frameworks": [
+      {
+        "name": "next",
+        "version": "16.2.4",
+        "category": "fullstack"
+      },
+      {
+        "name": "react",
+        "version": "19.2.4",
+        "category": "frontend"
+      },
+      {
+        "name": "react-dom",
+        "version": "19.2.4",
+        "category": "frontend"
+      }
+    ],
+    "packageManager": "npm",
+    "runtime": null
+  },
+  "build": {
+    "buildCommand": "npm run build",
+    "testCommand": null,
+    "lintCommand": "npm run lint",
+    "devCommand": "npm run dev",
+    "scripts": {
+      "dev": "next dev",
+      "build": "next build",
+      "start": "next start",
+      "lint": "eslint"
+    }
+  },
+  "conventions": {
+    "namingStyle": "camelCase",
+    "importStyle": "ES modules",
+    "testPattern": null,
+    "fileOrganization": null
+  },
+  "structure": {
+    "isMonorepo": false,
+    "workspaces": [],
+    "mainDirectories": [
+      "app",
+      "components",
+      "lib",
+      "public"
+    ],
+    "gitBranches": null
+  },
+  "customNotes": [],
+  "directoryMap": {
+    "app": {
+      "path": "app",
+      "purpose": "Application code",
+      "fileCount": 3,
+      "lastAccessed": 1777148327812,
+      "keyFiles": [
+        "favicon.ico",
+        "globals.css",
+        "layout.tsx"
+      ]
+    },
+    "components": {
+      "path": "components",
+      "purpose": "UI components",
+      "fileCount": 1,
+      "lastAccessed": 1777148327812,
+      "keyFiles": [
+        "providers.jsx"
+      ]
+    },
+    "lib": {
+      "path": "lib",
+      "purpose": "Library code",
+      "fileCount": 8,
+      "lastAccessed": 1777148327813,
+      "keyFiles": [
+        "auth.js",
+        "brevo.js",
+        "cart.js",
+        "cloudinary.js",
+        "fuse.js"
+      ]
+    },
+    "prisma": {
+      "path": "prisma",
+      "purpose": null,
+      "fileCount": 1,
+      "lastAccessed": 1777148327815,
+      "keyFiles": [
+        "schema.prisma"
+      ]
+    },
+    "public": {
+      "path": "public",
+      "purpose": "Public files",
+      "fileCount": 5,
+      "lastAccessed": 1777148327815,
+      "keyFiles": [
+        "file.svg",
+        "globe.svg",
+        "next.svg",
+        "vercel.svg",
+        "window.svg"
+      ]
+    },
+    "app/api": {
+      "path": "app/api",
+      "purpose": "API routes",
+      "fileCount": 0,
+      "lastAccessed": 1777148327816,
+      "keyFiles": []
+    }
+  },
+  "hotPaths": [
+    {
+      "path": ".env.local",
+      "accessCount": 5,
+      "lastAccessed": 1777053510439,
+      "type": "file"
+    },
+    {
+      "path": "app/(main)/page.jsx",
+      "accessCount": 5,
+      "lastAccessed": 1777147374416,
+      "type": "file"
+    },
+    {
+      "path": "app/(main)/cart/page.jsx",
+      "accessCount": 5,
+      "lastAccessed": 1777148487294,
+      "type": "file"
+    },
+    {
+      "path": "prisma/schema.prisma",
+      "accessCount": 4,
+      "lastAccessed": 1777053699171,
+      "type": "file"
+    },
+    {
+      "path": "components/layout/Navbar.jsx",
+      "accessCount": 4,
+      "lastAccessed": 1777147920440,
+      "type": "file"
+    },
+    {
+      "path": "prisma.config.ts",
+      "accessCount": 3,
+      "lastAccessed": 1777049950079,
+      "type": "file"
+    },
+    {
+      "path": "lib/prisma.js",
+      "accessCount": 3,
+      "lastAccessed": 1777053689680,
+      "type": "file"
+    },
+    {
+      "path": "app/layout.tsx",
+      "accessCount": 3,
+      "lastAccessed": 1777146844704,
+      "type": "file"
+    },
+    {
+      "path": "components/product/CategoryTabs.jsx",
+      "accessCount": 3,
+      "lastAccessed": 1777146890522,
+      "type": "file"
+    },
+    {
+      "path": "components/product/ProductGrid.jsx",
+      "accessCount": 3,
+      "lastAccessed": 1777146899824,
+      "type": "file"
+    },
+    {
+      "path": "app/(main)/shop/[category]/page.jsx",
+      "accessCount": 3,
+      "lastAccessed": 1777146929190,
+      "type": "file"
+    },
+    {
+      "path": "app/globals.css",
+      "accessCount": 3,
+      "lastAccessed": 1777146938696,
+      "type": "file"
+    },
+    {
+      "path": "app/(main)/shop/page.jsx",
+      "accessCount": 3,
+      "lastAccessed": 1777147921984,
+      "type": "file"
+    },
+    {
+      "path": "components/layout/AnnouncementBar.jsx",
+      "accessCount": 3,
+      "lastAccessed": 1777147925239,
+      "type": "file"
+    },
+    {
+      "path": "components/layout/Footer.jsx",
+      "accessCount": 3,
+      "lastAccessed": 1777147936784,
+      "type": "file"
+    },
+    {
+      "path": "app/(auth)/login/page.jsx",
+      "accessCount": 3,
+      "lastAccessed": 1777147964295,
+      "type": "file"
+    },
+    {
+      "path": "lib/razorpay.js",
+      "accessCount": 3,
+      "lastAccessed": 1777148608625,
+      "type": "file"
+    },
+    {
+      "path": "app/api/payments/create-order/route.js",
+      "accessCount": 3,
+      "lastAccessed": 1777148616428,
+      "type": "file"
+    },
+    {
+      "path": "components/ui/CartDrawer.jsx",
+      "accessCount": 3,
+      "lastAccessed": 1777149053539,
+      "type": "file"
+    },
+    {
+      "path": "lib/auth.js",
+      "accessCount": 2,
+      "lastAccessed": 1777053580934,
+      "type": "file"
+    },
+    {
+      "path": "components/providers.jsx",
+      "accessCount": 2,
+      "lastAccessed": 1777054631213,
+      "type": "file"
+    },
+    {
+      "path": "app/(main)/layout.jsx",
+      "accessCount": 2,
+      "lastAccessed": 1777147852288,
+      "type": "file"
+    },
+    {
+      "path": "lib/cart.js",
+      "accessCount": 2,
+      "lastAccessed": 1777148167835,
+      "type": "file"
+    },
+    {
+      "path": "app/(main)/checkout/page.jsx",
+      "accessCount": 2,
+      "lastAccessed": 1777148522299,
+      "type": "file"
+    },
+    {
+      "path": "app/(main)/orders/[id]/page.jsx",
+      "accessCount": 2,
+      "lastAccessed": 1777148590313,
+      "type": "file"
+    },
+    {
+      "path": "lib/cloudinary.js",
+      "accessCount": 1,
+      "lastAccessed": 1777049330281,
+      "type": "file"
+    },
+    {
+      "path": "lib/shiprocket.js",
+      "accessCount": 1,
+      "lastAccessed": 1777049335356,
+      "type": "file"
+    },
+    {
+      "path": "lib/brevo.js",
+      "accessCount": 1,
+      "lastAccessed": 1777049338336,
+      "type": "file"
+    },
+    {
+      "path": "lib/fuse.js",
+      "accessCount": 1,
+      "lastAccessed": 1777049340006,
+      "type": "file"
+    },
+    {
+      "path": ".env.example",
+      "accessCount": 1,
+      "lastAccessed": 1777049341849,
+      "type": "file"
+    },
+    {
+      "path": "app/api/auth/signup/route.js",
+      "accessCount": 1,
+      "lastAccessed": 1777053434252,
+      "type": "file"
+    },
+    {
+      "path": "middleware.js",
+      "accessCount": 1,
+      "lastAccessed": 1777053434637,
+      "type": "file"
+    },
+    {
+      "path": "app/(auth)/signup/page.jsx",
+      "accessCount": 1,
+      "lastAccessed": 1777053460491,
+      "type": "file"
+    },
+    {
+      "path": "proxy.js",
+      "accessCount": 1,
+      "lastAccessed": 1777053579752,
+      "type": "file"
+    },
+    {
+      "path": "app/api/products/route.js",
+      "accessCount": 1,
+      "lastAccessed": 1777054525836,
+      "type": "file"
+    },
+    {
+      "path": "app/api/products/[slug]/route.js",
+      "accessCount": 1,
+      "lastAccessed": 1777054528457,
+      "type": "file"
+    },
+    {
+      "path": "components/ui/ProductCard.jsx",
+      "accessCount": 1,
+      "lastAccessed": 1777054576094,
+      "type": "file"
+    },
+    {
+      "path": "components/ui/SearchOverlay.jsx",
+      "accessCount": 1,
+      "lastAccessed": 1777054605785,
+      "type": "file"
+    },
+    {
+      "path": "app/api/cart/route.js",
+      "accessCount": 1,
+      "lastAccessed": 1777148142136,
+      "type": "file"
+    },
+    {
+      "path": "app/api/addresses/route.js",
+      "accessCount": 1,
+      "lastAccessed": 1777148147400,
+      "type": "file"
+    },
+    {
+      "path": "app/api/addresses/[id]/route.js",
+      "accessCount": 1,
+      "lastAccessed": 1777148150127,
+      "type": "file"
+    },
+    {
+      "path": "app/api/payments/verify/route.js",
+      "accessCount": 1,
+      "lastAccessed": 1777148420131,
+      "type": "file"
+    },
+    {
+      "path": "app/api/webhooks/razorpay/route.js",
+      "accessCount": 1,
+      "lastAccessed": 1777148429341,
+      "type": "file"
+    },
+    {
+      "path": "app/api/orders/route.js",
+      "accessCount": 1,
+      "lastAccessed": 1777148574170,
+      "type": "file"
+    },
+    {
+      "path": "app/api/orders/[id]/route.js",
+      "accessCount": 1,
+      "lastAccessed": 1777148579311,
+      "type": "file"
+    },
+    {
+      "path": "PROGRESS.md",
+      "accessCount": 1,
+      "lastAccessed": 1777148904932,
+      "type": "file"
+    },
+    {
+      "path": "COMPONENTS.md",
+      "accessCount": 1,
+      "lastAccessed": 1777148959623,
+      "type": "file"
+    }
+  ],
+  "userDirectives": []
+}

@@ -1,0 +1,29 @@
+@import "tailwindcss";
+
+:root {
+  --white:  #ffffff;
+  --bg:     #f0ede8;
+  --black:  #1a1814;
+  --gray:   #8a8480;
+  --border: #ddd9d3;
+  --light:  #e8e4de;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--black);
+  font-family: var(--font-jost), 'Jost', sans-serif;
+  font-weight: 300;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-cormorant), 'Cormorant Garamond', serif;
+  font-weight: 300;
+}

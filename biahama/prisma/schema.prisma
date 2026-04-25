@@ -1,0 +1,191 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id             String          @id @default(uuid())
+  name           String?
+  email          String          @unique
+  phone          String?
+  passwordHash   String?
+  provider       String          @default("email")
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  addresses      Address[]
+  cart           Cart[]
+  orders         Order[]
+  reviews        Review[]
+  waitlist       Waitlist[]
+  abandonedCarts AbandonedCart[]
+}
+
+model Address {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  fullName  String
+  phone     String
+  line1     String
+  line2     String?
+  pincode   String
+  city      String
+  state     String
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model Product {
+  id              String           @id @default(uuid())
+  name            String
+  slug            String           @unique
+  description     String?
+  category        String
+  fabric          String?
+  care            String?
+  isActive        Boolean          @default(true)
+  metaTitle       String?
+  metaDescription String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  variants        ProductVariant[]
+  images          ProductImage[]
+  reviews         Review[]
+}
+
+model ProductVariant {
+  id           String         @id @default(uuid())
+  productId    String
+  product      Product        @relation(fields: [productId], references: [id])
+  size         String
+  color        String
+  colorHex     String?
+  stockQty     Int            @default(0)
+  sku          String         @unique
+  price        Int
+  comparePrice Int?
+  createdAt    DateTime       @default(now())
+  images       ProductImage[]
+  cartItems    Cart[]
+  orderItems   OrderItem[]
+  waitlist     Waitlist[]
+}
+
+model ProductImage {
+  id        String          @id @default(uuid())
+  productId String
+  product   Product         @relation(fields: [productId], references: [id])
+  variantId String?
+  variant   ProductVariant? @relation(fields: [variantId], references: [id])
+  url       String
+  altText   String?
+  sortOrder Int             @default(0)
+  isPrimary Boolean         @default(false)
+}
+
+model Cart {
+  id        String         @id @default(uuid())
+  userId    String?
+  user      User?          @relation(fields: [userId], references: [id])
+  sessionId String?
+  variantId String
+  variant   ProductVariant @relation(fields: [variantId], references: [id])
+  quantity  Int
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+}
+
+model Order {
+  id              String      @id @default(uuid())
+  userId          String
+  user            User        @relation(fields: [userId], references: [id])
+  status          String      @default("pending")
+  totalAmount     Int
+  discountAmount  Int         @default(0)
+  shippingAmount  Int         @default(0)
+  paymentMethod   String
+  paymentId       String?
+  paymentStatus   String      @default("pending")
+  shippingAddress Json
+  couponCode      String?
+  shippingPartner String?
+  awbNumber       String?
+  shippingStatus  String      @default("not_shipped")
+  codAmount       Int?
+  remittanceId    String?
+  notes           String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  items           OrderItem[]
+}
+
+model OrderItem {
+  id              String         @id @default(uuid())
+  orderId         String
+  order           Order          @relation(fields: [orderId], references: [id])
+  productId       String
+  variantId       String
+  variant         ProductVariant @relation(fields: [variantId], references: [id])
+  productName     String
+  variantDetails  Json
+  quantity        Int
+  priceAtPurchase Int
+  total           Int
+}
+
+model Coupon {
+  id            String   @id @default(uuid())
+  code          String   @unique
+  type          String
+  value         Int
+  minOrderValue Int?
+  maxDiscount   Int?
+  usageLimit    Int?
+  usedCount     Int      @default(0)
+  userSpecific  String?
+  validFrom     DateTime
+  validUntil    DateTime
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+}
+
+model Waitlist {
+  id        String         @id @default(uuid())
+  variantId String
+  variant   ProductVariant @relation(fields: [variantId], references: [id])
+  email     String
+  userId    String?
+  user      User?          @relation(fields: [userId], references: [id])
+  notified  Boolean        @default(false)
+  createdAt DateTime       @default(now())
+}
+
+model Review {
+  id          String   @id @default(uuid())
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id])
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  orderId     String
+  rating      Int
+  title       String?
+  body        String?
+  isVerified  Boolean  @default(false)
+  isPublished Boolean  @default(false)
+  createdAt   DateTime @default(now())
+}
+
+model AbandonedCart {
+  id              String   @id @default(uuid())
+  userId          String?
+  user            User?    @relation(fields: [userId], references: [id])
+  email           String
+  cartSnapshot    Json
+  firstEmailSent  Boolean  @default(false)
+  secondEmailSent Boolean  @default(false)
+  recovered       Boolean  @default(false)
+  createdAt       DateTime @default(now())
+}
