@@ -287,6 +287,12 @@
       "type": "file"
     },
     {
+      "path": "package.json",
+      "accessCount": 2,
+      "lastAccessed": 1777256341924,
+      "type": "file"
+    },
+    {
       "path": "lib/cloudinary.js",
       "accessCount": 1,
       "lastAccessed": 1777049330281,
