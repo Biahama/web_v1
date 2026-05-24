@@ -1,9 +1,17 @@
+'use client'
+
+import { usePathname } from 'next/navigation'
+
 export default function AnnouncementBar() {
+  const pathname = usePathname()
+
+  if (pathname === '/') return null
+
   return (
     <div
       className="w-full text-center"
       style={{
-        background: '#1a1814',
+        background: 'var(--black)',
         color: '#ffffff',
         fontFamily: 'Jost, sans-serif',
         fontWeight: 300,

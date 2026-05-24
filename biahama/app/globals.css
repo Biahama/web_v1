@@ -2,11 +2,11 @@
 
 :root {
   --white:  #ffffff;
-  --bg:     #f0ede8;
-  --black:  #1a1814;
-  --gray:   #8a8480;
-  --border: #ddd9d3;
-  --light:  #e8e4de;
+  --bg:     #ffffff;
+  --black:  #262626;
+  --gray:   #6f6f6f;
+  --border: #e5e5e5;
+  --light:  #f3f3f3;
 }
 
 * {

@@ -27,17 +27,20 @@ export async function GET(req) {
     const prices   = p.variants.map(v => v.price)
     const minPrice = prices.length ? Math.min(...prices) : 0
     const inStock  = p.variants.some(v => v.stockQty > 0)
+    const firstInStockVariant = p.variants.find(v => v.stockQty > 0) || p.variants[0]
 
     return {
-      id:       p.id,
-      name:     p.name,
-      slug:     p.slug,
-      category: p.category,
-      image:    p.images[0]?.url ?? null,
-      altText:  p.images[0]?.altText ?? p.name,
-      price:    minPrice,
+      id:             p.id,
+      name:           p.name,
+      slug:           p.slug,
+      category:       p.category,
+      image:          p.images[0]?.url ?? null,
+      altText:        p.images[0]?.altText ?? p.name,
+      price:          minPrice,
       inStock,
-      colors:   [...new Map(p.variants.map(v => [v.color, { color: v.color, colorHex: v.colorHex }])).values()],
+      firstVariantId: firstInStockVariant?.id ?? null,
+      variants:       p.variants,
+      colors:         [...new Map(p.variants.map(v => [v.color, { color: v.color, colorHex: v.colorHex }])).values()],
     }
   })
 
