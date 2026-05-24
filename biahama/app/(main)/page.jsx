@@ -26,7 +26,7 @@ export default function HomePage() {
       {/* Caption Overlay — Middle Left */}
       <div 
         className="absolute inset-y-0 left-0 flex flex-col justify-center z-10 text-white max-w-xl"
-        style={{ paddingLeft: 'clamp(48px, 9.5vw, 124px)', paddingRight: '48px' }}
+        style={{ paddingLeft: 'clamp(48px, 10vw, 144px)', paddingRight: '48px' }}
       >
         <h1
           className="mb-8 leading-[1.2]"
