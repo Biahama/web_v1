@@ -37,22 +37,36 @@ export default async function ShopPage({ searchParams }) {
   return (
     <div>
       {/* Category subheader bar */}
-      <div className="w-full flex justify-center py-3 border-b border-zinc-200" style={{ background: '#f5f4f4' }}>
-        <div className="flex gap-8 md:gap-14">
+      <div 
+        style={{ 
+          width: '100%', 
+          display: 'flex', 
+          justifyContent: 'center', 
+          paddingTop: '14px', 
+          paddingBottom: '14px', 
+          borderBottom: '1px solid var(--border)', 
+          background: '#f5f4f4' 
+        }}
+      >
+        <div style={{ display: 'flex', gap: '40px' }}>
           {CATEGORIES.map(cat => {
             const isActive = activeCategory === cat.slug
             return (
               <Link
                 key={cat.slug}
                 href={`/shop?cat=${cat.slug}`}
-                className="text-[10px] tracking-widest uppercase transition-opacity hover:opacity-100"
                 style={{
                   fontFamily: 'Jost, sans-serif',
+                  fontSize: '10px',
                   fontWeight: isActive ? 500 : 300,
                   color: isActive ? 'var(--black)' : 'var(--gray)',
                   letterSpacing: '1.77px',
-                  borderBottom: isActive ? '1px solid var(--black)' : '1px solid transparent',
+                  textTransform: 'uppercase',
+                  borderBottom: isActive ? '1.5px solid var(--black)' : '1.5px solid transparent',
                   paddingBottom: '2px',
+                  textDecoration: 'none',
+                  opacity: isActive ? 1 : 0.7,
+                  transition: 'opacity 0.2s',
                 }}
               >
                 {cat.name}

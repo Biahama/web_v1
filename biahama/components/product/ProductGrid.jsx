@@ -1,66 +1,53 @@
 import ProductCard from '@/components/ui/ProductCard'
 
-const PLACEHOLDER_NAMES = [
-  'Ivory Linen Kurta',
-  'Sand Tunic Dress',
-  'Natural Linen Set',
-]
+// Helper to generate mock products for UI demonstration when DB is empty
+function getMockProducts(category) {
+  const isLarge = category === 'shirts' || category === 'tunics' ? 3 : 10
+  const mockList = []
+  
+  const titles = {
+    kurtas: ['Ivory Linen Kurta', 'Sand Tunic Dress', 'Natural Linen Set', 'Stone Wrap Shirt', 'Ecru Wide Trousers', 'Oat Linen Jacket', 'Fluid Wrap Kurta', 'Architectural Linen Tunic', 'COS Style Kurta', 'Classic Linen Trousers'],
+    shirts: ['Stone Wrap Shirt', 'Classic White Linen Shirt', 'Relaxed Fit Linen Shirt'],
+    tunics: ['Sand Tunic Dress', 'Architectural Linen Tunic', 'Oat Tunic Coat'],
+    trousers: ['Ecru Wide Trousers', 'Classic Linen Trousers', 'Sand Linen Pants', 'Natural Linen Shorts', 'Crop Linen Pants', 'Flowing White Trouser', 'Loose Linen Pant', 'Belted Linen Trouser', 'Pleated Sand Trousers', 'Tailored Linen Pants']
+  }
+  
+  const activeTitles = titles[category] || titles['kurtas']
 
-function PlaceholderCard({ name }) {
-  return (
-    <div>
-      <div
-        className="flex items-center justify-center animate-pulse"
-        style={{ aspectRatio: '4/5', background: 'var(--light)' }}
-      >
-        <span
-          className="text-center px-4"
-          style={{
-            fontFamily: 'Cormorant Garamond, serif',
-            fontWeight: 300,
-            fontStyle: 'italic',
-            fontSize: '1rem',
-            color: 'var(--gray)',
-            opacity: 0.5,
-          }}
-        >
-          {name}
-        </span>
-      </div>
-      <div className="mt-3 space-y-1.5">
-        <div style={{ height: 10, width: 60, background: 'var(--light)', borderRadius: 2 }} />
-        <div style={{ height: 12, width: 120, background: 'var(--light)', borderRadius: 2 }} />
-        <div style={{ height: 12, width: 80, background: 'var(--border)', borderRadius: 2 }} />
-      </div>
-    </div>
-  )
+  for (let i = 1; i <= isLarge; i++) {
+    const title = activeTitles[(i - 1) % activeTitles.length]
+    mockList.push({
+      id: `mock-${category}-${i}`,
+      name: title,
+      slug: '#',
+      category: category === 'trousers' ? 'Pant' : category.charAt(0).toUpperCase() + category.slice(1, -1),
+      price: 245000 + i * 20000,
+      inStock: true,
+      image: null,
+      altText: 'Sample',
+      firstVariantId: `mock-var-${i}`,
+      variants: [
+        { id: `mock-var-${i}`, price: 245000 + i * 20000, size: 'M', color: 'Natural', stockQty: 5 }
+      ]
+    })
+  }
+  return mockList
 }
 
 export default function ProductGrid({ products = [], category = 'all' }) {
   const cat = (category || 'all').toLowerCase()
-
-  if (!products.length) {
-    return (
-      <div>
-        <p
-          className="text-xs tracking-widest uppercase mb-8"
-          style={{ color: 'var(--gray)', fontFamily: 'Jost, sans-serif', fontWeight: 300 }}
-        >
-          No products found — add products to see them here
-        </p>
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-4 lg:gap-x-6 gap-y-10 lg:gap-y-14">
-          {PLACEHOLDER_NAMES.map(name => (
-            <PlaceholderCard key={name} name={name} />
-          ))}
-        </div>
-      </div>
-    )
-  }
+  const isMock = products.length === 0
+  const displayProducts = isMock ? getMockProducts(cat) : products
 
   // Shirts Category Layout (3 + 1)
   if (cat === 'shirts') {
     return (
       <>
+        {isMock && (
+          <p className="text-[10px] tracking-widest uppercase mb-8 text-center text-zinc-400 font-light" style={{ fontFamily: 'Jost, sans-serif' }}>
+            Showing layout preview placeholders
+          </p>
+        )}
         {/* Desktop Layout */}
         <div className="hidden lg:block space-y-14">
           <div className="relative w-full overflow-hidden" style={{ aspectRatio: '16/7', background: 'var(--light)' }}>
@@ -72,7 +59,7 @@ export default function ProductGrid({ products = [], category = 'all' }) {
             />
           </div>
           <div className="grid grid-cols-3 gap-x-6 gap-y-14">
-            {products.slice(0, 3).map(p => (
+            {displayProducts.slice(0, 3).map(p => (
               <ProductCard key={p.id} product={p} />
             ))}
           </div>
@@ -89,7 +76,7 @@ export default function ProductGrid({ products = [], category = 'all' }) {
             />
           </div>
           <div className="grid grid-cols-2 gap-x-4 gap-y-10">
-            {products.slice(0, 3).map(p => (
+            {displayProducts.slice(0, 3).map(p => (
               <ProductCard key={p.id} product={p} />
             ))}
           </div>
@@ -106,11 +93,16 @@ export default function ProductGrid({ products = [], category = 'all' }) {
 
     return (
       <>
+        {isMock && (
+          <p className="text-[10px] tracking-widest uppercase mb-8 text-center text-zinc-400 font-light" style={{ fontFamily: 'Jost, sans-serif' }}>
+            Showing layout preview placeholders
+          </p>
+        )}
         {/* Desktop Layout */}
         <div className="hidden lg:grid grid-cols-3 gap-x-6 gap-y-14">
           {/* Left 4 products (2 columns spanning 2 rows) */}
           <div className="col-span-2 grid grid-cols-2 gap-x-6 gap-y-14">
-            {products.slice(0, 4).map((p, i) => (
+            {displayProducts.slice(0, 4).map((p, i) => (
               <ProductCard key={p.id} product={p} priority={i < 4} />
             ))}
           </div>
@@ -126,14 +118,14 @@ export default function ProductGrid({ products = [], category = 'all' }) {
           </div>
 
           {/* Remaining 6 products underneath */}
-          {products.slice(4, 10).map(p => (
+          {displayProducts.slice(4, 10).map(p => (
             <ProductCard key={p.id} product={p} />
           ))}
         </div>
 
         {/* Mobile Layout */}
         <div className="grid lg:hidden grid-cols-2 gap-x-4 gap-y-10">
-          {products.map(p => (
+          {displayProducts.map(p => (
             <ProductCard key={p.id} product={p} />
           ))}
         </div>
@@ -143,10 +135,17 @@ export default function ProductGrid({ products = [], category = 'all' }) {
 
   // Default Tunics & General Layout (3 + 0 / standard grid)
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-4 lg:gap-x-6 gap-y-10 lg:gap-y-14">
-      {products.map((product, i) => (
-        <ProductCard key={product.id} product={product} priority={i < 4} />
-      ))}
-    </div>
+    <>
+      {isMock && (
+        <p className="text-[10px] tracking-widest uppercase mb-8 text-center text-zinc-400 font-light" style={{ fontFamily: 'Jost, sans-serif' }}>
+          Showing layout preview placeholders
+        </p>
+      )}
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-4 lg:gap-x-6 gap-y-10 lg:gap-y-14">
+        {displayProducts.map((product, i) => (
+          <ProductCard key={product.id} product={product} priority={i < 4} />
+        ))}
+      </div>
+    </>
   )
 }
