@@ -59,7 +59,7 @@ export default function ProductGrid({ products = [], category = 'all' }) {
             />
           </div>
           <div className="grid grid-cols-3 gap-x-6 gap-y-14">
-            {displayProducts.slice(0, 3).map(p => (
+            {displayProducts.map(p => (
               <ProductCard key={p.id} product={p} />
             ))}
           </div>
@@ -76,7 +76,7 @@ export default function ProductGrid({ products = [], category = 'all' }) {
             />
           </div>
           <div className="grid grid-cols-2 gap-x-4 gap-y-10">
-            {displayProducts.slice(0, 3).map(p => (
+            {displayProducts.map(p => (
               <ProductCard key={p.id} product={p} />
             ))}
           </div>
@@ -98,29 +98,42 @@ export default function ProductGrid({ products = [], category = 'all' }) {
             Showing layout preview placeholders
           </p>
         )}
-        {/* Desktop Layout */}
-        <div className="hidden lg:grid grid-cols-3 gap-x-6 gap-y-14">
-          {/* Left 4 products (2 columns spanning 2 rows) */}
-          <div className="col-span-2 grid grid-cols-2 gap-x-6 gap-y-14">
-            {displayProducts.slice(0, 4).map((p, i) => (
-              <ProductCard key={p.id} product={p} priority={i < 4} />
-            ))}
+        {/* Desktop Layout — Asymmetric Top (4 products left, 1 banner right) + Bottom (6 products below) */}
+        <div className="hidden lg:block space-y-14">
+          {/* Top Section: 4 products left, 1 banner right */}
+          <div className="grid grid-cols-3 gap-x-6">
+            {/* Left side: 2x2 grid for the first 4 products */}
+            <div className="col-span-2 grid grid-cols-2 gap-x-6 gap-y-14">
+              {displayProducts.slice(0, 4).map((p, i) => (
+                <ProductCard key={p.id} product={p} priority={i < 4} />
+              ))}
+            </div>
+
+            {/* Right side: 1 campaign banner */}
+            <div
+              className="col-span-1 relative w-full h-full bg-zinc-100 overflow-hidden"
+              style={{ border: '1px solid var(--border)', minHeight: '550px' }}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={bannerUrl}
+                alt="Campaign Banner"
+                className="object-cover w-full h-full absolute inset-0"
+              />
+              <div className="absolute bottom-6 left-6 text-white text-3xl font-light italic" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
+                {cat === 'kurta' || cat === 'kurtas' ? 'Kurta Collection' : 'Linen Pants'}
+              </div>
+            </div>
           </div>
 
-          {/* Right Banner (Col 3, Spans 2 Rows height) */}
-          <div className="relative w-full h-full min-h-[500px]" style={{ gridColumn: '3', gridRow: '1 / span 2', background: 'var(--light)' }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={bannerUrl}
-              alt="Campaign Banner"
-              className="object-cover w-full h-full absolute inset-0"
-            />
-          </div>
-
-          {/* Remaining 6 products underneath */}
-          {displayProducts.slice(4, 10).map(p => (
-            <ProductCard key={p.id} product={p} />
-          ))}
+          {/* Bottom Section: Remaining products in a standard 3-column grid */}
+          {displayProducts.length > 4 && (
+            <div className="grid grid-cols-3 gap-x-6 gap-y-14">
+              {displayProducts.slice(4).map(p => (
+                <ProductCard key={p.id} product={p} />
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Mobile Layout */}
