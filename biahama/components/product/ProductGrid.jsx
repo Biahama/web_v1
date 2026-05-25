@@ -19,7 +19,7 @@ function getMockProducts(category) {
     mockList.push({
       id: `mock-${category}-${i}`,
       name: title,
-      slug: '#',
+      slug: `mock-${category}-${i}`,
       category: category === 'trousers' ? 'Pant' : category.charAt(0).toUpperCase() + category.slice(1, -1),
       price: 245000 + i * 20000,
       inStock: true,
