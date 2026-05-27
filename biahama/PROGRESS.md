@@ -12,7 +12,7 @@
 | Phase 5 | Razorpay payment + order creation + webhook | COMPLETE |
 | Phase 6 | Shiprocket integration, order tracking | NOT STARTED |
 | Phase 7 | Brevo transactional emails | NOT STARTED |
-| Phase 8 | Reviews, coupons, Notify Me, SEO, Clarity, mobile polish | NOT STARTED |
+| Phase 8 | Reviews, coupons, Notify Me, SEO, Clarity, mobile polish | PARTIALLY COMPLETE |
 | Phase 9 | Deploy to Vercel | NOT STARTED |
 
 ---
@@ -27,9 +27,10 @@ app/globals.css                         — Design tokens (CSS vars), font class
 app/(auth)/login/page.jsx               — Two-step login (email → password), Google OAuth, COS.com two-column layout
 app/(auth)/signup/page.jsx              — Signup form with name/email/password
 app/(main)/layout.jsx                   — Main layout: AnnouncementBar + Navbar + Footer
-app/(main)/page.jsx                     — Homepage: 8 editorial campaign blocks with evocative one-liners
-app/(main)/shop/page.jsx                — Shop page: category tabs + product grid, title updates per tab
-app/(main)/shop/[category]/page.jsx     — Category page: hero image + category name overlay + tabs + grid
+app/(main)/page.jsx                     — Homepage: Campaign hero overlay, clamp padding-left text alignment
+app/(main)/shop/page.jsx                — Shop page: category subheader bar + asymmetric layouts (10+1, 3+1, 3+0)
+app/(main)/shop/[category]/page.jsx     — Category page: redirects singular/plural/dropdown categories to shop page
+app/(main)/products/[slug]/page.jsx     — PDP: Server-side mock generator fallback, fetches prisma or serves mock PDP details
 app/(main)/cart/page.jsx                — Cart+Address page: qty controls, saved addresses, pincode autocomplete, order summary
 app/(main)/checkout/page.jsx            — Payment page: Razorpay popup + COD option, reads from sessionStorage
 app/(main)/orders/[id]/page.jsx         — Order confirmation + tracking: status, items, totals, shipping address
@@ -56,13 +57,14 @@ app/api/webhooks/razorpay/route.js      — POST: handles payment.captured / pay
 
 ```
 components/providers.jsx                — Wraps SessionProvider + CartProvider
-components/layout/AnnouncementBar.jsx   — Black top bar, promotional text
-components/layout/Navbar.jsx            — Fixed nav: BIAHAMA logo (center), search+wardrobe+cart (right)
+components/layout/AnnouncementBar.jsx   — Black top bar, promotional text (hidden on homepage)
+components/layout/Navbar.jsx            — Three-section nav: Left (Home/Collection/Contact), Center (Logo), Right (utilities) + Hover dropdown (5 categories)
 components/layout/Footer.jsx            — Brand tagline + 3 columns (Company, Help, Follow)
-components/product/CategoryTabs.jsx     — Tab bar: ALL/TUNICS/SHIRTS/KURTAS/DRESSES/SETS/TROUSERS/JACKETS/WRAPS
-components/product/ProductGrid.jsx      — Responsive product grid; shows 6 placeholder cards when empty
-components/ui/ProductCard.jsx           — Product card with image, name, price, wardrobe hover button
-components/ui/CartDrawer.jsx            — Slide-from-right cart drawer (desktop)
+components/product/CategoryTabs.jsx     — Tab bar: (Deprecated, direct inline subheader used instead)
+components/product/ProductGrid.jsx      — Category grids: Kurta/Pant (10+1 split layout), Shirts (3+1 layout), Tunics (3+0 layout)
+components/product/ProductDetailClient.jsx — PDP details panel (sticky right, S-3XL pills, view details scroll, Razorpay checkout)
+components/ui/ProductCard.jsx           — Product card with 4:5 image, name, price, wardrobe hover button, cart bag button
+components/ui/CartDrawer.jsx            — Slide-from-right cart drawer (wired to navbar)
 components/ui/SearchOverlay.jsx         — Full-screen search with Fuse.js autocomplete
 ```
 
@@ -87,11 +89,11 @@ proxy.js                                — Next.js 16 middleware (named export 
 
 ## What Is Working
 
-- **Build**: `npm run build` passes clean — all 21 routes compile
-- **Database**: Supabase PostgreSQL connected via Session pooler URL, all 13 tables created
+- **Build**: `npm run build` passes clean — all routes compile successfully
+- **Database**: Supabase PostgreSQL connection scaffolding, 13 tables defined
 - **Auth**: NextAuth email/password + Google OAuth, JWT strategy, signup + login pages
 - **Products API**: GET with category filter, single product with variants/images/reviews
-- **Cart**: Hybrid guest (localStorage) + DB (logged-in), merge on login
+- **Cart**: Hybrid guest (localStorage) + DB (logged-in), merge on login, wired to navbar CartDrawer
 - **Addresses**: CRUD with Zod validation, India Post pincode autocomplete (city+state auto-fill)
 - **Cart+Address page**: Full two-column page, GST 5%, free shipping ≥ ₹3000, order summary
 - **Payment flow**: Razorpay order creation → popup → HMAC verify → atomic transaction
@@ -99,7 +101,16 @@ proxy.js                                — Next.js 16 middleware (named export 
 - **Order creation**: Atomic Prisma transaction: decrement stock + create Order + OrderItems + clear cart
 - **Order confirmation page**: Status, items, totals, shipping address, tracking stub
 - **Webhook**: Razorpay payment.captured / payment.failed handled
-- **Design**: Design tokens applied, Cormorant Garamond + Jost fonts, all pages styled per CLAUDE.md
+- **Brunello Cucinelli Styling Overhaul**: Pure white backdrop (`#ffffff`), soft charcoal text (`#262626`), thin borders (`#e5e5e5`), Google Fonts (Cormorant Garamond + Jost).
+- **Homepage Campaign Overlay**: 100vh full-screen background overlaying aligned middle-left caption text and `STEP INSIDE →` button.
+- **Navbar Dropdown**: Hovering over `Collection` triggers a floating menu with 5 side-by-side side cards (Dresses, Shirts, Trousers, Tunics, Sets) loading Unsplash assets.
+- **Collections Grid Layouts**: `#f5f4f4` subheader bar for `KURTA`, `SHIRTS`, `TUNICS`, `PANT`.
+  - Kurta / Pant: 10+1 split layout (2x2 grid left, campaign banner right stretching to match 2x2 grid height, 6 products below).
+  - Shirts: 3+1 layout (landscape banner top, all products rendered below).
+  - Tunics: 3+0 layout (3 products side-by-side, no banner).
+- **Navbar Category Redirects**: Dynamic routing maps dropdown categories `dresses` and `sets` cleanly to `kurtas` on the shop page, aligning URL parameters with the active subheader tab.
+- **Product Detail Page (PDP)**: Zero-gap vertical stack of 6 product images (left), sticky right-side details panel, round size selection pills (S-3XL) with validation alerts, `+ VIEW DETAILS` scrolling to bottom description accordions, Razorpay wallet checkouts, and shipping details display.
+- **Resilient PDP Server-Side Mock Fallback**: PDP routes automatically intercept mock slugs (e.g. `mock-kurtas-1`) or database errors to construct complete product objects (images, price ranges, organic linen care details, and size variants) on the server, ensuring full visual and checkout flow testing when DB is empty/offline.
 
 ## What Still Needs Work / TODOs
 
@@ -118,8 +129,8 @@ proxy.js                                — Next.js 16 middleware (named export 
 - Refund confirmation email
 - `lib/brevo.js` scaffolded but email sending functions not implemented
 
-### Phase 8 — Features (NOT STARTED)
-- Product detail page (`/products/[slug]`) — Page 4 in CLAUDE.md spec
+### Phase 8 — Features (PARTIALLY COMPLETE)
+- Product detail page (`/products/[slug]`) — Page 4 in CLAUDE.md spec (COMPLETE)
 - Account dashboard (`/account/page.jsx`)
 - Order history page (`/account/orders/page.jsx`)
 - Wardrobe/wishlist (`/account/wardrobe/page.jsx`)
@@ -132,7 +143,6 @@ proxy.js                                — Next.js 16 middleware (named export 
 - "Only X left" badge when stockQty ≤ 3
 - "Sold Out" + disabled Add to Cart when stockQty === 0
 - Search overlay with Fuse.js fully wired to product data
-- Cart drawer (desktop slide-in) — CartDrawer.jsx exists but not wired to navbar
 
 ### Phase 9 — Deploy (NOT STARTED)
 - Vercel deployment
