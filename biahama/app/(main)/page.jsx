@@ -16,6 +16,7 @@ export default function HomePage() {
           alt="Biahama campaign hero"
           fill
           priority
+          quality={100}
           sizes="100vw"
           className="object-cover object-center pointer-events-none"
         />
