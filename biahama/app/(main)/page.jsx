@@ -12,11 +12,10 @@ export default function HomePage() {
       {/* Background Campaign Image */}
       <div className="absolute inset-0 w-full h-full">
         <Image
-          src="/biahama_homepage_hero.jpg"
+          src="https://res.cloudinary.com/dc30t7io2/image/upload/v1780574318/Gemini_Generated_Image_8otfaw8otfaw8otf_itwxgh.png"
           alt="Biahama campaign hero"
           fill
           priority
-          quality={100}
           sizes="100vw"
           className="object-cover object-center pointer-events-none"
         />
