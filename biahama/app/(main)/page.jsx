@@ -12,7 +12,7 @@ export default function HomePage() {
       {/* Background Campaign Image */}
       <div className="absolute inset-0 w-full h-full">
         <Image
-          src="/biahama_homepage_hero.png"
+          src="/biahama_homepage_hero.jpg"
           alt="Biahama campaign hero"
           fill
           priority
