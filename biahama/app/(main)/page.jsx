@@ -6,23 +6,17 @@ export const metadata = {
   description: 'Luxury linen clothing handcrafted in India.',
 }
 
-const cloudinaryLoader = ({ src, width, quality }) => {
-  const params = ['f_auto', 'c_limit', `w_${width}`, `q_${quality || 'auto:best'}`]
-  return src.replace('/image/upload/', `/image/upload/${params.join(',')}/`)
-}
-
 export default function HomePage() {
   return (
     <div className="relative w-full h-screen overflow-hidden bg-zinc-900">
       {/* Background Campaign Image */}
       <div className="absolute inset-0 w-full h-full">
         <Image
-          loader={cloudinaryLoader}
-          src="https://res.cloudinary.com/dc30t7io2/image/upload/v1781048357/biahama/biahama_homepage_hero_v2.jpg"
+          src="https://res.cloudinary.com/dc30t7io2/image/upload/w_2880,c_scale,q_auto:best,f_auto/v1781048357/biahama/biahama_homepage_hero_v2.jpg"
           alt="Biahama campaign hero"
           fill
           priority
-          sizes="100vw"
+          unoptimized
           className="object-cover object-center pointer-events-none"
         />
         {/* Soft shadow overlay for text legibility */}
