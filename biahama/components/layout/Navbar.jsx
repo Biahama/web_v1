@@ -2,10 +2,9 @@
 
 import Link from 'next/link'
 import { useSession } from 'next-auth/react'
-import { useState } from 'react'
-import { usePathname } from 'next/navigation'
+import { useState, useRef } from 'react'
+import { usePathname, useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import SearchOverlay from '@/components/ui/SearchOverlay'
 import CartDrawer from '@/components/ui/CartDrawer'
 import { useCart } from '@/lib/cart'
 
@@ -19,13 +18,28 @@ const DROPDOWN_CATEGORIES = [
 export default function Navbar() {
   const { data: session } = useSession()
   const pathname = usePathname()
-  const [searchOpen, setSearchOpen] = useState(false)
+  const router = useRouter()
+  const searchInputRef = useRef(null)
+  const [searchActive, setSearchActive] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
   const [cartOpen, setCartOpen] = useState(false)
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const { count } = useCart()
 
   const isHome = pathname === '/'
   const themeColor = isHome ? '#ffffff' : 'var(--black)'
+  
+  const dropdownBg = isHome ? 'rgba(137, 119, 105, 0.45)' : '#ffffff'
+  const dropdownBorder = isHome ? 'rgba(255, 255, 255, 0.15)' : 'var(--border)'
+  const cardBorder = isHome ? 'rgba(255, 255, 255, 0.12)' : 'var(--border)'
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault()
+    if (searchQuery.trim()) {
+      router.push(`/shop?q=${encodeURIComponent(searchQuery.trim())}`)
+      setSearchActive(false)
+    }
+  }
 
   return (
     <>
@@ -71,9 +85,10 @@ export default function Navbar() {
                   transition={{ duration: 0.15, ease: 'easeOut' }}
                   className="absolute left-0 top-full flex gap-4 p-4 z-50"
                   style={{
-                    background: '#f0ede8', // Brand warm sandy off-white
-                    border: '1px solid var(--border)',
-                    boxShadow: '0 10px 30px rgba(0,0,0,0.06)',
+                    background: dropdownBg,
+                    border: `1px solid ${dropdownBorder}`,
+                    backdropFilter: isHome ? 'blur(20px)' : 'none',
+                    boxShadow: isHome ? '0 20px 40px rgba(0,0,0,0.1)' : '0 10px 30px rgba(0,0,0,0.06)',
                   }}
                   onMouseEnter={() => setDropdownOpen(true)}
                   onMouseLeave={() => setDropdownOpen(false)}
@@ -83,7 +98,7 @@ export default function Navbar() {
                       key={cat.slug}
                       href={`/shop?cat=${cat.slug}`}
                       className="group relative block overflow-hidden"
-                      style={{ width: 110, height: 165, border: '1px solid var(--border)' }}
+                      style={{ width: 110, height: 165, border: `1px solid ${cardBorder}` }}
                     >
                       {/* Thumbnail Image */}
                       <div className="w-full h-full relative overflow-hidden bg-zinc-50">
@@ -140,16 +155,78 @@ export default function Navbar() {
         {/* Right Section — Icons */}
         <div className="flex-1 flex items-center justify-end gap-6 z-50">
           {/* Search */}
-          <button
-            onClick={() => setSearchOpen(true)}
-            className="flex items-center gap-2 hover:opacity-60 transition-opacity"
-            style={{ color: themeColor }}
+          <form
+            onSubmit={handleSearchSubmit}
+            className="flex items-center"
           >
-            <SearchIcon />
-            <span className="text-xs tracking-widest uppercase hidden lg:block" style={{ fontFamily: 'Jost, sans-serif', fontWeight: 300 }}>
-              Search
-            </span>
-          </button>
+            <AnimatePresence>
+              {searchActive && (
+                <motion.div
+                  initial={{ width: 0, opacity: 0 }}
+                  animate={{ width: 140, opacity: 1 }}
+                  exit={{ width: 0, opacity: 0 }}
+                  transition={{ duration: 0.2, ease: 'easeOut' }}
+                  style={{ overflow: 'hidden', marginRight: '8px' }}
+                >
+                  <input
+                    ref={searchInputRef}
+                    type="text"
+                    placeholder="Search..."
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === 'Escape') {
+                        setSearchActive(false)
+                      }
+                    }}
+                    onBlur={() => {
+                      setTimeout(() => {
+                        if (searchQuery.trim() === '') setSearchActive(false)
+                      }, 200)
+                    }}
+                    style={{
+                      background: 'transparent',
+                      border: 'none',
+                      borderBottom: `1px solid ${themeColor}`,
+                      outline: 'none',
+                      fontSize: '11px',
+                      fontFamily: 'Jost, sans-serif',
+                      color: themeColor,
+                      width: '100%',
+                      paddingBottom: '2px',
+                      letterSpacing: '0.05em',
+                    }}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <button
+              type="button"
+              onClick={() => {
+                if (searchActive) {
+                  if (searchQuery.trim()) {
+                    router.push(`/shop?q=${encodeURIComponent(searchQuery.trim())}`)
+                    setSearchActive(false)
+                  } else {
+                    setSearchActive(false)
+                  }
+                } else {
+                  setSearchActive(true)
+                  setTimeout(() => searchInputRef.current?.focus(), 50)
+                }
+              }}
+              className="flex items-center gap-2 hover:opacity-60 transition-opacity"
+              style={{ color: themeColor, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+            >
+              <SearchIcon />
+              {!searchActive && (
+                <span className="text-xs tracking-widest uppercase hidden lg:block" style={{ fontFamily: 'Jost, sans-serif', fontWeight: 300 }}>
+                  Search
+                </span>
+              )}
+            </button>
+          </form>
 
           {/* Wardrobe */}
           <Link
@@ -200,7 +277,6 @@ export default function Navbar() {
         </div>
       </nav>
 
-      <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
       <CartDrawer    open={cartOpen}   onClose={() => setCartOpen(false)} />
     </>
   )
