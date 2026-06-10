@@ -50,22 +50,22 @@ export default function Navbar() {
         }}
       >
         {/* Left Section — Home, Collection, Contact Us */}
-        <div className="flex-1 flex items-center gap-6 z-50">
+        <div className="flex-1 flex items-center gap-6 z-50 h-full">
           <Link
             href="/"
-            className="text-xs tracking-widest uppercase hover:opacity-60 transition-opacity"
+            className="text-xs tracking-widest uppercase hover:opacity-60 transition-opacity flex items-center h-full"
             style={{ fontFamily: 'Jost, sans-serif', fontWeight: 300, color: themeColor }}
           >
             Home
           </Link>
           <div
-            className="relative py-4"
+            className="relative flex items-center h-full"
             onMouseEnter={() => setDropdownOpen(true)}
             onMouseLeave={() => setDropdownOpen(false)}
           >
             <Link
               href="/shop"
-              className="text-xs tracking-widest uppercase hover:opacity-60 transition-opacity"
+              className="text-xs tracking-widest uppercase hover:opacity-60 transition-opacity flex items-center h-full"
               style={{ fontFamily: 'Jost, sans-serif', fontWeight: 300, color: themeColor }}
             >
               Collection
@@ -79,59 +79,60 @@ export default function Navbar() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 8 }}
                   transition={{ duration: 0.15, ease: 'easeOut' }}
-                  className="absolute left-0 top-full flex gap-4 p-4 z-50"
+                  className="fixed left-0 right-0 top-[56px] z-50 flex justify-center py-10 px-8"
                   style={{
-                    background: 'transparent',
-                    border: 'none',
-                    boxShadow: 'none',
+                    background: 'var(--border)',
+                    boxShadow: '0 10px 30px rgba(0, 0, 0, 0.05)',
                   }}
                   onMouseEnter={() => setDropdownOpen(true)}
                   onMouseLeave={() => setDropdownOpen(false)}
                 >
-                  {DROPDOWN_CATEGORIES.map(cat => (
-                    <Link
-                      key={cat.slug}
-                      href={`/shop?cat=${cat.slug}`}
-                      className="group relative block overflow-hidden"
-                      style={{ width: 110, height: 165, border: 'none' }}
-                    >
-                      {/* Thumbnail Image */}
-                      <div className="w-full h-full relative overflow-hidden bg-zinc-50">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={cat.img}
-                          alt={cat.name}
-                          className="object-cover w-full h-full transition-transform duration-700 group-hover:scale-103"
-                        />
-                        {/* Subtle dark overlay for text legibility */}
-                        <div className="absolute inset-0 bg-black/5 group-hover:bg-black/15 transition-colors duration-500" />
-                      </div>
-                      {/* Caption Overlay */}
-                      <div className="absolute bottom-3 left-3 right-3 flex justify-between items-center z-10">
-                        <span
-                          className="text-sm tracking-wide"
-                          style={{
-                            fontFamily: 'Cormorant Garamond, serif',
-                            fontStyle: 'italic',
-                            color: '#ffffff',
-                            fontWeight: 300,
-                          }}
-                        >
-                          {cat.name}
-                        </span>
-                        <span className="text-white text-xs opacity-0 group-hover:opacity-100 translate-x-2 group-hover:translate-x-0 transition-all duration-300">
-                          →
-                        </span>
-                      </div>
-                    </Link>
-                  ))}
+                  <div className="flex gap-8 max-w-6xl w-full justify-center">
+                    {DROPDOWN_CATEGORIES.map(cat => (
+                      <Link
+                        key={cat.slug}
+                        href={`/shop?cat=${cat.slug}`}
+                        className="group relative block overflow-hidden"
+                        style={{ width: 220, height: 300, border: 'none' }}
+                      >
+                        {/* Thumbnail Image */}
+                        <div className="w-full h-full relative overflow-hidden bg-zinc-100">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={cat.img}
+                            alt={cat.name}
+                            className="object-cover w-full h-full transition-transform duration-700 group-hover:scale-103"
+                          />
+                          {/* Subtle dark overlay for text legibility */}
+                          <div className="absolute inset-0 bg-black/5 group-hover:bg-black/15 transition-colors duration-500" />
+                        </div>
+                        {/* Caption Overlay */}
+                        <div className="absolute bottom-4 left-4 right-4 flex justify-between items-center z-10">
+                          <span
+                            className="text-lg tracking-wide"
+                            style={{
+                              fontFamily: 'Cormorant Garamond, serif',
+                              fontStyle: 'italic',
+                              color: '#ffffff',
+                              fontWeight: 300,
+                            }}
+                          >
+                            {cat.name}
+                          </span>
+                          <span className="text-white text-sm opacity-0 group-hover:opacity-100 translate-x-2 group-hover:translate-x-0 transition-all duration-300">
+                            →
+                          </span>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
                 </motion.div>
               )}
             </AnimatePresence>
           </div>
           <Link
             href="/#footer"
-            className="text-xs tracking-widest uppercase hover:opacity-60 transition-opacity"
+            className="text-xs tracking-widest uppercase hover:opacity-60 transition-opacity flex items-center h-full"
             style={{ fontFamily: 'Jost, sans-serif', fontWeight: 300, color: themeColor }}
           >
             Contact Us
@@ -229,7 +230,7 @@ export default function Navbar() {
             className="flex items-center gap-2 hover:opacity-60 transition-opacity"
             style={{ color: themeColor }}
           >
-            <WardrobeIcon />
+            <WardrobeIcon themeColor={themeColor} />
             <span className="text-xs tracking-widest uppercase hidden lg:block" style={{ fontFamily: 'Jost, sans-serif', fontWeight: 300 }}>
               Wardrobe
             </span>
@@ -286,17 +287,19 @@ function SearchIcon() {
   )
 }
 
-function WardrobeIcon() {
+function WardrobeIcon({ themeColor }) {
+  const isInverted = themeColor === '#ffffff'
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 3 a2 2 0 0 1 2 2 a2 2 0 0 1 -2 2" />
-      <path d="M12 7 L3 16" />
-      <path d="M12 7 L21 16" />
-      <line x1="2" y1="16" x2="22" y2="16" />
-      <line x1="2" y1="16" x2="2" y2="19" />
-      <line x1="22" y1="16" x2="22" y2="19" />
-      <line x1="2" y1="19" x2="22" y2="19" />
-    </svg>
+    <img
+      src="/cloth-hanger.png"
+      alt="Wardrobe"
+      style={{
+        width: '20px',
+        height: '20px',
+        objectFit: 'contain',
+        filter: isInverted ? 'invert(1)' : 'none',
+      }}
+    />
   )
 }
 

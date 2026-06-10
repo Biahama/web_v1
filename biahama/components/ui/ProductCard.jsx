@@ -146,15 +146,17 @@ export default function ProductCard({ product, priority = false }) {
 }
 
 function HangerIcon({ color = 'currentColor' }) {
+  const isInverted = color === 'var(--white)' || color === '#ffffff'
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 3 a2 2 0 0 1 2 2 a2 2 0 0 1 -2 2" />
-      <path d="M12 7 L3 16" />
-      <path d="M12 7 L21 16" />
-      <line x1="2" y1="16" x2="22" y2="16" />
-      <line x1="2" y1="16" x2="2" y2="19" />
-      <line x1="22" y1="16" x2="22" y2="19" />
-      <line x1="2" y1="19" x2="22" y2="19" />
-    </svg>
+    <img
+      src="/cloth-hanger.png"
+      alt="Hanger"
+      style={{
+        width: '14px',
+        height: '14px',
+        objectFit: 'contain',
+        filter: isInverted ? 'invert(1)' : 'none',
+      }}
+    />
   )
 }
