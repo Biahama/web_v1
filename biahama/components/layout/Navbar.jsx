@@ -65,15 +65,15 @@ export default function Navbar() {
             <AnimatePresence>
               {dropdownOpen && (
                 <motion.div
-                  initial={{ opacity: 0, y: -12 }}
+                  initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -12 }}
-                  transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                  className="fixed left-0 right-0 top-[56px] flex justify-center gap-8 py-10 z-30"
+                  exit={{ opacity: 0, y: 8 }}
+                  transition={{ duration: 0.15, ease: 'easeOut' }}
+                  className="absolute left-0 top-full flex gap-4 p-4 z-50"
                   style={{
-                    background: '#ffffff',
-                    borderBottom: '1px solid var(--border)',
-                    boxShadow: '0 20px 40px rgba(0,0,0,0.03)',
+                    background: '#f0ede8', // Brand warm sandy off-white
+                    border: '1px solid var(--border)',
+                    boxShadow: '0 10px 30px rgba(0,0,0,0.06)',
                   }}
                   onMouseEnter={() => setDropdownOpen(true)}
                   onMouseLeave={() => setDropdownOpen(false)}
@@ -83,7 +83,7 @@ export default function Navbar() {
                       key={cat.slug}
                       href={`/shop?cat=${cat.slug}`}
                       className="group relative block overflow-hidden"
-                      style={{ width: 140, height: 210, border: '1px solid var(--border)' }}
+                      style={{ width: 110, height: 165, border: '1px solid var(--border)' }}
                     >
                       {/* Thumbnail Image */}
                       <div className="w-full h-full relative overflow-hidden bg-zinc-50">
@@ -97,7 +97,7 @@ export default function Navbar() {
                         <div className="absolute inset-0 bg-black/5 group-hover:bg-black/15 transition-colors duration-500" />
                       </div>
                       {/* Caption Overlay */}
-                      <div className="absolute bottom-4 left-4 right-4 flex justify-between items-center z-10">
+                      <div className="absolute bottom-3 left-3 right-3 flex justify-between items-center z-10">
                         <span
                           className="text-sm tracking-wide"
                           style={{
