@@ -29,10 +29,6 @@ export default function Navbar() {
   const isHome = pathname === '/'
   const themeColor = isHome ? '#ffffff' : 'var(--black)'
   
-  const dropdownBg = isHome ? 'rgba(137, 119, 105, 0.45)' : '#ffffff'
-  const dropdownBorder = isHome ? 'rgba(255, 255, 255, 0.15)' : 'var(--border)'
-  const cardBorder = isHome ? 'rgba(255, 255, 255, 0.12)' : 'var(--border)'
-
   const handleSearchSubmit = (e) => {
     e.preventDefault()
     if (searchQuery.trim()) {
@@ -85,10 +81,9 @@ export default function Navbar() {
                   transition={{ duration: 0.15, ease: 'easeOut' }}
                   className="absolute left-0 top-full flex gap-4 p-4 z-50"
                   style={{
-                    background: dropdownBg,
-                    border: `1px solid ${dropdownBorder}`,
-                    backdropFilter: isHome ? 'blur(20px)' : 'none',
-                    boxShadow: isHome ? '0 20px 40px rgba(0,0,0,0.1)' : '0 10px 30px rgba(0,0,0,0.06)',
+                    background: 'transparent',
+                    border: 'none',
+                    boxShadow: 'none',
                   }}
                   onMouseEnter={() => setDropdownOpen(true)}
                   onMouseLeave={() => setDropdownOpen(false)}
@@ -98,7 +93,7 @@ export default function Navbar() {
                       key={cat.slug}
                       href={`/shop?cat=${cat.slug}`}
                       className="group relative block overflow-hidden"
-                      style={{ width: 110, height: 165, border: `1px solid ${cardBorder}` }}
+                      style={{ width: 110, height: 165, border: 'none' }}
                     >
                       {/* Thumbnail Image */}
                       <div className="w-full h-full relative overflow-hidden bg-zinc-50">
