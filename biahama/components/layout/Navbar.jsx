@@ -4,16 +4,16 @@ import Link from 'next/link'
 import { useSession } from 'next-auth/react'
 import { useState } from 'react'
 import { usePathname } from 'next/navigation'
+import { motion, AnimatePresence } from 'framer-motion'
 import SearchOverlay from '@/components/ui/SearchOverlay'
 import CartDrawer from '@/components/ui/CartDrawer'
 import { useCart } from '@/lib/cart'
 
 const DROPDOWN_CATEGORIES = [
-  { name: 'Dresses', slug: 'dresses', img: 'https://images.unsplash.com/photo-1609357605129-26f69add5d6e?auto=format&fit=crop&w=300&h=480&q=80' },
-  { name: 'Shirts', slug: 'shirts', img: 'https://images.unsplash.com/photo-1598033129183-c4f50c736f10?auto=format&fit=crop&w=300&h=480&q=80' },
-  { name: 'Trousers', slug: 'trousers', img: 'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?auto=format&fit=crop&w=300&h=480&q=80' },
-  { name: 'Tunics', slug: 'tunics', img: 'https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&w=300&h=480&q=80' },
-  { name: 'Sets', slug: 'sets', img: 'https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=300&h=480&q=80' },
+  { name: 'Kurta', slug: 'kurtas', img: 'https://res.cloudinary.com/dc30t7io2/image/upload/q_auto,f_auto,w_300,h_480,c_fill/v1781050257/biahama/collection_hover_kurta.png' },
+  { name: 'Shirts', slug: 'shirts', img: 'https://res.cloudinary.com/dc30t7io2/image/upload/q_auto,f_auto,w_300,h_480,c_fill/v1781050258/biahama/collection_hover_shirt.png' },
+  { name: 'Tunics', slug: 'tunics', img: 'https://res.cloudinary.com/dc30t7io2/image/upload/q_auto,f_auto,w_300,h_480,c_fill/v1781050259/biahama/collection_hover_tunic.png' },
+  { name: 'Pant', slug: 'trousers', img: 'https://res.cloudinary.com/dc30t7io2/image/upload/q_auto,f_auto,w_300,h_480,c_fill/v1781050260/biahama/collection_hover_pant.png' },
 ]
 
 export default function Navbar() {
@@ -62,50 +62,62 @@ export default function Navbar() {
             </Link>
 
             {/* Floating hover dropdown */}
-            {dropdownOpen && (
-              <div
-                className="absolute left-0 mt-3 flex gap-3 p-4 transition-all duration-200"
-                style={{
-                  background: '#ffffff',
-                  border: '1px solid var(--border)',
-                  boxShadow: '0 10px 30px rgba(0,0,0,0.08)',
-                  zIndex: 50,
-                }}
-              >
-                {DROPDOWN_CATEGORIES.map(cat => (
-                  <Link
-                    key={cat.slug}
-                    href={`/shop/${cat.slug}`}
-                    className="group relative block overflow-hidden"
-                    style={{ width: 100, height: 160 }}
-                  >
-                    {/* Thumbnail Image */}
-                    <div className="w-full h-full relative overflow-hidden bg-zinc-100">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={cat.img}
-                        alt={cat.name}
-                        className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
-                      />
-                      {/* Dark overlay gradient */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
-                    </div>
-                    {/* Caption Overlay */}
-                    <span
-                      className="absolute bottom-2 left-2 text-xs tracking-wider"
-                      style={{
-                        fontFamily: 'Cormorant Garamond, serif',
-                        fontStyle: 'italic',
-                        color: '#ffffff',
-                        fontWeight: 300,
-                      }}
+            <AnimatePresence>
+              {dropdownOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: -12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -12 }}
+                  transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                  className="fixed left-0 right-0 top-[56px] flex justify-center gap-8 py-10 z-30"
+                  style={{
+                    background: '#ffffff',
+                    borderBottom: '1px solid var(--border)',
+                    boxShadow: '0 20px 40px rgba(0,0,0,0.03)',
+                  }}
+                  onMouseEnter={() => setDropdownOpen(true)}
+                  onMouseLeave={() => setDropdownOpen(false)}
+                >
+                  {DROPDOWN_CATEGORIES.map(cat => (
+                    <Link
+                      key={cat.slug}
+                      href={`/shop?cat=${cat.slug}`}
+                      className="group relative block overflow-hidden"
+                      style={{ width: 140, height: 210, border: '1px solid var(--border)' }}
                     >
-                      {cat.name}
-                    </span>
-                  </Link>
-                ))}
-              </div>
-            )}
+                      {/* Thumbnail Image */}
+                      <div className="w-full h-full relative overflow-hidden bg-zinc-50">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={cat.img}
+                          alt={cat.name}
+                          className="object-cover w-full h-full transition-transform duration-700 group-hover:scale-103"
+                        />
+                        {/* Subtle dark overlay for text legibility */}
+                        <div className="absolute inset-0 bg-black/5 group-hover:bg-black/15 transition-colors duration-500" />
+                      </div>
+                      {/* Caption Overlay */}
+                      <div className="absolute bottom-4 left-4 right-4 flex justify-between items-center z-10">
+                        <span
+                          className="text-sm tracking-wide"
+                          style={{
+                            fontFamily: 'Cormorant Garamond, serif',
+                            fontStyle: 'italic',
+                            color: '#ffffff',
+                            fontWeight: 300,
+                          }}
+                        >
+                          {cat.name}
+                        </span>
+                        <span className="text-white text-xs opacity-0 group-hover:opacity-100 translate-x-2 group-hover:translate-x-0 transition-all duration-300">
+                          →
+                        </span>
+                      </div>
+                    </Link>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
           <Link
             href="/#footer"
