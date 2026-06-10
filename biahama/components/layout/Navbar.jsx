@@ -27,7 +27,8 @@ export default function Navbar() {
   const { count } = useCart()
 
   const isHome = pathname === '/'
-  const themeColor = isHome ? '#ffffff' : 'var(--black)'
+  const showSolidNavbar = !isHome || dropdownOpen
+  const themeColor = showSolidNavbar ? 'var(--black)' : '#ffffff'
   
   const handleSearchSubmit = (e) => {
     e.preventDefault()
@@ -45,8 +46,8 @@ export default function Navbar() {
           height: 56,
           paddingLeft: 48,
           paddingRight: 48,
-          background: isHome ? 'transparent' : 'var(--bg)',
-          borderBottom: isHome ? 'none' : '1px solid var(--border)',
+          background: dropdownOpen ? 'var(--border)' : (isHome ? 'transparent' : 'var(--bg)'),
+          borderBottom: (dropdownOpen || !isHome) ? '1px solid var(--border)' : 'none',
         }}
       >
         {/* Left Section — Home, Collection, Contact Us */}
@@ -79,7 +80,7 @@ export default function Navbar() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 8 }}
                   transition={{ duration: 0.15, ease: 'easeOut' }}
-                  className="fixed left-0 right-0 top-[56px] z-50 flex justify-center py-10 px-8"
+                  className="fixed left-0 right-0 top-[56px] z-50 flex justify-center py-12 px-8"
                   style={{
                     background: 'var(--border)',
                     boxShadow: '0 10px 30px rgba(0, 0, 0, 0.05)',
@@ -87,13 +88,13 @@ export default function Navbar() {
                   onMouseEnter={() => setDropdownOpen(true)}
                   onMouseLeave={() => setDropdownOpen(false)}
                 >
-                  <div className="flex gap-8 max-w-6xl w-full justify-center">
+                  <div className="flex gap-6 max-w-7xl w-full justify-center">
                     {DROPDOWN_CATEGORIES.map(cat => (
                       <Link
                         key={cat.slug}
                         href={`/shop?cat=${cat.slug}`}
                         className="group relative block overflow-hidden"
-                        style={{ width: 220, height: 300, border: 'none' }}
+                        style={{ width: 280, height: 420, border: 'none' }}
                       >
                         {/* Thumbnail Image */}
                         <div className="w-full h-full relative overflow-hidden bg-zinc-100">
@@ -119,9 +120,6 @@ export default function Navbar() {
                           >
                             {cat.name}
                           </span>
-                          <span className="text-white text-sm opacity-0 group-hover:opacity-100 translate-x-2 group-hover:translate-x-0 transition-all duration-300">
-                            →
-                          </span>
                         </div>
                       </Link>
                     ))}
@@ -142,18 +140,18 @@ export default function Navbar() {
         {/* Center Section — Brand Name */}
         <Link
           href="/"
-          className="absolute left-1/2 -translate-x-1/2 select-none z-50"
+          className="absolute left-1/2 -translate-x-1/2 select-none z-50 h-full flex items-center"
           style={{ fontFamily: 'Cormorant Garamond, serif', fontWeight: 300, fontSize: 28, color: themeColor, letterSpacing: '0.3em' }}
         >
           BIAHAMA
         </Link>
 
         {/* Right Section — Icons */}
-        <div className="flex-1 flex items-center justify-end gap-6 z-50">
+        <div className="flex-1 flex items-center justify-end gap-6 z-50 h-full">
           {/* Search */}
           <form
             onSubmit={handleSearchSubmit}
-            className="flex items-center"
+            className="flex items-center h-full"
           >
             <AnimatePresence>
               {searchActive && (
@@ -212,7 +210,7 @@ export default function Navbar() {
                   setTimeout(() => searchInputRef.current?.focus(), 50)
                 }
               }}
-              className="flex items-center gap-2 hover:opacity-60 transition-opacity"
+              className="flex items-center gap-2 hover:opacity-60 transition-opacity h-full"
               style={{ color: themeColor, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
             >
               <SearchIcon />
@@ -227,7 +225,7 @@ export default function Navbar() {
           {/* Wardrobe */}
           <Link
             href={session ? '/account/wardrobe' : '/login'}
-            className="flex items-center gap-2 hover:opacity-60 transition-opacity"
+            className="flex items-center gap-2 hover:opacity-60 transition-opacity h-full"
             style={{ color: themeColor }}
           >
             <WardrobeIcon themeColor={themeColor} />
@@ -240,31 +238,33 @@ export default function Navbar() {
           <button
             onClick={() => setCartOpen(true)}
             aria-label="Cart"
-            className="relative hover:opacity-60 transition-opacity"
+            className="hover:opacity-60 transition-opacity flex items-center h-full"
             style={{ color: themeColor }}
           >
-            <CartIcon />
-            <span
-              className="absolute flex items-center justify-center rounded-full"
-              style={{
-                width: 13,
-                height: 13,
-                top: -5,
-                right: -7,
-                background: isHome ? '#ffffff' : 'var(--black)',
-                color: isHome ? 'var(--black)' : '#ffffff',
-                fontSize: 8,
-                fontFamily: 'Jost, sans-serif',
-              }}
-            >
-              {count}
-            </span>
+            <div className="relative flex items-center">
+              <CartIcon />
+              <span
+                className="absolute flex items-center justify-center rounded-full"
+                style={{
+                  width: 13,
+                  height: 13,
+                  top: -5,
+                  right: -7,
+                  background: isHome ? '#ffffff' : 'var(--black)',
+                  color: isHome ? 'var(--black)' : '#ffffff',
+                  fontSize: 8,
+                  fontFamily: 'Jost, sans-serif',
+                }}
+              >
+                {count}
+              </span>
+            </div>
           </button>
 
           {/* Profile */}
           <Link
             href={session ? '/account' : '/login'}
-            className="hover:opacity-60 transition-opacity"
+            className="hover:opacity-60 transition-opacity flex items-center h-full"
             style={{ color: themeColor }}
             aria-label="Account"
           >
