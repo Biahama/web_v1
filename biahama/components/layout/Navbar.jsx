@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useSession } from 'next-auth/react'
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import CartDrawer from '@/components/ui/CartDrawer'
@@ -25,6 +25,21 @@ export default function Navbar() {
   const [cartOpen, setCartOpen] = useState(false)
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const { count } = useCart()
+
+  const collectionRef = useRef(null)
+  const [leftOffset, setLeftOffset] = useState(0)
+
+  useEffect(() => {
+    function updateOffset() {
+      if (collectionRef.current) {
+        const rect = collectionRef.current.getBoundingClientRect()
+        setLeftOffset(rect.left)
+      }
+    }
+    updateOffset()
+    window.addEventListener('resize', updateOffset)
+    return () => window.removeEventListener('resize', updateOffset)
+  }, [dropdownOpen])
 
   const isHome = pathname === '/'
   const showSolidNavbar = !isHome || dropdownOpen
@@ -90,6 +105,7 @@ export default function Navbar() {
             Home
           </Link>
           <div
+            ref={collectionRef}
             className="relative flex items-center h-full"
             onMouseEnter={() => setDropdownOpen(true)}
             onMouseLeave={() => setDropdownOpen(false)}
@@ -110,21 +126,27 @@ export default function Navbar() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 8 }}
                   transition={{ duration: 0.15, ease: 'easeOut' }}
-                  className="fixed left-0 right-0 top-[56px] z-50 flex justify-center py-12 px-8"
+                  className="fixed top-[56px] z-50"
                   style={{
+                    left: leftOffset,
+                    right: 0,
                     background: 'var(--border)',
                     boxShadow: '0 10px 30px rgba(0, 0, 0, 0.05)',
+                    paddingTop: 0,
+                    paddingLeft: 0,
+                    paddingRight: 0,
+                    paddingBottom: '80px',
                   }}
                   onMouseEnter={() => setDropdownOpen(true)}
                   onMouseLeave={() => setDropdownOpen(false)}
                 >
-                  <div className="flex gap-6 max-w-7xl w-full justify-center">
+                  <div className="flex gap-4 w-full" style={{ padding: 0, margin: 0 }}>
                     {DROPDOWN_CATEGORIES.map(cat => (
                       <Link
                         key={cat.slug}
                         href={`/shop?cat=${cat.slug}`}
                         className="group relative block overflow-hidden"
-                        style={{ width: 280, height: 420, border: 'none' }}
+                        style={{ flex: 1, aspectRatio: '2/3', border: 'none' }}
                       >
                         {/* Thumbnail Image */}
                         <div className="w-full h-full relative overflow-hidden bg-zinc-100">
