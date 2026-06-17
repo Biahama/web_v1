@@ -38,6 +38,36 @@ export default function Navbar() {
     }
   }
 
+  const isCheckout = pathname === '/checkout'
+
+  if (isCheckout) {
+    return (
+      <nav
+        className="fixed top-0 left-0 right-0 z-40 flex items-center justify-center"
+        style={{
+          height: 56,
+          background: 'var(--bg)',
+          borderBottom: '1px solid var(--border)',
+        }}
+      >
+        <Link
+          href="/"
+          className="select-none"
+          style={{
+            fontFamily: 'Cormorant Garamond, serif',
+            fontWeight: 300,
+            fontSize: 28,
+            color: 'var(--black)',
+            letterSpacing: '0.3em',
+            marginLeft: '0.3em',
+          }}
+        >
+          BIAHAMA
+        </Link>
+      </nav>
+    )
+  }
+
   return (
     <>
       <nav

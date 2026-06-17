@@ -12,7 +12,7 @@ export async function GET() {
     include: {
       variant: {
         include: {
-          product: { select: { name: true, slug: true } },
+          product: { select: { name: true, slug: true, description: true, fabric: true, care: true } },
           images:  { where: { isPrimary: true }, take: 1 },
         },
       },

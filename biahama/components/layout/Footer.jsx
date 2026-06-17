@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 
 const links = {
   Company: [
@@ -21,6 +22,25 @@ const links = {
 }
 
 export default function Footer() {
+  const pathname = usePathname()
+  const isCheckout = pathname === '/checkout'
+
+  if (isCheckout) {
+    return (
+      <footer
+        style={{ borderTop: '1px solid var(--border)', background: 'var(--bg)', padding: '24px 48px' }}
+      >
+        <div
+          className="flex flex-col md:flex-row items-center justify-between gap-4"
+          style={{ color: 'var(--gray)', fontFamily: 'Jost, sans-serif', fontWeight: 300, fontSize: 10, letterSpacing: '0.05em' }}
+        >
+          <span>2026 © Biahama SpA Vat 01886120540</span>
+          <span>Made with intention · India</span>
+        </div>
+      </footer>
+    )
+  }
+
   return (
     <footer
       style={{ borderTop: '1px solid var(--border)', background: 'var(--bg)', paddingBottom: 48 }}

@@ -159,7 +159,7 @@ export default function OrderPage() {
                   {item.productName}
                 </p>
                 <p style={{ fontSize: 12, color: 'var(--gray)', letterSpacing: '0.04em' }}>
-                  {item.variantDetails?.size} · {item.variantDetails?.color} · Qty {item.quantity}
+                  {item.variantDetails?.sku ? `SKU: ${item.variantDetails.sku} · ` : ''}{item.variantDetails?.size} · {item.variantDetails?.color} · Qty {item.quantity}
                 </p>
               </div>
               <p style={{ fontSize: 13, color: 'var(--black)', letterSpacing: '0.03em', whiteSpace: 'nowrap' }}>
