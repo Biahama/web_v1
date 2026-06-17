@@ -26,7 +26,20 @@ export default function Navbar() {
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const { count } = useCart()
 
+  const collectionRef = useRef(null)
+  const [leftOffset, setLeftOffset] = useState(0)
 
+  useEffect(() => {
+    function updateOffset() {
+      if (collectionRef.current) {
+        const rect = collectionRef.current.getBoundingClientRect()
+        setLeftOffset(rect.left)
+      }
+    }
+    updateOffset()
+    window.addEventListener('resize', updateOffset)
+    return () => window.removeEventListener('resize', updateOffset)
+  }, [])
 
   const isHome = pathname === '/'
   const showSolidNavbar = !isHome || dropdownOpen
@@ -92,6 +105,7 @@ export default function Navbar() {
             Home
           </Link>
           <div
+            ref={collectionRef}
             className="relative flex items-center h-full"
             onMouseEnter={() => setDropdownOpen(true)}
             onMouseLeave={() => setDropdownOpen(false)}
@@ -112,8 +126,10 @@ export default function Navbar() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 8 }}
                   transition={{ duration: 0.15, ease: 'easeOut' }}
-                  className="fixed left-0 right-0 top-[56px] z-50"
+                  className="fixed top-[56px] z-50"
                   style={{
+                    left: leftOffset > 0 ? leftOffset - 16 : 0,
+                    right: 0,
                     background: 'var(--border)',
                     boxShadow: '0 10px 30px rgba(0, 0, 0, 0.05)',
                     paddingTop: 0,
