@@ -26,20 +26,7 @@ export default function Navbar() {
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const { count } = useCart()
 
-  const collectionRef = useRef(null)
-  const [leftOffset, setLeftOffset] = useState(0)
 
-  useEffect(() => {
-    function updateOffset() {
-      if (collectionRef.current) {
-        const rect = collectionRef.current.getBoundingClientRect()
-        setLeftOffset(rect.left)
-      }
-    }
-    updateOffset()
-    window.addEventListener('resize', updateOffset)
-    return () => window.removeEventListener('resize', updateOffset)
-  }, [dropdownOpen])
 
   const isHome = pathname === '/'
   const showSolidNavbar = !isHome || dropdownOpen
@@ -105,7 +92,6 @@ export default function Navbar() {
             Home
           </Link>
           <div
-            ref={collectionRef}
             className="relative flex items-center h-full"
             onMouseEnter={() => setDropdownOpen(true)}
             onMouseLeave={() => setDropdownOpen(false)}
@@ -142,7 +128,7 @@ export default function Navbar() {
                   <div style={{ width: '100%', height: '1px', background: 'var(--black)', opacity: 0.15 }} />
 
                   {/* Content Container aligned with uniform padding */}
-                  <div className="flex gap-4 w-full" style={{ paddingLeft: leftOffset, paddingRight: '16px', paddingTop: '16px', margin: 0 }}>
+                  <div className="flex gap-4 w-full" style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '16px', margin: 0 }}>
                     {DROPDOWN_CATEGORIES.map(cat => (
                       <Link
                         key={cat.slug}
