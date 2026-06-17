@@ -26,20 +26,7 @@ export default function Navbar() {
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const { count } = useCart()
 
-  const collectionRef = useRef(null)
-  const [leftOffset, setLeftOffset] = useState(0)
 
-  useEffect(() => {
-    function updateOffset() {
-      if (collectionRef.current) {
-        const rect = collectionRef.current.getBoundingClientRect()
-        setLeftOffset(rect.left)
-      }
-    }
-    updateOffset()
-    window.addEventListener('resize', updateOffset)
-    return () => window.removeEventListener('resize', updateOffset)
-  }, [dropdownOpen])
 
   const isHome = pathname === '/'
   const showSolidNavbar = !isHome || dropdownOpen
@@ -105,7 +92,6 @@ export default function Navbar() {
             Home
           </Link>
           <div
-            ref={collectionRef}
             className="relative flex items-center h-full"
             onMouseEnter={() => setDropdownOpen(true)}
             onMouseLeave={() => setDropdownOpen(false)}
@@ -138,25 +124,11 @@ export default function Navbar() {
                   onMouseEnter={() => setDropdownOpen(true)}
                   onMouseLeave={() => setDropdownOpen(false)}
                 >
-                  {/* EXPLORE FOR HER Text Label */}
-                  <div style={{ paddingLeft: leftOffset, paddingTop: '16px', paddingBottom: '8px' }}>
-                    <span style={{
-                      fontFamily: 'Jost, sans-serif',
-                      fontSize: '10px',
-                      fontWeight: 400,
-                      letterSpacing: '0.15em',
-                      textTransform: 'uppercase',
-                      color: 'var(--black)',
-                    }}>
-                      EXPLORE FOR HER
-                    </span>
-                  </div>
-
                   {/* Horizontal Line spanning the full screen width */}
-                  <div style={{ width: '100%', height: '1px', background: 'var(--black)', opacity: 0.15, marginBottom: '16px' }} />
+                  <div style={{ width: '100%', height: '1px', background: 'var(--black)', opacity: 0.15 }} />
 
-                  {/* Content Container aligned horizontally */}
-                  <div className="flex gap-4 w-full" style={{ paddingLeft: leftOffset, paddingRight: 0, margin: 0 }}>
+                  {/* Content Container aligned with uniform padding */}
+                  <div className="flex gap-4 w-full" style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '16px', margin: 0 }}>
                     {DROPDOWN_CATEGORIES.map(cat => (
                       <Link
                         key={cat.slug}
