@@ -9,10 +9,10 @@ import CartDrawer from '@/components/ui/CartDrawer'
 import { useCart } from '@/lib/cart'
 
 const DROPDOWN_CATEGORIES = [
-  { name: 'Kurta', slug: 'kurtas', img: 'https://res.cloudinary.com/dc30t7io2/image/upload/q_auto,f_auto,w_300,h_480,c_fill/v1781050257/biahama/collection_hover_kurta.png' },
-  { name: 'Shirts', slug: 'shirts', img: 'https://res.cloudinary.com/dc30t7io2/image/upload/q_auto,f_auto,w_300,h_480,c_fill/v1781050258/biahama/collection_hover_shirt.png' },
-  { name: 'Tunics', slug: 'tunics', img: 'https://res.cloudinary.com/dc30t7io2/image/upload/q_auto,f_auto,w_300,h_480,c_fill/v1781050259/biahama/collection_hover_tunic.png' },
-  { name: 'Pant', slug: 'trousers', img: 'https://res.cloudinary.com/dc30t7io2/image/upload/q_auto,f_auto,w_300,h_480,c_fill/v1781050260/biahama/collection_hover_pant.png' },
+  { name: 'Kurta', slug: 'kurtas', img: 'https://res.cloudinary.com/dc30t7io2/image/upload/q_auto,f_auto,w_800,h_1200,c_fill/v1781050257/biahama/collection_hover_kurta.png' },
+  { name: 'Shirts', slug: 'shirts', img: 'https://res.cloudinary.com/dc30t7io2/image/upload/q_auto,f_auto,w_800,h_1200,c_fill/v1781050258/biahama/collection_hover_shirt.png' },
+  { name: 'Tunics', slug: 'tunics', img: 'https://res.cloudinary.com/dc30t7io2/image/upload/q_auto,f_auto,w_800,h_1200,c_fill/v1781050259/biahama/collection_hover_tunic.png' },
+  { name: 'Pant', slug: 'trousers', img: 'https://res.cloudinary.com/dc30t7io2/image/upload/q_auto,f_auto,w_800,h_1200,c_fill/v1781050260/biahama/collection_hover_pant.png' },
 ]
 
 export default function Navbar() {
@@ -135,7 +135,7 @@ export default function Navbar() {
                     paddingTop: 0,
                     paddingLeft: 0,
                     paddingRight: 0,
-                    paddingBottom: '80px',
+                    paddingBottom: '16px',
                   }}
                   onMouseEnter={() => setDropdownOpen(true)}
                   onMouseLeave={() => setDropdownOpen(false)}
