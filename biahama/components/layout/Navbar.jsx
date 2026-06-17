@@ -122,10 +122,10 @@ export default function Navbar() {
             <AnimatePresence>
               {dropdownOpen && (
                 <motion.div
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 8 }}
-                  transition={{ duration: 0.15, ease: 'easeOut' }}
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
                   className="fixed top-[56px] z-50"
                   style={{
                     left: leftOffset > 0 ? leftOffset - 16 : 0,
@@ -136,6 +136,7 @@ export default function Navbar() {
                     paddingLeft: 0,
                     paddingRight: 0,
                     paddingBottom: '16px',
+                    overflow: 'hidden',
                   }}
                   onMouseEnter={() => setDropdownOpen(true)}
                   onMouseLeave={() => setDropdownOpen(false)}
