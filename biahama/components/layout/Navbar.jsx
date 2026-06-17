@@ -126,10 +126,8 @@ export default function Navbar() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 8 }}
                   transition={{ duration: 0.15, ease: 'easeOut' }}
-                  className="fixed top-[56px] z-50"
+                  className="fixed left-0 right-0 top-[56px] z-50"
                   style={{
-                    left: leftOffset,
-                    right: 0,
                     background: 'var(--border)',
                     boxShadow: '0 10px 30px rgba(0, 0, 0, 0.05)',
                     paddingTop: 0,
@@ -140,7 +138,25 @@ export default function Navbar() {
                   onMouseEnter={() => setDropdownOpen(true)}
                   onMouseLeave={() => setDropdownOpen(false)}
                 >
-                  <div className="flex gap-4 w-full" style={{ padding: 0, margin: 0 }}>
+                  {/* EXPLORE FOR HER Text Label */}
+                  <div style={{ paddingLeft: leftOffset, paddingTop: '16px', paddingBottom: '8px' }}>
+                    <span style={{
+                      fontFamily: 'Jost, sans-serif',
+                      fontSize: '10px',
+                      fontWeight: 400,
+                      letterSpacing: '0.15em',
+                      textTransform: 'uppercase',
+                      color: 'var(--black)',
+                    }}>
+                      EXPLORE FOR HER
+                    </span>
+                  </div>
+
+                  {/* Horizontal Line spanning the full screen width */}
+                  <div style={{ width: '100%', height: '1px', background: 'var(--black)', opacity: 0.15, marginBottom: '16px' }} />
+
+                  {/* Content Container aligned horizontally */}
+                  <div className="flex gap-4 w-full" style={{ paddingLeft: leftOffset, paddingRight: 0, margin: 0 }}>
                     {DROPDOWN_CATEGORIES.map(cat => (
                       <Link
                         key={cat.slug}
