@@ -58,7 +58,7 @@ export default function ProductGrid({ products = [], category = 'all' }) {
               className="object-cover w-full h-full"
             />
           </div>
-          <div className="grid grid-cols-3 gap-x-6 gap-y-14">
+          <div className="grid grid-cols-3 gap-x-6 gap-y-14 mt-14">
             {displayProducts.map(p => (
               <ProductCard key={p.id} product={p} />
             ))}
@@ -75,7 +75,7 @@ export default function ProductGrid({ products = [], category = 'all' }) {
               className="object-cover w-full h-full"
             />
           </div>
-          <div className="grid grid-cols-2 gap-x-4 gap-y-10">
+          <div className="grid grid-cols-2 gap-x-4 gap-y-10 mt-10">
             {displayProducts.map(p => (
               <ProductCard key={p.id} product={p} />
             ))}
@@ -138,7 +138,7 @@ export default function ProductGrid({ products = [], category = 'all' }) {
 
           {/* Bottom Section: Remaining products in a standard 3-column grid */}
           {displayProducts.length > 4 && (
-            <div className="grid grid-cols-3 gap-x-6 gap-y-14">
+            <div className="grid grid-cols-3 gap-x-6 gap-y-14 mt-14">
               {displayProducts.slice(4).map(p => (
                 <ProductCard key={p.id} product={p} />
               ))}

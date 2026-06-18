@@ -97,8 +97,8 @@ export default function ProductCard({ product, priority = false }) {
             src="/cloth-hanger.png"
             alt="Save to wardrobe"
             style={{
-              width: '18px',
-              height: '18px',
+              width: '36px',
+              height: '36px',
               objectFit: 'contain',
               opacity: wishlisted ? 1.0 : 0.6,
               filter: 'drop-shadow(0px 1px 2px rgba(255, 255, 255, 0.4))'
@@ -124,7 +124,7 @@ export default function ProductCard({ product, priority = false }) {
                 <img
                   src="/bag.png"
                   alt="Add to cart"
-                  style={{ width: '18px', height: '18px', objectFit: 'contain' }}
+                  style={{ width: '36px', height: '36px', objectFit: 'contain' }}
                 />
               </button>
             )}
