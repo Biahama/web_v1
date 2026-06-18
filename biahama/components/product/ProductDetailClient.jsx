@@ -262,7 +262,7 @@ export default function ProductDetailClient({ product }) {
           </div>
 
           {/* Right Column — Sticky product info */}
-          <div className="lg:sticky lg:top-[76px] space-y-6 pt-2 ml-auto max-w-[520px] w-full">
+          <div className="lg:sticky lg:top-[76px] space-y-6 pt-2 w-full">
             
             {/* Header utilities (sku, share, wishlist) */}
             <div className="flex items-center justify-between">
@@ -323,13 +323,13 @@ export default function ProductDetailClient({ product }) {
             </div>
 
             {/* Color Swatch Panel */}
-            <div className="flex items-center gap-4 py-2 border-b border-zinc-100 pb-4">
-              <span className="text-[10px] tracking-widest text-zinc-400 uppercase font-medium w-16">
+            <div className="flex items-start gap-4 py-4 border-b border-zinc-100 pb-5">
+              <span className="text-[10px] tracking-widest text-zinc-400 uppercase font-medium w-16 pt-1">
                 COLOR
               </span>
-              <div className="flex items-center gap-3">
+              <div className="flex flex-col items-center gap-1.5">
                 <div
-                  className="w-10 h-14 border border-zinc-950 flex items-center justify-center p-0.5 bg-zinc-50"
+                  className="w-11 h-14 border border-zinc-950 flex items-center justify-center p-0.5 bg-zinc-50"
                   title={product.variants?.[0]?.color}
                 >
                   {displayImages[0] ? (
@@ -345,7 +345,7 @@ export default function ProductDetailClient({ product }) {
                     />
                   )}
                 </div>
-                <span className="text-xs text-zinc-800 font-light" style={{ fontFamily: 'Jost, sans-serif' }}>
+                <span className="text-[10px] tracking-wide text-zinc-800 font-light" style={{ fontFamily: 'Jost, sans-serif' }}>
                   {product.variants?.[0]?.color || 'Natural Cocoa'}
                 </span>
               </div>
