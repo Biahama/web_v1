@@ -32,12 +32,12 @@ export default function ProductDetailClient({ product }) {
     shipping: false,
   })
 
-  // Ensure we have exactly 6 images stacked vertically
+  // Stacked vertically images
   const displayImages = []
   if (product.images && product.images.length > 0) {
-    for (let i = 0; i < 6; i++) {
-      displayImages.push(product.images[i % product.images.length].url)
-    }
+    product.images.forEach(img => {
+      displayImages.push(typeof img === 'string' ? img : img.url)
+    })
   } else {
     // Elegant fashion fallback images
     const fallbacks = [
@@ -247,8 +247,8 @@ export default function ProductDetailClient({ product }) {
       <div className="max-w-7xl mx-auto px-6 md:px-12 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
           
-          {/* Left Column — 6 stacked gapless images */}
-          <div className="lg:col-span-7 flex flex-col gap-0 border border-zinc-200 overflow-hidden">
+          {/* Left Column — stacked gapless images */}
+          <div className="lg:col-span-7 flex flex-col gap-0 overflow-hidden">
             {displayImages.map((src, i) => (
               <div key={i} className="relative w-full overflow-hidden bg-zinc-50" style={{ aspectRatio: '4/5' }}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -292,15 +292,16 @@ export default function ProductDetailClient({ product }) {
                   aria-label="Save to wardrobe"
                   className="p-1.5 rounded-full hover:bg-zinc-50 transition-colors"
                 >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={wishlisted ? 'var(--black)' : 'currentColor'} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M12 3 a2 2 0 0 1 2 2 a2 2 0 0 1 -2 2" />
-                    <path d="M12 7 L3 16" />
-                    <path d="M12 7 L21 16" />
-                    <line x1="2" y1="16" x2="22" y2="16" />
-                    <line x1="2" y1="16" x2="2" y2="19" />
-                    <line x1="22" y1="16" x2="22" y2="19" />
-                    <line x1="2" y1="19" x2="22" y2="19" />
-                  </svg>
+                  <img
+                    src="/cloth-hanger.png"
+                    alt="Save to wardrobe"
+                    style={{
+                      width: '18px',
+                      height: '18px',
+                      objectFit: 'contain',
+                      filter: wishlisted ? 'none' : 'opacity(0.6)'
+                    }}
+                  />
                 </button>
               </div>
             </div>
@@ -326,15 +327,26 @@ export default function ProductDetailClient({ product }) {
               <span className="text-[10px] tracking-widest text-zinc-400 uppercase font-medium">
                 COLOR: <span className="text-zinc-800">{product.variants?.[0]?.color || 'Natural Cocoa'}</span>
               </span>
-              <div className="flex gap-2">
-                <span
-                  className="w-10 h-14 border border-zinc-900 flex items-center justify-center p-0.5"
+              <div className="flex flex-col items-start gap-1">
+                <div
+                  className="w-10 h-14 border border-zinc-900 flex items-center justify-center p-0.5 bg-zinc-50"
                   title={product.variants?.[0]?.color}
                 >
-                  <span
-                    className="w-full h-full"
-                    style={{ background: product.variants?.[0]?.colorHex || '#5e5045' }}
-                  />
+                  {displayImages[0] ? (
+                    <img
+                      src={displayImages[0]}
+                      alt={product.variants?.[0]?.color || 'Swatch'}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span
+                      className="w-full h-full"
+                      style={{ background: product.variants?.[0]?.colorHex || '#5e5045' }}
+                    />
+                  )}
+                </div>
+                <span className="text-[10px] tracking-wide text-zinc-500 font-light" style={{ fontFamily: 'Jost, sans-serif' }}>
+                  {product.variants?.[0]?.color || 'Natural Cocoa'}
                 </span>
               </div>
             </div>
@@ -412,7 +424,7 @@ export default function ProductDetailClient({ product }) {
                   fontWeight: 400,
                 }}
               >
-                {adding ? 'Adding...' : 'ADD TO BAG 🛍'}
+                {adding ? 'Adding...' : 'ADD TO BAG 👜'}
               </button>
 
               {/* Razorpay Express Checkout */}
@@ -423,7 +435,8 @@ export default function ProductDetailClient({ product }) {
                 style={{
                   fontFamily: 'Jost, sans-serif',
                   fontWeight: 400,
-                  borderColor: '#1c2c54'
+                  borderColor: '#1c2c54',
+                  marginTop: '20px'
                 }}
               >
                 {checkoutLoading ? 'Opening checkout...' : 'Pay with Razorpay'}

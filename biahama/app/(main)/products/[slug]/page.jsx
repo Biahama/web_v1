@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
 import ProductDetailClient from '@/components/product/ProductDetailClient'
+import { getKurtaBySlug } from '@/lib/kurtas'
 
 function getMockProduct(slug) {
   const parts = slug.split('-')
@@ -51,6 +52,14 @@ function getMockProduct(slug) {
 export async function generateMetadata({ params }) {
   const { slug } = await params
 
+  const filesystemKurta = getKurtaBySlug(slug)
+  if (filesystemKurta) {
+    return {
+      title: `${filesystemKurta.name} | Biahama`,
+      description: filesystemKurta.description,
+    }
+  }
+
   if (slug.startsWith('mock-')) {
     const product = getMockProduct(slug)
     return {
@@ -84,6 +93,11 @@ export async function generateMetadata({ params }) {
 
 export default async function ProductDetailPage({ params }) {
   const { slug } = await params
+
+  const filesystemKurta = getKurtaBySlug(slug)
+  if (filesystemKurta) {
+    return <ProductDetailClient product={filesystemKurta} />
+  }
 
   if (slug.startsWith('mock-')) {
     const product = getMockProduct(slug)

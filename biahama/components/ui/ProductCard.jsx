@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useCart } from '@/lib/cart'
@@ -12,10 +12,26 @@ function formatPrice(paise) {
 export default function ProductCard({ product, priority = false }) {
   const [wishlisted, setWishlisted] = useState(false)
   const [hovered, setHovered] = useState(false)
+  const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const { add } = useCart()
 
   const isLowStock = product.stockQty <= 3 && product.stockQty > 0
   const isSoldOut  = !product.inStock
+
+  const imagesToCycle = product.images?.map(img => typeof img === 'string' ? img : img.url) || (product.image ? [product.image] : [])
+
+  useEffect(() => {
+    if (!hovered || imagesToCycle.length <= 1) {
+      setCurrentImageIndex(0)
+      return
+    }
+
+    const interval = setInterval(() => {
+      setCurrentImageIndex(idx => (idx + 1) % imagesToCycle.length)
+    }, 2000)
+
+    return () => clearInterval(interval)
+  }, [hovered, imagesToCycle])
 
   const handleAddToCart = async (e) => {
     e.preventDefault()
@@ -34,6 +50,7 @@ export default function ProductCard({ product, priority = false }) {
           slug: product.slug,
         }
       }, 1)
+      alert(`${product.name} has been added to your bag.`)
     }
   }
 
@@ -46,9 +63,9 @@ export default function ProductCard({ product, priority = false }) {
     >
       {/* Image container */}
       <div className="relative overflow-hidden" style={{ aspectRatio: '4/5', background: 'var(--light)' }}>
-        {product.image ? (
+        {imagesToCycle.length > 0 ? (
           <Image
-            src={product.image}
+            src={imagesToCycle[currentImageIndex]}
             alt={product.altText || product.name}
             fill
             sizes="(max-width: 768px) 50vw, 33vw"
@@ -96,11 +113,10 @@ export default function ProductCard({ product, priority = false }) {
           </div>
         )}
 
-        {/* Wardrobe button — appears on hover */}
+        {/* Wardrobe button — always visible */}
         <button
           onClick={e => { e.preventDefault(); e.stopPropagation(); setWishlisted(w => !w) }}
-          className="absolute top-3 right-3 transition-opacity duration-200 z-10"
-          style={{ opacity: hovered ? 1 : 0 }}
+          className="absolute top-3 right-3 z-10"
           aria-label="Save to wardrobe"
         >
           <div
@@ -126,18 +142,18 @@ export default function ProductCard({ product, priority = false }) {
           </p>
         </div>
 
-        {/* Shopping bag button */}
+        {/* Shopping bag button using bag.png */}
         {!isSoldOut && (
           <button
             onClick={handleAddToCart}
-            className="p-2 border border-transparent hover:border-zinc-200 transition-colors bg-zinc-50 hover:bg-zinc-100 z-10 rounded"
+            className="p-1 hover:opacity-75 transition-opacity z-10"
             aria-label="Add to cart"
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--black)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
-              <line x1="3" y1="6" x2="21" y2="6" />
-              <path d="M16 10a4 4 0 0 1-8 0" />
-            </svg>
+            <img
+              src="/bag.png"
+              alt="Add to cart"
+              style={{ width: '18px', height: '18px', objectFit: 'contain' }}
+            />
           </button>
         )}
       </div>

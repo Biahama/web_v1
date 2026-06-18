@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { getKurtasFromFilesystem } from '@/lib/kurtas'
 
 export async function GET(req) {
   const { searchParams } = new URL(req.url)
@@ -7,21 +8,44 @@ export async function GET(req) {
   const limit    = parseInt(searchParams.get('limit') || '50')
   const slug     = searchParams.get('slug')
 
+  // Intercept category=kurtas or category=kurta
+  if (category && (category.toLowerCase() === 'kurtas' || category.toLowerCase() === 'kurta')) {
+    let kurtas = getKurtasFromFilesystem()
+    if (slug) {
+      kurtas = kurtas.filter(k => k.slug === slug)
+    }
+    return NextResponse.json(kurtas.slice(0, limit))
+  }
+
+  // Intercept slug if it matches a Kurta
+  if (slug) {
+    const kurtas = getKurtasFromFilesystem()
+    const found = kurtas.find(k => k.slug === slug)
+    if (found) {
+      return NextResponse.json([found])
+    }
+  }
+
   const where = {
     isActive: true,
     ...(category ? { category: { equals: category, mode: 'insensitive' } } : {}),
     ...(slug     ? { slug }                                                 : {}),
   }
 
-  const products = await prisma.product.findMany({
-    where,
-    take: limit,
-    orderBy: { createdAt: 'desc' },
-    include: {
-      images:   { where: { isPrimary: true }, take: 1 },
-      variants: { select: { price: true, comparePrice: true, stockQty: true, color: true, colorHex: true, size: true } },
-    },
-  })
+  let products = []
+  try {
+    products = await prisma.product.findMany({
+      where,
+      take: limit,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        images:   { where: { isPrimary: true }, take: 1 },
+        variants: { select: { id: true, price: true, comparePrice: true, stockQty: true, color: true, colorHex: true, size: true } },
+      },
+    })
+  } catch (err) {
+    console.error("Products API database query failed:", err)
+  }
 
   const mapped = products.map(p => {
     const prices   = p.variants.map(v => v.price)
