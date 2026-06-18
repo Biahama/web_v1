@@ -58,17 +58,14 @@ export default function ProductCard({ product, priority = false }) {
       <div className="relative biahama-card-image overflow-hidden" style={{ background: '#ffffff' }}>
         {imagesToCycle.length > 0 ? (
           <>
-            <Image
+            <img
               src={imagesToCycle[currentImageIndex]}
               alt={product.altText || product.name}
-              fill
-              unoptimized
-              className="object-contain"
+              className="w-full h-auto block"
               style={{
                 transform: hovered ? 'scale(1.04)' : 'scale(1)',
                 transition: 'transform 700ms cubic-bezier(0.4, 0, 0.2, 1)'
               }}
-              priority={priority}
             />
             {imagesToCycle.length > 1 && (
               <>
