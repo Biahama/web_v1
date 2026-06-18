@@ -1,0 +1,302 @@
+/* ============================================================
+   BIAHAMA — Design Tokens
+   Source: Brunello Cucinelli (reference) — adapted for BIAHAMA
+   Icons: BIAHAMA originals (hanger + bag) at BC sizes
+   Currency: ₹ INR
+   Last updated: June 2026
+   ============================================================ */
+
+/* ------------------------------------------------------------
+   COLORS — BC values
+   ------------------------------------------------------------ */
+:root {
+  --black:        #1A202C;   /* BC primary text color */
+  --bg:           #ffffff;   /* page + header background */
+  --gray:         #6f6f6f;   /* muted text, inactive tabs, color tags */
+  --body-alt:     #262626;   /* breadcrumb, utility bar text */
+  --border:       #e5e5e5;   /* header bottom border — BC value */
+  --light:        #f2f2f2;   /* utility/filter bar background — BC value */
+  --wishlist-bg:  rgba(255, 255, 255, 0.7);  /* card icon button bg */
+}
+
+/* ------------------------------------------------------------
+   TYPOGRAPHY — FONT FAMILIES
+   BIAHAMA keeps its own fonts (GTEesti not publicly available)
+   ------------------------------------------------------------ */
+:root {
+  --font-ui:       'Jost', sans-serif;           /* nav, tabs, product info */
+  --font-display:  'Cormorant Garamond', serif;  /* headings, page titles (italic) */
+}
+
+/* ------------------------------------------------------------
+   TYPOGRAPHY — SCALE & WEIGHTS (all BC values)
+   ------------------------------------------------------------ */
+:root {
+  /* Page / Section Headings (e.g. "Kurta") */
+  --text-heading-size:          36px;
+  --text-heading-weight:        300;
+  --text-heading-tracking:      0.72px;
+  --text-heading-line-height:   42px;
+
+  /* Main Nav Links — BC: 16px/400 */
+  --text-nav-size:              16px;
+  --text-nav-weight:            400;
+  --text-nav-tracking:          normal;
+  --text-nav-line-height:       normal;
+
+  /* Sub-category Filter Tabs — BC: 16px/300 */
+  --text-tab-size:              16px;
+  --text-tab-weight:            300;
+  --text-tab-tracking:          normal;
+  --text-tab-line-height:       24px;
+
+  /* Product Name — BC: 16px/400/0.8px */
+  --text-product-name-size:     16px;
+  --text-product-name-weight:   400;
+  --text-product-name-tracking: 0.8px;
+  --text-product-name-lh:       20px;
+
+  /* Product Price — BC: 14px/300/0.8px */
+  --text-price-size:            14px;
+  --text-price-weight:          300;
+  --text-price-tracking:        0.8px;
+  --text-price-line-height:     17px;
+
+  /* Color / Fabric Tag — BC: 10px/300/2.5px */
+  --text-tag-size:              10px;
+  --text-tag-weight:            300;
+  --text-tag-tracking:          2.5px;
+  --text-tag-line-height:       12px;
+  --text-tag-color:             var(--gray);
+
+  /* FILTERS label — BC: 14px/300/1px */
+  --text-filter-size:           14px;
+  --text-filter-weight:         300;
+  --text-filter-tracking:       1px;
+
+  /* Newsletter H2 — BC: 20px/400/1px */
+  --text-h2-size:               20px;
+  --text-h2-weight:             400;
+  --text-h2-tracking:           1px;
+  --text-h2-line-height:        26px;
+}
+
+/* ------------------------------------------------------------
+   HEADER / NAV — BC values
+   ------------------------------------------------------------ */
+:root {
+  --header-height:          177px;  /* BC total header height */
+  --utility-bar-height:     34px;   /* BC top utility strip */
+  --nav-row-height:         142px;  /* BC logo + nav row */
+  --main-nav-height:        62px;   /* BC main nav menu row */
+  --header-bg:              #ffffff;
+  --header-border:          1px solid var(--border);
+  --header-position:        fixed;
+  --header-padding:         0 24px;
+  --nav-item-height:        46px;   /* BC each nav button height */
+
+  /* BIAHAMA filter bar — kept from BIAHAMA */
+  --filter-bar-height:      47px;
+  --tab-bar-padding:        14px 0;
+}
+
+/* ------------------------------------------------------------
+   ICONS
+   Nav icons — BC sizes
+   Card icons — BC sizes, BIAHAMA icon style (hanger + bag)
+   ------------------------------------------------------------ */
+:root {
+  /* Header nav icons — BC values */
+  --icon-search:    16px;   /* BC: 16×16px */
+  --icon-account:   16px;   /* BC: 16×16px */
+  --icon-cart:      16px;   /* BC: 16×16px */
+  --icon-wardrobe:  16px;   /* BIAHAMA wardrobe — set to BC nav icon size */
+
+  /* Product card icons — BC sizes, BIAHAMA icons */
+  --icon-hanger:         18px;   /* hanger icon — BC wishlist SVG size: 18×18px */
+  --icon-hanger-btn:     36px;   /* circular container — BC: 36×36px */
+  --icon-hanger-btn-bg:  var(--wishlist-bg);  /* rgba(255,255,255,0.7) */
+  --icon-bag:            20px;   /* bag/add icon — BC expand SVG: 20×20px */
+  --icon-bag-container:  24px;   /* BC expand container: 24×20px width */
+}
+
+/* ------------------------------------------------------------
+   ACTIVE TAB UNDERLINE — BC style
+   ------------------------------------------------------------ */
+:root {
+  --tab-active-border:    1px solid var(--body-alt);   /* #262626 */
+  --tab-inactive-border:  1px solid transparent;
+}
+
+/* ------------------------------------------------------------
+   PRODUCT CARD — BC values
+   ------------------------------------------------------------ */
+:root {
+  --card-image-ratio:          4 / 5;    /* BC: ~1.27:1 portrait */
+  --card-image-fit:            cover;
+  --card-info-padding-top:     12px;     /* BC: padding-top of info section */
+  --card-name-margin-bottom:   6px;      /* BC: gap between name and price */
+  --card-info-row-gap:         8px;      /* BC: gap between name+price block and + button */
+}
+
+/* ------------------------------------------------------------
+   PRODUCT GRID — BC values
+   ------------------------------------------------------------ */
+:root {
+  --grid-columns:      3;
+  --grid-col-gap:      16px;   /* BC: column gap */
+  --grid-row-gap:      32px;   /* BC: row gap */
+  --grid-padding:      16px;   /* BC: container left/right padding */
+}
+
+/* ------------------------------------------------------------
+   SPACING SYSTEM — BC: multiples of 8px
+   ------------------------------------------------------------ */
+:root {
+  --space-1:    8px;
+  --space-2:   16px;
+  --space-3:   24px;
+  --space-4:   32px;
+  --space-5:   48px;
+  --space-6:   64px;
+}
+
+/* ------------------------------------------------------------
+   UTILITY CLASSES
+   ------------------------------------------------------------ */
+
+/* Page heading */
+.biahama-heading {
+  font-family: var(--font-display);
+  font-size: var(--text-heading-size);
+  font-weight: var(--text-heading-weight);
+  letter-spacing: var(--text-heading-tracking);
+  line-height: var(--text-heading-line-height);
+  font-style: italic;
+  color: var(--black);
+  text-align: center;
+}
+
+/* Nav links */
+.biahama-nav-link {
+  font-family: var(--font-ui);
+  font-size: var(--text-nav-size);
+  font-weight: var(--text-nav-weight);
+  letter-spacing: var(--text-nav-tracking);
+  color: var(--black);
+  text-decoration: none;
+  height: var(--nav-item-height);
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Filter tabs */
+.biahama-tab {
+  font-family: var(--font-ui);
+  font-size: var(--text-tab-size);
+  font-weight: var(--text-tab-weight);
+  letter-spacing: var(--text-tab-tracking);
+  line-height: var(--text-tab-line-height);
+  color: var(--gray);
+  border-bottom: var(--tab-inactive-border);
+  padding: var(--tab-bar-padding);
+}
+
+.biahama-tab.active {
+  color: var(--black);
+  border-bottom: var(--tab-active-border);
+}
+
+/* Product name */
+.biahama-product-name {
+  font-family: var(--font-ui);
+  font-size: var(--text-product-name-size);
+  font-weight: var(--text-product-name-weight);
+  letter-spacing: var(--text-product-name-tracking);
+  line-height: var(--text-product-name-lh);
+  color: var(--black);
+  margin-bottom: var(--card-name-margin-bottom);
+}
+
+/* Product price — ₹ INR */
+.biahama-price {
+  font-family: var(--font-ui);
+  font-size: var(--text-price-size);
+  font-weight: var(--text-price-weight);
+  letter-spacing: var(--text-price-tracking);
+  line-height: var(--text-price-line-height);
+  color: var(--black);
+}
+
+/* Fabric / color tag */
+.biahama-tag {
+  font-family: var(--font-ui);
+  font-size: var(--text-tag-size);
+  font-weight: var(--text-tag-weight);
+  letter-spacing: var(--text-tag-tracking);
+  line-height: var(--text-tag-line-height);
+  color: var(--text-tag-color);
+}
+
+/* Product card image */
+.biahama-card-image {
+  aspect-ratio: var(--card-image-ratio);
+  object-fit: var(--card-image-fit);
+  width: 100%;
+  display: block;
+}
+
+/* Hanger icon button (top-right of card image) — BC circular style */
+.biahama-hanger-btn {
+  width: var(--icon-hanger-btn);
+  height: var(--icon-hanger-btn);
+  border-radius: 50%;
+  background: var(--icon-hanger-btn-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  top: 8px;
+  right: 8px;
+}
+
+.biahama-hanger-btn svg,
+.biahama-hanger-btn img {
+  width: var(--icon-hanger);
+  height: var(--icon-hanger);
+}
+
+/* Bag/add icon (bottom-right of info row) */
+.biahama-bag-btn {
+  width: var(--icon-bag-container);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.biahama-bag-btn svg,
+.biahama-bag-btn img {
+  width: var(--icon-bag);
+  height: var(--icon-bag);
+}
+
+/* Product card info row */
+.biahama-card-info {
+  padding-top: var(--card-info-padding-top);
+  display: flex;
+  flex-direction: row;
+  gap: var(--card-info-row-gap);
+  align-items: flex-start;
+}
+
+/* Product grid */
+.biahama-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--grid-columns), 1fr);
+  column-gap: var(--grid-col-gap);
+  row-gap: var(--grid-row-gap);
+  padding: 0 var(--grid-padding);
+}

@@ -22,15 +22,7 @@ export default function ProductDetailClient({ product }) {
   const [addresses, setAddresses] = useState([])
   const [wishlisted, setWishlisted] = useState(false)
   const [copied, setCopied] = useState(false)
-
-  // Accordion states
-  const [accordions, setAccordions] = useState({
-    description: true,
-    materials: true,
-    details: false,
-    packaging: false,
-    shipping: false,
-  })
+  const [showDetails, setShowDetails] = useState(false)
 
   // Stacked vertically images
   const displayImages = []
@@ -68,10 +60,6 @@ export default function ProductDetailClient({ product }) {
   const inStockSizes = product.variants
     ?.filter(v => v.stockQty > 0)
     .map(v => v.size.toUpperCase()) || []
-
-  const toggleAccordion = (key) => {
-    setAccordions(prev => ({ ...prev, [key]: !prev[key] }))
-  }
 
   const handleShare = () => {
     if (typeof window !== 'undefined') {
@@ -235,11 +223,6 @@ export default function ProductDetailClient({ product }) {
     }
   }
 
-  const handleScrollToDetails = () => {
-    const el = document.getElementById('details-section')
-    if (el) el.scrollIntoView({ behavior: 'smooth' })
-  }
-
   return (
     <>
       <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
@@ -247,88 +230,117 @@ export default function ProductDetailClient({ product }) {
       <div className="w-full max-w-none pl-6 pr-0 md:pl-12 md:pr-0 pb-24 mt-[-32px] pt-[10px]">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-start">
           
-          {/* Left Column — stacked gapless images */}
-          <div className="flex flex-col gap-0 overflow-hidden">
-            {displayImages.map((src, i) => (
-              <div key={i} className="relative w-full overflow-hidden bg-zinc-50" style={{ aspectRatio: '4/5' }}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={src}
-                  alt={`${product.name} detail view ${i + 1}`}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            ))}
+          {/* Left Column — Sticky Product Image */}
+          <div 
+            className="lg:sticky w-full overflow-hidden bg-zinc-50 relative aspect-[4/5] lg:h-[calc(100vh-var(--header-height))]"
+            style={{ top: 'var(--header-height)' }}
+          >
+            {displayImages[0] && (
+              <img
+                src={displayImages[0]}
+                alt={`${product.name} primary view`}
+                className="w-full h-full object-cover"
+              />
+            )}
+
+            {/* Circular Hanger Wishlist button */}
+            <button
+              onClick={() => setWishlisted(!wishlisted)}
+              aria-label="Save to wardrobe"
+              className="biahama-hanger-btn z-20 transition-colors"
+              style={{
+                width: 'var(--icon-hanger-btn)',
+                height: 'var(--icon-hanger-btn)',
+                borderRadius: '50%',
+                background: 'var(--icon-hanger-btn-bg)',
+                position: 'absolute',
+                top: 'var(--space-2)',
+                right: 'var(--space-2)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                border: 'none',
+              }}
+            >
+              <img
+                src="/cloth-hanger.png"
+                alt="Save to wardrobe"
+                style={{
+                  width: 'var(--icon-hanger)',
+                  height: 'var(--icon-hanger)',
+                  objectFit: 'contain',
+                  opacity: wishlisted ? 1.0 : 0.6,
+                  filter: 'drop-shadow(0px 1px 2px rgba(255, 255, 255, 0.4))'
+                }}
+              />
+            </button>
           </div>
 
-          {/* Right Column — Sticky product info */}
-          <div className="lg:sticky lg:top-[76px] space-y-8 pt-2 w-full pr-6 md:pr-12">
+          {/* Right Column — Scrollable Product Info */}
+          <div 
+            className="w-full pr-6 md:pr-12 flex flex-col gap-6"
+            style={{ paddingTop: 'var(--space-5)' }} // 48px top padding on the info column
+          >
             
-            {/* Header utilities (sku, share, wishlist) */}
+            {/* Section 1: SKU & Share */}
             <div className="flex items-center justify-between">
               <span className="text-[10px] tracking-widest text-zinc-400 uppercase font-medium">
                 SKU: {product.variants?.[0]?.sku || 'BIA-LNN-01'}
               </span>
-              <div className="flex items-center gap-4">
-                {/* Share Button */}
-                <button
-                  onClick={handleShare}
-                  className="text-xs uppercase tracking-widest hover:opacity-60 transition-opacity flex items-center gap-1.5"
-                  style={{ fontFamily: 'var(--font-ui)', color: 'var(--black)' }}
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="18" cy="5" r="3" />
-                    <circle cx="6" cy="12" r="3" />
-                    <circle cx="18" cy="19" r="3" />
-                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
-                    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
-                  </svg>
-                  <span>{copied ? 'Copied' : 'Share'}</span>
-                </button>
-
-                {/* Hanger Wishlist button */}
-                <button
-                  onClick={() => setWishlisted(!wishlisted)}
-                  aria-label="Save to wardrobe"
-                  className="p-1.5 rounded-full hover:bg-zinc-50 transition-colors"
-                >
-                  <img
-                    src="/cloth-hanger.png"
-                    alt="Save to wardrobe"
-                    style={{
-                      width: 'var(--icon-wishlist)',
-                      height: 'var(--icon-wishlist)',
-                      objectFit: 'contain',
-                      filter: wishlisted ? 'none' : 'opacity(0.6)'
-                    }}
-                  />
-                </button>
-              </div>
+              <button
+                onClick={handleShare}
+                className="text-xs uppercase tracking-widest hover:opacity-60 transition-opacity flex items-center gap-1.5"
+                style={{ fontFamily: 'var(--font-ui)', color: 'var(--black)' }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="18" cy="5" r="3" />
+                  <circle cx="6" cy="12" r="3" />
+                  <circle cx="18" cy="19" r="3" />
+                  <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+                  <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+                </svg>
+                <span>{copied ? 'Copied' : 'Share'}</span>
+              </button>
             </div>
 
-            {/* Product Title and Price */}
-            {/* Product Title and Price */}
-            <div className="space-y-2 border-b border-zinc-100 pb-8">
+            {/* Section 2: Name and Price */}
+            <div>
               <h1
-                className="text-2xl md:text-3xl leading-tight font-light"
-                style={{ fontFamily: 'var(--font-ui)', color: 'var(--black)' }}
+                style={{
+                  fontFamily: 'var(--font-display)',
+                  fontSize: 'var(--text-heading-size)',
+                  fontWeight: 'var(--text-heading-weight)',
+                  color: 'var(--black)',
+                  letterSpacing: 'var(--text-heading-tracking)',
+                  lineHeight: 'var(--text-heading-line-height)',
+                }}
+                className="leading-tight font-light"
               >
                 {product.name}
               </h1>
+              
               <p
-                className="text-lg font-semibold"
-                style={{ fontFamily: 'var(--font-ui)', color: 'var(--black)' }}
+                style={{
+                  fontFamily: 'var(--font-ui)',
+                  fontSize: 'var(--text-price-size)',
+                  fontWeight: 'var(--text-price-weight)',
+                  letterSpacing: 'var(--text-price-tracking)',
+                  color: 'var(--black)',
+                  marginTop: '12px', // 12px between name and price
+                }}
               >
                 {formatPrice(product.variants?.[0]?.price || 0)}
               </p>
+              
+              <div className="border-b border-zinc-200 mt-6" />
             </div>
- 
-            {/* Color Swatch Panel */}
-            <div className="flex items-start gap-4 pt-8 pb-8 border-b border-zinc-100">
-              <span className="text-[10px] tracking-widest text-zinc-400 uppercase font-medium w-16 pt-1">
+
+            {/* Section 3: Color block */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}>
+              <span className="biahama-tag" style={{ textTransform: 'uppercase' }}>
                 COLOR
               </span>
-              <div className="flex flex-col items-center gap-1.5">
+              <div className="flex items-center gap-3">
                 <div
                   className="w-11 h-14 border border-zinc-950 flex items-center justify-center p-0.5 bg-zinc-50"
                   title={product.variants?.[0]?.color}
@@ -346,22 +358,22 @@ export default function ProductDetailClient({ product }) {
                     />
                   )}
                 </div>
-                <span className="text-[10px] tracking-wide text-zinc-800 font-light" style={{ fontFamily: 'var(--font-ui)' }}>
+                <span className="biahama-tag">
                   {product.variants?.[0]?.color || 'Natural Cocoa'}
                 </span>
               </div>
             </div>
- 
-            {/* Sizes Selection Pills */}
-            <div className="space-y-4 pt-8 pb-8 border-b border-zinc-100">
-              <span className="text-[10px] tracking-widest text-zinc-400 uppercase font-medium">
-                Select Size
+
+            {/* Section 4: Size Selection */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}>
+              <span className="biahama-tag" style={{ textTransform: 'uppercase' }}>
+                SELECT SIZE
               </span>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2 mt-2">
                 {availableSizes.map(size => {
                   const isInStock = inStockSizes.includes(size.toUpperCase())
                   const isSelected = selectedSize === size
- 
+
                   return (
                     <button
                       key={size}
@@ -373,16 +385,16 @@ export default function ProductDetailClient({ product }) {
                       className="w-11 h-11 rounded-full flex items-center justify-center text-xs tracking-wider transition-all"
                       style={{
                         fontFamily: 'var(--font-ui)',
-                        fontWeight: isSelected ? 500 : 300,
+                        fontWeight: isSelected ? 'var(--text-tab-weight)' : 'var(--text-nav-weight)',
                         border: isSelected
                           ? '1.5px solid var(--black)'
                           : '1px solid var(--border)',
                         background: isSelected ? 'var(--black)' : 'transparent',
                         color: isSelected
-                          ? '#ffffff'
+                          ? 'var(--bg)'
                           : isInStock
                           ? 'var(--black)'
-                          : '#a1a1aa',
+                          : 'var(--gray)',
                         opacity: isInStock ? 1 : 0.4,
                         cursor: isInStock ? 'pointer' : 'not-allowed',
                       }}
@@ -393,27 +405,81 @@ export default function ProductDetailClient({ product }) {
                 })}
               </div>
               
-              {/* Validation alert message */}
               {sizeError && (
-                <p className="text-red-500 text-xs font-medium animate-pulse" style={{ fontFamily: 'var(--font-ui)' }}>
+                <p className="text-red-500 text-xs font-medium animate-pulse mt-1" style={{ fontFamily: 'var(--font-ui)' }}>
                   Please select a size
                 </p>
               )}
-            </div>
- 
-            {/* PDP Action Buttons */}
-            <div className="pt-8 space-y-6">
               
-              {/* + VIEW DETAILS (Link above Add to Bag) */}
+              <div className="border-b border-zinc-200 mt-6" />
+            </div>
+
+            {/* Section 5: Collapsible VIEW DETAILS accordion */}
+            <div>
               <button
-                onClick={handleScrollToDetails}
-                className="text-xs uppercase tracking-widest hover:opacity-60 transition-opacity font-medium block"
-                style={{ fontFamily: 'var(--font-ui)', color: 'var(--black)', letterSpacing: '0.12em' }}
+                onClick={() => setShowDetails(!showDetails)}
+                className="w-full flex items-center justify-between text-left font-medium text-xs tracking-widest uppercase hover:opacity-60 transition-opacity"
+                style={{ fontFamily: 'var(--font-ui)', color: 'var(--black)', padding: '12px 0' }}
               >
-                + View Details
+                <span>{showDetails ? '— VIEW DETAILS' : '+ VIEW DETAILS'}</span>
               </button>
- 
-              {/* Add to Bag Button */}
+              {showDetails && (
+                <div className="mt-4 space-y-6 text-[11px] font-light text-zinc-500 leading-[1.8] tracking-wide border-t border-zinc-100 pt-4" style={{ fontFamily: 'var(--font-ui)', letterSpacing: '0.05em' }}>
+                  {/* Description */}
+                  <div>
+                    <h4 className="font-semibold text-zinc-800 uppercase mb-1">Description</h4>
+                    <p>{product.description || 'Crafted with premium Indian linen, this clothing piece combines breathability with architectural silhouette lines. Designed for effortless transitions from morning to evening settings.'}</p>
+                  </div>
+                  {/* Details & Care */}
+                  <div>
+                    <h4 className="font-semibold text-zinc-800 uppercase mb-1">Details & Care</h4>
+                    <div className="space-y-1">
+                      <p>Handcrafted linen knitwear</p>
+                      <p>Unstructured relaxed shoulder</p>
+                      <p>Rib knit collar and clean hem</p>
+                      <p>Special workmanship</p>
+                      <div className="font-medium text-zinc-800 tracking-widest text-[10px] pt-1">
+                        100% ORGANIC LINEN
+                      </div>
+                    </div>
+                  </div>
+                  {/* Materials */}
+                  <div>
+                    <h4 className="font-semibold text-zinc-800 uppercase mb-1">Materials</h4>
+                    <p>{product.fabric || '100% Organic hand-spun Indian linen yarns. Structured yet lightweight breathable weave.'}</p>
+                    <p>Our items are manufactured in limited artisanal batches in India, respecting local craft traditions and community development.</p>
+                  </div>
+                  {/* Packaging */}
+                  <div>
+                    <h4 className="font-semibold text-zinc-800 uppercase mb-1">Packaging</h4>
+                    <div className="flex gap-4 items-start mt-2">
+                      <div className="w-1/3 max-w-[120px] aspect-[4/3] bg-zinc-100 flex items-center justify-center overflow-hidden border border-zinc-100 shrink-0">
+                        <img
+                          src="/images/packaging.png"
+                          alt="Packaging boxes"
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                          }}
+                        />
+                      </div>
+                      <p className="text-[11px] font-light text-zinc-500 leading-[1.6]">
+                        All linen garments are folded carefully in tissue layers and shipped inside our signature architectural boxes, completely plastic-free and reusable.
+                      </p>
+                    </div>
+                  </div>
+                  {/* Shipping & Returns */}
+                  <div>
+                    <h4 className="font-semibold text-zinc-800 uppercase mb-1">Shipping & Returns</h4>
+                    <p className="mb-2"><strong>Shipping:</strong> Free shipping across India, usually delivered within 3-5 working days.</p>
+                    <p><strong>Returns:</strong> Free size exchanges and returns within 7 days of delivery.</p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Section 6: Action Buttons */}
+            <div className="space-y-4 pt-4">
               <button
                 onClick={handleAddToBag}
                 disabled={adding}
@@ -427,170 +493,29 @@ export default function ProductDetailClient({ product }) {
               >
                 {adding ? 'Adding...' : 'ADD TO BAG 👜'}
               </button>
- 
-              {/* Razorpay Express Checkout */}
+
               <button
                 onClick={handleFastCheckout}
                 disabled={checkoutLoading}
-                className="w-full text-sm tracking-widest uppercase border transition-colors flex items-center justify-center gap-2 bg-[var(--black)] text-[var(--bg)] hover:bg-opacity-95 font-medium"
+                className="w-full text-sm tracking-widest uppercase border transition-colors flex items-center justify-center gap-2 text-white hover:bg-opacity-95 font-medium"
                 style={{
+                  background: '#1c2c54',
+                  borderColor: '#1c2c54',
                   fontFamily: 'var(--font-ui)',
-                  borderColor: 'var(--black)',
                   height: '60px',
                 }}
               >
                 {checkoutLoading ? 'Opening checkout...' : 'Pay with Razorpay'}
               </button>
-            </div>
- 
-            {/* Delivery/Shipping details text */}
-            <div className="pt-2 text-center">
-              <span className="text-[10px] tracking-widest text-zinc-500 uppercase font-medium">
-                Free shipping and 7 Days to Return
-              </span>
-            </div>
- 
-          </div>
-        </div>
-
-        {/* Bottom Specifications Accordion Area */}
-        <div id="details-section" className="mt-32 lg:mt-48 pb-32 w-full pr-6 md:pr-12">
-          
-          {/* 2-Column Grid for Description, Details, Materials, Packaging */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-16 lg:gap-x-24 items-start">
-            
-            {/* Left Column: Description & Details */}
-            <div className="border-t border-zinc-200 flex flex-col">
               
-              {/* Description Tab */}
-              <div className="border-b border-zinc-200 pt-8 pb-12">
-                <button
-                  onClick={() => toggleAccordion('description')}
-                  className="w-full flex items-center justify-between text-left font-light text-[11px] tracking-[0.25em] uppercase"
-                  style={{ fontFamily: 'var(--font-ui)', color: 'var(--black)' }}
-                >
-                  <span>DESCRIPTION</span>
-                  <span className="text-[14px] font-light">{accordions.description ? '—' : '+'}</span>
-                </button>
-                {accordions.description && (
-                  <p className="mt-6 text-[11px] font-light text-zinc-500 tracking-wide max-w-xl" style={{ fontFamily: 'var(--font-ui)', lineHeight: '1.8', letterSpacing: '0.05em' }}>
-                    {product.description || 'Crafted with premium Indian linen, this clothing piece combines breathability with architectural silhouette lines. Designed for effortless transitions from morning to evening settings.'}
-                  </p>
-                )}
+              <div className="pt-2 text-center">
+                <span className="text-[10px] tracking-widest text-zinc-500 uppercase font-medium">
+                  Free shipping and 7 Days to Return
+                </span>
               </div>
-
-              {/* Details Tab */}
-              <div className="border-b border-zinc-200 pt-8 pb-12">
-                <button
-                  onClick={() => toggleAccordion('details')}
-                  className="w-full flex items-center justify-between text-left font-light text-[11px] tracking-[0.25em] uppercase"
-                  style={{ fontFamily: 'var(--font-ui)', color: 'var(--black)' }}
-                >
-                  <span>DETAILS & CARE</span>
-                  <span className="text-[14px] font-light">{accordions.details ? '—' : '+'}</span>
-                </button>
-                {accordions.details && (
-                  <div className="mt-6 text-[11px] font-light text-zinc-500 space-y-2 leading-[1.8] tracking-wide" style={{ fontFamily: 'var(--font-ui)', letterSpacing: '0.05em' }}>
-                    <p>Handcrafted linen knitwear</p>
-                    <p>Unstructured relaxed shoulder</p>
-                    <p>Rib knit collar and clean hem</p>
-                    <p>Special workmanship</p>
-                    <div className="pt-2 font-medium text-zinc-800 tracking-widest text-[10px]">
-                      100% ORGANIC LINEN
-                    </div>
-                  </div>
-                )}
-              </div>
-
-            </div>
-
-            {/* Right Column: Materials & Packaging */}
-            <div className="border-t border-zinc-200 flex flex-col">
-              
-              {/* Materials Tab */}
-              <div className="border-b border-zinc-200 pt-8 pb-12">
-                <button
-                  onClick={() => toggleAccordion('materials')}
-                  className="w-full flex items-center justify-between text-left font-light text-[11px] tracking-[0.25em] uppercase"
-                  style={{ fontFamily: 'var(--font-ui)', color: 'var(--black)' }}
-                >
-                  <span>MATERIALS</span>
-                  <span className="text-[14px] font-light">{accordions.materials ? '—' : '+'}</span>
-                </button>
-                {accordions.materials && (
-                  <div className="mt-6 text-[11px] font-light text-zinc-500 space-y-4 leading-[1.8] tracking-wide max-w-xl" style={{ fontFamily: 'var(--font-ui)', letterSpacing: '0.05em' }}>
-                    <p>{product.fabric || '100% Organic hand-spun Indian linen yarns. Structured yet lightweight breathable weave.'}</p>
-                    <p>Our items are manufactured in limited artisanal batches in India, respecting local craft traditions and community development.</p>
-                    <p>Dry clean or gentle hand wash is recommended to preserve the linen fibers.</p>
-                  </div>
-                )}
-              </div>
-
-              {/* Packaging Tab */}
-              <div className="border-b border-zinc-200 pt-8 pb-12">
-                <button
-                  onClick={() => toggleAccordion('packaging')}
-                  className="w-full flex items-center justify-between text-left font-light text-[11px] tracking-[0.25em] uppercase"
-                  style={{ fontFamily: 'var(--font-ui)', color: 'var(--black)' }}
-                >
-                  <span>PACKAGING</span>
-                  <span className="text-[14px] font-light">{accordions.packaging ? '—' : '+'}</span>
-                </button>
-                {accordions.packaging && (
-                  <div className="mt-6 flex gap-4 items-start">
-                    <div className="w-1/3 max-w-[150px] aspect-[4/3] bg-zinc-100 flex items-center justify-center overflow-hidden border border-zinc-100">
-                      <img
-                        src="/images/packaging.png"
-                        alt="Packaging boxes"
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          e.target.style.display = 'none';
-                        }}
-                      />
-                    </div>
-                    <p className="w-2/3 text-[11px] font-light text-zinc-500 tracking-wide leading-[1.8]" style={{ fontFamily: 'var(--font-ui)', letterSpacing: '0.05em' }}>
-                      All linen garments are folded carefully in tissue layers and shipped inside our signature architectural boxes, completely plastic-free and reusable.
-                    </p>
-                  </div>
-                )}
-              </div>
-
             </div>
 
           </div>
-
-          {/* Shipping & Returns Tab (Full Width) */}
-          <div className="border-b border-zinc-200 mt-8 pt-8 pb-12 w-full">
-            <button
-              onClick={() => toggleAccordion('shipping')}
-              className="w-full flex items-center justify-between text-left font-light text-[11px] tracking-[0.25em] uppercase"
-              style={{ fontFamily: 'var(--font-ui)', color: 'var(--black)' }}
-            >
-              <span>SHIPPING & RETURNS</span>
-              <span className="text-[14px] font-light">{accordions.shipping ? '—' : '+'}</span>
-            </button>
-            {accordions.shipping && (
-              <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24">
-                <div>
-                  <h4 className="text-[14px] font-light text-zinc-800 tracking-wider uppercase mb-2">
-                    Shipping Times and Costs
-                  </h4>
-                  <p className="text-[11px] font-light text-zinc-500 tracking-wide leading-[1.8]" style={{ fontFamily: 'var(--font-ui)', letterSpacing: '0.05em' }}>
-                    Shipping of all of our garments is always free. Express courier delivery across India, usually within 3-5 working days.
-                  </p>
-                </div>
-                <div>
-                  <h4 className="text-[14px] font-light text-zinc-800 tracking-wider uppercase mb-2">
-                    Method of Return
-                  </h4>
-                  <p className="text-[11px] font-light text-zinc-500 tracking-wide leading-[1.8]" style={{ fontFamily: 'var(--font-ui)', letterSpacing: '0.05em' }}>
-                    We offer free size exchanges and returns within 7 days of delivery. Return pickup will be arranged at your doorstep free of cost.
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-
         </div>
       </div>
     </>
