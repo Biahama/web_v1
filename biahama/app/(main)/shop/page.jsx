@@ -1,5 +1,7 @@
 import Link from 'next/link'
 import ProductGrid from '@/components/product/ProductGrid'
+import { getKurtasFromFilesystem } from '@/lib/kurtas'
+import { prisma } from '@/lib/prisma'
 
 export const metadata = { title: 'Collections — Biahama' }
 
@@ -11,16 +13,53 @@ const CATEGORIES = [
 ]
 
 async function getProducts(category) {
-  const base = process.env.NEXTAUTH_URL || 'http://localhost:3000'
-  const url = `${base}/api/products?category=${category}`
+  // 1. Check if category is kurtas
+  if (category.toLowerCase() === 'kurtas' || category.toLowerCase() === 'kurta') {
+    return getKurtasFromFilesystem()
+  }
 
+  // 2. Query other categories from database
+  const where = {
+    isActive: true,
+    category: { equals: category, mode: 'insensitive' },
+  }
+
+  let products = []
   try {
-    const res = await fetch(url, { next: { revalidate: 60 } })
-    if (!res.ok) return []
-    return res.json()
-  } catch {
+    products = await prisma.product.findMany({
+      where,
+      take: 50,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        images:   { where: { isPrimary: true }, take: 1 },
+        variants: { select: { id: true, price: true, comparePrice: true, stockQty: true, color: true, colorHex: true, size: true } },
+      },
+    })
+  } catch (err) {
+    console.error("Local products query failed:", err)
     return []
   }
+
+  return products.map(p => {
+    const prices   = p.variants.map(v => v.price)
+    const minPrice = prices.length ? Math.min(...prices) : 0
+    const inStock  = p.variants.some(v => v.stockQty > 0)
+    const firstInStockVariant = p.variants.find(v => v.stockQty > 0) || p.variants[0]
+
+    return {
+      id:             p.id,
+      name:           p.name,
+      slug:           p.slug,
+      category:       p.category,
+      image:          p.images[0]?.url ?? null,
+      altText:        p.images[0]?.altText ?? p.name,
+      price:          minPrice,
+      inStock,
+      firstVariantId: firstInStockVariant?.id ?? null,
+      variants:       p.variants,
+      colors:         [...new Map(p.variants.map(v => [v.color, { color: v.color, colorHex: v.colorHex }])).values()],
+    }
+  })
 }
 
 export default async function ShopPage({ searchParams }) {
