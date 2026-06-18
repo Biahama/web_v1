@@ -274,7 +274,7 @@ export default function ProductDetailClient({ product }) {
                 <button
                   onClick={handleShare}
                   className="text-xs uppercase tracking-widest hover:opacity-60 transition-opacity flex items-center gap-1.5"
-                  style={{ fontFamily: 'Jost, sans-serif', color: 'var(--black)' }}
+                  style={{ fontFamily: 'var(--font-ui)', color: 'var(--black)' }}
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                     <circle cx="18" cy="5" r="3" />
@@ -296,8 +296,8 @@ export default function ProductDetailClient({ product }) {
                     src="/cloth-hanger.png"
                     alt="Save to wardrobe"
                     style={{
-                      width: '18px',
-                      height: '18px',
+                      width: 'var(--icon-wishlist)',
+                      height: 'var(--icon-wishlist)',
                       objectFit: 'contain',
                       filter: wishlisted ? 'none' : 'opacity(0.6)'
                     }}
@@ -311,13 +311,13 @@ export default function ProductDetailClient({ product }) {
             <div className="space-y-2 border-b border-zinc-100 pb-8">
               <h1
                 className="text-2xl md:text-3xl leading-tight font-light"
-                style={{ fontFamily: 'Jost, sans-serif', color: 'var(--black)' }}
+                style={{ fontFamily: 'var(--font-ui)', color: 'var(--black)' }}
               >
                 {product.name}
               </h1>
               <p
                 className="text-lg font-semibold"
-                style={{ fontFamily: 'Jost, sans-serif', color: 'var(--black)' }}
+                style={{ fontFamily: 'var(--font-ui)', color: 'var(--black)' }}
               >
                 {formatPrice(product.variants?.[0]?.price || 0)}
               </p>
@@ -346,7 +346,7 @@ export default function ProductDetailClient({ product }) {
                     />
                   )}
                 </div>
-                <span className="text-[10px] tracking-wide text-zinc-800 font-light" style={{ fontFamily: 'Jost, sans-serif' }}>
+                <span className="text-[10px] tracking-wide text-zinc-800 font-light" style={{ fontFamily: 'var(--font-ui)' }}>
                   {product.variants?.[0]?.color || 'Natural Cocoa'}
                 </span>
               </div>
@@ -372,7 +372,7 @@ export default function ProductDetailClient({ product }) {
                       disabled={!isInStock}
                       className="w-11 h-11 rounded-full flex items-center justify-center text-xs tracking-wider transition-all"
                       style={{
-                        fontFamily: 'Jost, sans-serif',
+                        fontFamily: 'var(--font-ui)',
                         fontWeight: isSelected ? 500 : 300,
                         border: isSelected
                           ? '1.5px solid var(--black)'
@@ -395,7 +395,7 @@ export default function ProductDetailClient({ product }) {
               
               {/* Validation alert message */}
               {sizeError && (
-                <p className="text-red-500 text-xs font-medium animate-pulse" style={{ fontFamily: 'Jost, sans-serif' }}>
+                <p className="text-red-500 text-xs font-medium animate-pulse" style={{ fontFamily: 'var(--font-ui)' }}>
                   Please select a size
                 </p>
               )}
@@ -408,7 +408,7 @@ export default function ProductDetailClient({ product }) {
               <button
                 onClick={handleScrollToDetails}
                 className="text-xs uppercase tracking-widest hover:opacity-60 transition-opacity font-medium block"
-                style={{ fontFamily: 'Jost, sans-serif', color: 'var(--black)', letterSpacing: '0.12em' }}
+                style={{ fontFamily: 'var(--font-ui)', color: 'var(--black)', letterSpacing: '0.12em' }}
               >
                 + View Details
               </button>
@@ -420,8 +420,8 @@ export default function ProductDetailClient({ product }) {
                 className="w-full text-sm tracking-widest uppercase transition-colors flex items-center justify-center gap-2 font-medium"
                 style={{
                   background: 'var(--black)',
-                  color: '#ffffff',
-                  fontFamily: 'Jost, sans-serif',
+                  color: 'var(--bg)',
+                  fontFamily: 'var(--font-ui)',
                   height: '60px',
                 }}
               >
@@ -432,10 +432,10 @@ export default function ProductDetailClient({ product }) {
               <button
                 onClick={handleFastCheckout}
                 disabled={checkoutLoading}
-                className="w-full text-sm tracking-widest uppercase border transition-colors flex items-center justify-center gap-2 bg-[#1c2c54] text-white hover:bg-opacity-95 font-medium"
+                className="w-full text-sm tracking-widest uppercase border transition-colors flex items-center justify-center gap-2 bg-[var(--black)] text-[var(--bg)] hover:bg-opacity-95 font-medium"
                 style={{
-                  fontFamily: 'Jost, sans-serif',
-                  borderColor: '#1c2c54',
+                  fontFamily: 'var(--font-ui)',
+                  borderColor: 'var(--black)',
                   height: '60px',
                 }}
               >
@@ -467,13 +467,13 @@ export default function ProductDetailClient({ product }) {
                 <button
                   onClick={() => toggleAccordion('description')}
                   className="w-full flex items-center justify-between text-left font-light text-[11px] tracking-[0.25em] uppercase"
-                  style={{ fontFamily: 'Jost, sans-serif', color: 'var(--black)' }}
+                  style={{ fontFamily: 'var(--font-ui)', color: 'var(--black)' }}
                 >
                   <span>DESCRIPTION</span>
                   <span className="text-[14px] font-light">{accordions.description ? '—' : '+'}</span>
                 </button>
                 {accordions.description && (
-                  <p className="mt-6 text-[11px] font-light text-zinc-500 tracking-wide max-w-xl" style={{ fontFamily: 'Jost, sans-serif', lineHeight: '1.8', letterSpacing: '0.05em' }}>
+                  <p className="mt-6 text-[11px] font-light text-zinc-500 tracking-wide max-w-xl" style={{ fontFamily: 'var(--font-ui)', lineHeight: '1.8', letterSpacing: '0.05em' }}>
                     {product.description || 'Crafted with premium Indian linen, this clothing piece combines breathability with architectural silhouette lines. Designed for effortless transitions from morning to evening settings.'}
                   </p>
                 )}
@@ -484,13 +484,13 @@ export default function ProductDetailClient({ product }) {
                 <button
                   onClick={() => toggleAccordion('details')}
                   className="w-full flex items-center justify-between text-left font-light text-[11px] tracking-[0.25em] uppercase"
-                  style={{ fontFamily: 'Jost, sans-serif', color: 'var(--black)' }}
+                  style={{ fontFamily: 'var(--font-ui)', color: 'var(--black)' }}
                 >
                   <span>DETAILS & CARE</span>
                   <span className="text-[14px] font-light">{accordions.details ? '—' : '+'}</span>
                 </button>
                 {accordions.details && (
-                  <div className="mt-6 text-[11px] font-light text-zinc-500 space-y-2 leading-[1.8] tracking-wide" style={{ fontFamily: 'Jost, sans-serif', letterSpacing: '0.05em' }}>
+                  <div className="mt-6 text-[11px] font-light text-zinc-500 space-y-2 leading-[1.8] tracking-wide" style={{ fontFamily: 'var(--font-ui)', letterSpacing: '0.05em' }}>
                     <p>Handcrafted linen knitwear</p>
                     <p>Unstructured relaxed shoulder</p>
                     <p>Rib knit collar and clean hem</p>
@@ -512,13 +512,13 @@ export default function ProductDetailClient({ product }) {
                 <button
                   onClick={() => toggleAccordion('materials')}
                   className="w-full flex items-center justify-between text-left font-light text-[11px] tracking-[0.25em] uppercase"
-                  style={{ fontFamily: 'Jost, sans-serif', color: 'var(--black)' }}
+                  style={{ fontFamily: 'var(--font-ui)', color: 'var(--black)' }}
                 >
                   <span>MATERIALS</span>
                   <span className="text-[14px] font-light">{accordions.materials ? '—' : '+'}</span>
                 </button>
                 {accordions.materials && (
-                  <div className="mt-6 text-[11px] font-light text-zinc-500 space-y-4 leading-[1.8] tracking-wide max-w-xl" style={{ fontFamily: 'Jost, sans-serif', letterSpacing: '0.05em' }}>
+                  <div className="mt-6 text-[11px] font-light text-zinc-500 space-y-4 leading-[1.8] tracking-wide max-w-xl" style={{ fontFamily: 'var(--font-ui)', letterSpacing: '0.05em' }}>
                     <p>{product.fabric || '100% Organic hand-spun Indian linen yarns. Structured yet lightweight breathable weave.'}</p>
                     <p>Our items are manufactured in limited artisanal batches in India, respecting local craft traditions and community development.</p>
                     <p>Dry clean or gentle hand wash is recommended to preserve the linen fibers.</p>
@@ -531,7 +531,7 @@ export default function ProductDetailClient({ product }) {
                 <button
                   onClick={() => toggleAccordion('packaging')}
                   className="w-full flex items-center justify-between text-left font-light text-[11px] tracking-[0.25em] uppercase"
-                  style={{ fontFamily: 'Jost, sans-serif', color: 'var(--black)' }}
+                  style={{ fontFamily: 'var(--font-ui)', color: 'var(--black)' }}
                 >
                   <span>PACKAGING</span>
                   <span className="text-[14px] font-light">{accordions.packaging ? '—' : '+'}</span>
@@ -548,7 +548,7 @@ export default function ProductDetailClient({ product }) {
                         }}
                       />
                     </div>
-                    <p className="w-2/3 text-[11px] font-light text-zinc-500 tracking-wide leading-[1.8]" style={{ fontFamily: 'Jost, sans-serif', letterSpacing: '0.05em' }}>
+                    <p className="w-2/3 text-[11px] font-light text-zinc-500 tracking-wide leading-[1.8]" style={{ fontFamily: 'var(--font-ui)', letterSpacing: '0.05em' }}>
                       All linen garments are folded carefully in tissue layers and shipped inside our signature architectural boxes, completely plastic-free and reusable.
                     </p>
                   </div>
@@ -564,7 +564,7 @@ export default function ProductDetailClient({ product }) {
             <button
               onClick={() => toggleAccordion('shipping')}
               className="w-full flex items-center justify-between text-left font-light text-[11px] tracking-[0.25em] uppercase"
-              style={{ fontFamily: 'Jost, sans-serif', color: 'var(--black)' }}
+              style={{ fontFamily: 'var(--font-ui)', color: 'var(--black)' }}
             >
               <span>SHIPPING & RETURNS</span>
               <span className="text-[14px] font-light">{accordions.shipping ? '—' : '+'}</span>
@@ -575,7 +575,7 @@ export default function ProductDetailClient({ product }) {
                   <h4 className="text-[14px] font-light text-zinc-800 tracking-wider uppercase mb-2">
                     Shipping Times and Costs
                   </h4>
-                  <p className="text-[11px] font-light text-zinc-500 tracking-wide leading-[1.8]" style={{ fontFamily: 'Jost, sans-serif', letterSpacing: '0.05em' }}>
+                  <p className="text-[11px] font-light text-zinc-500 tracking-wide leading-[1.8]" style={{ fontFamily: 'var(--font-ui)', letterSpacing: '0.05em' }}>
                     Shipping of all of our garments is always free. Express courier delivery across India, usually within 3-5 working days.
                   </p>
                 </div>
@@ -583,7 +583,7 @@ export default function ProductDetailClient({ product }) {
                   <h4 className="text-[14px] font-light text-zinc-800 tracking-wider uppercase mb-2">
                     Method of Return
                   </h4>
-                  <p className="text-[11px] font-light text-zinc-500 tracking-wide leading-[1.8]" style={{ fontFamily: 'Jost, sans-serif', letterSpacing: '0.05em' }}>
+                  <p className="text-[11px] font-light text-zinc-500 tracking-wide leading-[1.8]" style={{ fontFamily: 'var(--font-ui)', letterSpacing: '0.05em' }}>
                     We offer free size exchanges and returns within 7 days of delivery. Return pickup will be arranged at your doorstep free of cost.
                   </p>
                 </div>

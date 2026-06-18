@@ -62,7 +62,7 @@ export default function ProductCard({ product, priority = false }) {
       onMouseLeave={() => setHovered(false)}
     >
       {/* Image container */}
-      <div className="relative overflow-hidden" style={{ aspectRatio: '4/5', background: 'var(--light)' }}>
+      <div className="relative biahama-card-image" style={{ background: 'var(--light)' }}>
         {imagesToCycle.length > 0 ? (
           <Image
             src={imagesToCycle[currentImageIndex]}
@@ -80,7 +80,7 @@ export default function ProductCard({ product, priority = false }) {
           >
             <span
               className="text-4xl leading-none"
-              style={{ fontFamily: 'Cormorant Garamond, serif', fontWeight: 300, fontStyle: 'italic', color: 'var(--border)', opacity: 0.6 }}
+              style={{ fontFamily: 'var(--font-display)', fontWeight: 300, fontStyle: 'italic', color: 'var(--border)', opacity: 0.6 }}
             >
               {product.category}
             </span>
@@ -97,8 +97,8 @@ export default function ProductCard({ product, priority = false }) {
             src="/cloth-hanger.png"
             alt="Save to wardrobe"
             style={{
-              width: '36px',
-              height: '36px',
+              width: 'var(--icon-wishlist-btn)',
+              height: 'var(--icon-wishlist-btn)',
               objectFit: 'contain',
               opacity: wishlisted ? 1.0 : 0.6,
               filter: 'drop-shadow(0px 1px 2px rgba(255, 255, 255, 0.4))'
@@ -108,10 +108,10 @@ export default function ProductCard({ product, priority = false }) {
       </div>
 
       {/* Info */}
-      <div className="mt-3 flex justify-between items-start gap-4">
-        <div className="space-y-1 flex-1">
-          <div className="flex justify-between items-start gap-2">
-            <p className="text-sm font-medium" style={{ color: 'var(--black)', fontFamily: 'Jost, sans-serif', fontWeight: 400 }}>
+      <div style={{ marginTop: 'var(--card-image-margin-bottom)' }} className="flex justify-between items-start">
+        <div className="flex-1" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}>
+          <div className="flex justify-between items-start" style={{ gap: 'var(--space-1)' }}>
+            <p className="biahama-product-name">
               {product.name}
             </p>
             {/* Shopping bag button using bag.png */}
@@ -124,12 +124,16 @@ export default function ProductCard({ product, priority = false }) {
                 <img
                   src="/bag.png"
                   alt="Add to cart"
-                  style={{ width: '36px', height: '36px', objectFit: 'contain' }}
+                  style={{
+                    width: 'var(--icon-wishlist-btn)',
+                    height: 'var(--icon-wishlist-btn)',
+                    objectFit: 'contain'
+                  }}
                 />
               </button>
             )}
           </div>
-          <p className="text-sm font-bold" style={{ color: 'var(--black)', fontFamily: 'Jost, sans-serif', fontWeight: 600 }}>
+          <p className="biahama-price">
             {isSoldOut ? 'Sold Out' : formatPrice(product.price)}
           </p>
         </div>

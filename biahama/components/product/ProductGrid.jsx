@@ -58,7 +58,7 @@ export default function ProductGrid({ products = [], category = 'all' }) {
               className="object-cover w-full h-full"
             />
           </div>
-          <div className="grid grid-cols-3 gap-x-6 gap-y-14 mt-14">
+          <div className="biahama-grid" style={{ marginTop: 'var(--space-5)' }}>
             {displayProducts.map(p => (
               <ProductCard key={p.id} product={p} />
             ))}
@@ -75,7 +75,7 @@ export default function ProductGrid({ products = [], category = 'all' }) {
               className="object-cover w-full h-full"
             />
           </div>
-          <div className="grid grid-cols-2 gap-x-4 gap-y-10 mt-10">
+          <div className="grid grid-cols-2 mt-10" style={{ columnGap: 'var(--grid-col-gap)', rowGap: 'var(--grid-row-gap)' }}>
             {displayProducts.map(p => (
               <ProductCard key={p.id} product={p} />
             ))}
@@ -111,9 +111,9 @@ export default function ProductGrid({ products = [], category = 'all' }) {
         {/* Desktop Layout — Asymmetric Top (4 products left, 1 banner right) + Bottom (6 products below) */}
         <div className="hidden lg:block space-y-14">
           {/* Top Section: 4 products left, 1 banner right */}
-          <div className="grid grid-cols-3 gap-x-6">
+          <div className="grid grid-cols-3" style={{ columnGap: 'var(--grid-col-gap)' }}>
             {/* Left side: 2x2 grid for the first 4 products */}
-            <div className="col-span-2 grid grid-cols-2 gap-x-6 gap-y-14">
+            <div className="col-span-2 grid grid-cols-2" style={{ columnGap: 'var(--grid-col-gap)', rowGap: 'var(--grid-row-gap)' }}>
               {displayProducts.slice(0, 4).map((p, i) => (
                 <ProductCard key={p.id} product={p} priority={i < 4} />
               ))}
@@ -138,7 +138,7 @@ export default function ProductGrid({ products = [], category = 'all' }) {
 
           {/* Bottom Section: Remaining products in a standard 3-column grid */}
           {displayProducts.length > 4 && (
-            <div className="grid grid-cols-3 gap-x-6 gap-y-14 mt-14">
+            <div className="biahama-grid" style={{ marginTop: 'var(--space-5)' }}>
               {displayProducts.slice(4).map(p => (
                 <ProductCard key={p.id} product={p} />
               ))}
@@ -147,7 +147,7 @@ export default function ProductGrid({ products = [], category = 'all' }) {
         </div>
 
         {/* Mobile Layout */}
-        <div className="grid lg:hidden grid-cols-2 gap-x-4 gap-y-10">
+        <div className="grid lg:hidden grid-cols-2" style={{ columnGap: 'var(--grid-col-gap)', rowGap: 'var(--grid-row-gap)' }}>
           {displayProducts.map(p => (
             <ProductCard key={p.id} product={p} />
           ))}
@@ -160,11 +160,11 @@ export default function ProductGrid({ products = [], category = 'all' }) {
   return (
     <>
       {isMock && (
-        <p className="text-[10px] tracking-widest uppercase mb-8 text-center text-zinc-400 font-light" style={{ fontFamily: 'Jost, sans-serif' }}>
+        <p className="text-[10px] tracking-widest uppercase mb-8 text-center text-zinc-400 font-light" style={{ fontFamily: 'var(--font-ui)' }}>
           Showing layout preview placeholders
         </p>
       )}
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-4 lg:gap-x-6 gap-y-10 lg:gap-y-14">
+      <div className="grid grid-cols-2 lg:biahama-grid" style={{ columnGap: 'var(--grid-col-gap)', rowGap: 'var(--grid-row-gap)' }}>
         {displayProducts.map((product, i) => (
           <ProductCard key={product.id} product={product} priority={i < 4} />
         ))}

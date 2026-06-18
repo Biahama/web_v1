@@ -81,28 +81,19 @@ export default async function ShopPage({ searchParams }) {
           width: '100%', 
           display: 'flex', 
           justifyContent: 'center', 
-          paddingTop: '14px', 
-          paddingBottom: '14px', 
-          borderBottom: '1px solid var(--border)', 
-          background: '#f5f4f4' 
+          background: 'var(--light)',
+          borderBottom: '1px solid var(--border)'
         }}
       >
-        <div style={{ display: 'flex', gap: '40px' }}>
+        <div style={{ display: 'flex', gap: 'var(--space-5)' }}>
           {CATEGORIES.map(cat => {
             const isActive = activeCategory === cat.slug
             return (
               <Link
                 key={cat.slug}
                 href={`/shop?cat=${cat.slug}`}
+                className={isActive ? 'biahama-tab active' : 'biahama-tab'}
                 style={{
-                  fontFamily: 'Jost, sans-serif',
-                  fontSize: '10px',
-                  fontWeight: isActive ? 500 : 300,
-                  color: isActive ? 'var(--black)' : 'var(--gray)',
-                  letterSpacing: '1.77px',
-                  textTransform: 'uppercase',
-                  borderBottom: isActive ? '1.5px solid var(--black)' : '1.5px solid transparent',
-                  paddingBottom: '2px',
                   textDecoration: 'none',
                   opacity: isActive ? 1 : 0.7,
                   transition: 'opacity 0.2s',
@@ -116,23 +107,28 @@ export default async function ShopPage({ searchParams }) {
       </div>
 
       {/* Category centered title */}
-      <div style={{ paddingLeft: 48, paddingRight: 48, paddingTop: 40, paddingBottom: 24 }} className="text-center">
-        <h1
-          style={{
-            fontFamily: 'Cormorant Garamond, serif',
-            fontWeight: 300,
-            fontStyle: 'italic',
-            fontSize: 'clamp(2rem, 5vw, 3rem)',
-            color: 'var(--black)',
-            lineHeight: 1,
-          }}
-        >
+      <div 
+        style={{ 
+          paddingLeft: 'var(--space-5)', 
+          paddingRight: 'var(--space-5)', 
+          paddingTop: 'var(--space-5)', 
+          paddingBottom: 'var(--space-3)' 
+        }} 
+        className="text-center"
+      >
+        <h1 className="biahama-heading">
           {displayName}
         </h1>
       </div>
 
       {/* Product grid */}
-      <div style={{ paddingLeft: 48, paddingRight: 48, paddingBottom: 80 }}>
+      <div 
+        style={{ 
+          paddingLeft: 'var(--space-5)', 
+          paddingRight: 'var(--space-5)', 
+          paddingBottom: 'var(--space-6)' 
+        }}
+      >
         <ProductGrid products={products} category={activeCategory} />
       </div>
     </div>

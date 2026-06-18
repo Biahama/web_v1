@@ -28,11 +28,11 @@ export default function Footer() {
   if (isCheckout) {
     return (
       <footer
-        style={{ borderTop: '1px solid var(--border)', background: 'var(--bg)', padding: '24px 48px' }}
+        style={{ borderTop: '1px solid var(--border)', background: 'var(--bg)', padding: 'var(--space-3) var(--space-5)' }}
       >
         <div
           className="flex flex-col md:flex-row items-center justify-between gap-4"
-          style={{ color: 'var(--gray)', fontFamily: 'Jost, sans-serif', fontWeight: 300, fontSize: 10, letterSpacing: '0.05em' }}
+          style={{ color: 'var(--gray)', fontFamily: 'var(--font-ui)', fontWeight: 'var(--text-tag-weight)', fontSize: 'var(--text-tag-size)', letterSpacing: 'var(--text-tag-tracking)' }}
         >
           <span>2026 © Biahama SpA Vat 01886120540</span>
           <span>Made with intention · India</span>
@@ -43,19 +43,19 @@ export default function Footer() {
 
   return (
     <footer
-      style={{ borderTop: '1px solid var(--border)', background: 'var(--bg)', paddingBottom: 48 }}
+      style={{ borderTop: '1px solid var(--border)', background: 'var(--bg)', paddingBottom: 'var(--space-5)' }}
     >
-      <div style={{ paddingTop: 64, paddingLeft: 48, paddingRight: 48 }}>
+      <div style={{ paddingTop: 'var(--space-6)', paddingLeft: 'var(--space-5)', paddingRight: 'var(--space-5)' }}>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
           {/* Brand column */}
           <div>
             <p
               className="mb-4"
-              style={{ fontFamily: 'Cormorant Garamond, serif', fontWeight: 300, fontStyle: 'italic', fontSize: 22, letterSpacing: '0.2em', color: 'var(--black)' }}
+              style={{ fontFamily: 'var(--font-display)', fontWeight: 'var(--text-heading-weight)', fontStyle: 'italic', fontSize: 22, letterSpacing: '0.2em', color: 'var(--black)' }}
             >
               Biahama
             </p>
-            <p style={{ color: 'var(--gray)', fontFamily: 'Jost, sans-serif', fontWeight: 300, fontSize: 12, lineHeight: 1.7 }}>
+            <p style={{ color: 'var(--gray)', fontFamily: 'var(--font-ui)', fontWeight: 'var(--text-nav-weight)', fontSize: 'var(--text-nav-size)', lineHeight: 1.7 }}>
               Luxury linen, handcrafted<br />in India. Wear slowly.
             </p>
           </div>
@@ -65,7 +65,7 @@ export default function Footer() {
             <div key={heading}>
               <h4
                 className="uppercase mb-5"
-                style={{ color: 'var(--black)', fontFamily: 'Jost, sans-serif', fontWeight: 300, fontSize: 10, letterSpacing: '0.15em' }}
+                style={{ color: 'var(--black)', fontFamily: 'var(--font-ui)', fontWeight: 'var(--text-tag-weight)', fontSize: 'var(--text-tag-size)', letterSpacing: 'var(--text-tag-tracking)' }}
               >
                 {heading}
               </h4>
@@ -75,7 +75,7 @@ export default function Footer() {
                     <Link
                       href={href}
                       className="transition-opacity hover:opacity-60"
-                      style={{ color: 'var(--gray)', fontFamily: 'Jost, sans-serif', fontWeight: 300, fontSize: 12 }}
+                      style={{ color: 'var(--gray)', fontFamily: 'var(--font-ui)', fontWeight: 'var(--text-nav-weight)', fontSize: 'var(--text-nav-size)' }}
                     >
                       {label}
                     </Link>
@@ -88,7 +88,7 @@ export default function Footer() {
 
         <div
           className="mt-16 pt-6 flex flex-col md:flex-row items-center justify-between gap-4"
-          style={{ borderTop: '1px solid var(--border)', color: 'var(--gray)', fontFamily: 'Jost, sans-serif', fontWeight: 300, fontSize: 10, letterSpacing: '0.05em' }}
+          style={{ borderTop: '1px solid var(--border)', color: 'var(--gray)', fontFamily: 'var(--font-ui)', fontWeight: 'var(--text-tag-weight)', fontSize: 'var(--text-tag-size)', letterSpacing: 'var(--text-tag-tracking)' }}
         >
           <span>© {new Date().getFullYear()} Biahama. All rights reserved.</span>
           <span>Made with intention · India</span>

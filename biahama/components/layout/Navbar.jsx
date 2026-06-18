@@ -43,7 +43,7 @@ export default function Navbar() {
 
   const isHome = pathname === '/'
   const showSolidNavbar = !isHome || dropdownOpen
-  const themeColor = showSolidNavbar ? 'var(--black)' : '#ffffff'
+  const themeColor = showSolidNavbar ? 'var(--black)' : 'var(--bg)'
   
   const handleSearchSubmit = (e) => {
     e.preventDefault()
@@ -60,7 +60,7 @@ export default function Navbar() {
       <nav
         className="fixed top-0 left-0 right-0 z-40 flex items-center justify-center"
         style={{
-          height: 56,
+          height: 'var(--header-height)',
           background: 'var(--bg)',
           borderBottom: '1px solid var(--border)',
         }}
@@ -69,8 +69,8 @@ export default function Navbar() {
           href="/"
           className="select-none"
           style={{
-            fontFamily: 'Cormorant Garamond, serif',
-            fontWeight: 300,
+            fontFamily: 'var(--font-display)',
+            fontWeight: 'var(--text-heading-weight)',
             fontSize: 28,
             color: 'var(--black)',
             letterSpacing: '0.3em',
@@ -88,9 +88,9 @@ export default function Navbar() {
       <nav
         className="fixed top-0 left-0 right-0 z-40 flex items-center justify-between transition-all duration-300"
         style={{
-          height: 56,
-          paddingLeft: 48,
-          paddingRight: 48,
+          height: 'var(--header-height)',
+          paddingLeft: 'var(--space-5)',
+          paddingRight: 'var(--space-5)',
           background: dropdownOpen ? 'var(--border)' : (isHome ? 'transparent' : 'var(--bg)'),
           borderBottom: (dropdownOpen || !isHome) ? '1px solid var(--border)' : 'none',
         }}
@@ -100,7 +100,7 @@ export default function Navbar() {
           <Link
             href="/"
             className="text-xs tracking-widest uppercase hover:opacity-60 transition-opacity flex items-center h-full"
-            style={{ fontFamily: 'Jost, sans-serif', fontWeight: 300, color: themeColor }}
+            style={{ fontFamily: 'var(--font-ui)', fontWeight: 'var(--text-nav-weight)', color: themeColor }}
           >
             Home
           </Link>
@@ -113,7 +113,7 @@ export default function Navbar() {
             <Link
               href="/shop"
               className="text-xs tracking-widest uppercase hover:opacity-60 transition-opacity flex items-center h-full"
-              style={{ fontFamily: 'Jost, sans-serif', fontWeight: 300, color: themeColor }}
+              style={{ fontFamily: 'var(--font-ui)', fontWeight: 'var(--text-nav-weight)', color: themeColor }}
             >
               Collection
             </Link>
@@ -126,8 +126,9 @@ export default function Navbar() {
                   animate={{ height: 'auto', opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}
                   transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-                  className="fixed top-[56px] z-50"
+                  className="fixed z-50"
                   style={{
+                    top: 'var(--header-height)',
                     left: leftOffset > 0 ? leftOffset - 16 : 0,
                     right: 0,
                     background: 'var(--border)',
@@ -135,7 +136,7 @@ export default function Navbar() {
                     paddingTop: 0,
                     paddingLeft: 0,
                     paddingRight: 0,
-                    paddingBottom: '16px',
+                    paddingBottom: 'var(--space-2)',
                     overflow: 'hidden',
                   }}
                   onMouseEnter={() => setDropdownOpen(true)}
@@ -145,7 +146,7 @@ export default function Navbar() {
                   <div style={{ width: '100%', height: '1px', background: 'var(--black)', opacity: 0.15 }} />
 
                   {/* Content Container aligned with uniform padding */}
-                  <div className="flex gap-4 w-full" style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '16px', margin: 0 }}>
+                  <div className="flex gap-4 w-full" style={{ paddingLeft: 'var(--space-2)', paddingRight: 'var(--space-2)', paddingTop: 'var(--space-2)', margin: 0 }}>
                     {DROPDOWN_CATEGORIES.map(cat => (
                       <Link
                         key={cat.slug}
@@ -169,10 +170,10 @@ export default function Navbar() {
                           <span
                             className="text-lg tracking-wide"
                             style={{
-                              fontFamily: 'Cormorant Garamond, serif',
+                              fontFamily: 'var(--font-display)',
                               fontStyle: 'italic',
-                              color: '#ffffff',
-                              fontWeight: 300,
+                              color: 'var(--bg)',
+                              fontWeight: 'var(--text-heading-weight)',
                             }}
                           >
                             {cat.name}
@@ -188,7 +189,7 @@ export default function Navbar() {
           <Link
             href="/#footer"
             className="text-xs tracking-widest uppercase hover:opacity-60 transition-opacity flex items-center h-full"
-            style={{ fontFamily: 'Jost, sans-serif', fontWeight: 300, color: themeColor }}
+            style={{ fontFamily: 'var(--font-ui)', fontWeight: 'var(--text-nav-weight)', color: themeColor }}
           >
             Contact Us
           </Link>
@@ -198,7 +199,7 @@ export default function Navbar() {
         <Link
           href="/"
           className="absolute left-1/2 -translate-x-1/2 select-none z-50 h-full flex items-center"
-          style={{ fontFamily: 'Cormorant Garamond, serif', fontWeight: 300, fontSize: 28, color: themeColor, letterSpacing: '0.3em' }}
+          style={{ fontFamily: 'var(--font-display)', fontWeight: 'var(--text-heading-weight)', fontSize: 28, color: themeColor, letterSpacing: '0.3em' }}
         >
           BIAHAMA
         </Link>
@@ -217,7 +218,7 @@ export default function Navbar() {
                   animate={{ width: 140, opacity: 1 }}
                   exit={{ width: 0, opacity: 0 }}
                   transition={{ duration: 0.2, ease: 'easeOut' }}
-                  style={{ overflow: 'hidden', marginRight: '8px' }}
+                  style={{ overflow: 'hidden', marginRight: 'var(--space-1)' }}
                 >
                   <input
                     ref={searchInputRef}
@@ -241,7 +242,7 @@ export default function Navbar() {
                       borderBottom: `1px solid ${themeColor}`,
                       outline: 'none',
                       fontSize: '11px',
-                      fontFamily: 'Jost, sans-serif',
+                      fontFamily: 'var(--font-ui)',
                       color: themeColor,
                       width: '100%',
                       paddingBottom: '2px',
@@ -272,7 +273,7 @@ export default function Navbar() {
             >
               <SearchIcon />
               {!searchActive && (
-                <span className="text-xs tracking-widest uppercase hidden lg:block" style={{ fontFamily: 'Jost, sans-serif', fontWeight: 300 }}>
+                <span className="text-xs tracking-widest uppercase hidden lg:block" style={{ fontFamily: 'var(--font-ui)', fontWeight: 'var(--text-nav-weight)' }}>
                   Search
                 </span>
               )}
@@ -286,7 +287,7 @@ export default function Navbar() {
             style={{ color: themeColor }}
           >
             <WardrobeIcon themeColor={themeColor} />
-            <span className="text-xs tracking-widest uppercase hidden lg:block" style={{ fontFamily: 'Jost, sans-serif', fontWeight: 300 }}>
+            <span className="text-xs tracking-widest uppercase hidden lg:block" style={{ fontFamily: 'var(--font-ui)', fontWeight: 'var(--text-nav-weight)' }}>
               Wardrobe
             </span>
           </Link>
@@ -307,10 +308,10 @@ export default function Navbar() {
                   height: 13,
                   top: -5,
                   right: -7,
-                  background: isHome ? '#ffffff' : 'var(--black)',
-                  color: isHome ? 'var(--black)' : '#ffffff',
+                  background: isHome ? 'var(--bg)' : 'var(--black)',
+                  color: isHome ? 'var(--black)' : 'var(--bg)',
                   fontSize: 8,
-                  fontFamily: 'Jost, sans-serif',
+                  fontFamily: 'var(--font-ui)',
                 }}
               >
                 {count}
@@ -337,7 +338,7 @@ export default function Navbar() {
 
 function SearchIcon() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round">
+    <svg width="var(--icon-search)" height="var(--icon-search)" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round">
       <circle cx="11" cy="11" r="8" />
       <line x1="21" y1="21" x2="16.65" y2="16.65" />
     </svg>
@@ -345,14 +346,14 @@ function SearchIcon() {
 }
 
 function WardrobeIcon({ themeColor }) {
-  const isInverted = themeColor === '#ffffff'
+  const isInverted = themeColor === 'var(--bg)'
   return (
     <img
       src="/cloth-hanger.png"
       alt="Wardrobe"
       style={{
-        width: '20px',
-        height: '20px',
+        width: 'var(--icon-wardrobe)',
+        height: 'var(--icon-wardrobe)',
         objectFit: 'contain',
         filter: isInverted ? 'invert(1)' : 'none',
       }}
@@ -362,7 +363,7 @@ function WardrobeIcon({ themeColor }) {
 
 function CartIcon() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="var(--icon-cart)" height="var(--icon-cart)" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
       <line x1="3" y1="6" x2="21" y2="6" />
       <path d="M16 10a4 4 0 0 1-8 0" />
@@ -372,7 +373,7 @@ function CartIcon() {
 
 function ProfileIcon() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="var(--icon-cart)" height="var(--icon-cart)" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
       <circle cx="12" cy="7" r="4" />
     </svg>

@@ -1,13 +1,6 @@
+@import '/Users/soundariyanvenkatachalam/Desktop/Biahama/example-css/biahama-tokens.css';
 @import "tailwindcss";
 
-:root {
-  --white:  #ffffff;
-  --bg:     #ffffff;
-  --black:  #262626;
-  --gray:   #6f6f6f;
-  --border: #ddd9d3;
-  --light:  #f3f3f3;
-}
 
 * {
   box-sizing: border-box;
