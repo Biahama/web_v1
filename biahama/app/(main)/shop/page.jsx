@@ -97,6 +97,8 @@ export default async function ShopPage({ searchParams }) {
                   textDecoration: 'none',
                   opacity: isActive ? 1 : 0.7,
                   transition: 'opacity 0.2s',
+                  fontSize: 'var(--text-tab-size)',
+                  fontWeight: 'var(--text-tab-weight)',
                 }}
               >
                 {cat.name}

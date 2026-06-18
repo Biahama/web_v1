@@ -90,15 +90,28 @@ export default function ProductCard({ product, priority = false }) {
         {/* Wardrobe button — always visible */}
         <button
           onClick={e => { e.preventDefault(); e.stopPropagation(); setWishlisted(w => !w) }}
-          className="absolute top-3 right-3 z-10 p-1.5 rounded-full hover:bg-zinc-50/20 transition-colors"
+          className="biahama-hanger-btn z-10 transition-colors"
           aria-label="Save to wardrobe"
+          style={{
+            width: 'var(--icon-hanger-btn)',
+            height: 'var(--icon-hanger-btn)',
+            borderRadius: '50%',
+            background: 'var(--icon-hanger-btn-bg)',
+            position: 'absolute',
+            top: '8px',
+            right: '8px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            border: 'none',
+          }}
         >
           <img
             src="/cloth-hanger.png"
             alt="Save to wardrobe"
             style={{
-              width: 'var(--icon-wishlist-btn)',
-              height: 'var(--icon-wishlist-btn)',
+              width: 'var(--icon-hanger)',
+              height: 'var(--icon-hanger)',
               objectFit: 'contain',
               opacity: wishlisted ? 1.0 : 0.6,
               filter: 'drop-shadow(0px 1px 2px rgba(255, 255, 255, 0.4))'
@@ -111,29 +124,50 @@ export default function ProductCard({ product, priority = false }) {
       <div style={{ marginTop: 'var(--card-image-margin-bottom)' }} className="flex justify-between items-start">
         <div className="flex-1" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}>
           <div className="flex justify-between items-start" style={{ gap: 'var(--space-1)' }}>
-            <p className="biahama-product-name">
+            <p 
+              className="biahama-product-name"
+              style={{
+                fontSize: 'var(--text-product-name-size)',
+                letterSpacing: 'var(--text-product-name-tracking)',
+              }}
+            >
               {product.name}
             </p>
             {/* Shopping bag button using bag.png */}
             {!isSoldOut && (
               <button
                 onClick={handleAddToCart}
-                className="p-1 hover:opacity-75 transition-opacity z-10 shrink-0 mt-0.5"
+                className="biahama-bag-btn hover:opacity-75 transition-opacity z-10 shrink-0 mt-0.5"
                 aria-label="Add to cart"
+                style={{
+                  width: 'var(--icon-bag-container)',
+                  background: 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
               >
                 <img
                   src="/bag.png"
                   alt="Add to cart"
                   style={{
-                    width: 'var(--icon-wishlist-btn)',
-                    height: 'var(--icon-wishlist-btn)',
+                    width: 'var(--icon-bag)',
+                    height: 'var(--icon-bag)',
                     objectFit: 'contain'
                   }}
                 />
               </button>
             )}
           </div>
-          <p className="biahama-price">
+          <p 
+            className="biahama-price"
+            style={{
+              fontWeight: 'var(--text-price-weight)',
+              letterSpacing: 'var(--text-price-tracking)',
+            }}
+          >
             {isSoldOut ? 'Sold Out' : formatPrice(product.price)}
           </p>
         </div>
