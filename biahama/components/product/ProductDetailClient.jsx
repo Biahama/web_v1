@@ -22,8 +22,8 @@ export default function ProductDetailClient({ product }) {
   const [addresses, setAddresses] = useState([])
   const [wishlisted, setWishlisted] = useState(false)
   const [copied, setCopied] = useState(false)
-  const [showDetails, setShowDetails] = useState(false)
-
+  const [detailsExpanded, setDetailsExpanded] = useState(false)
+  const [shippingExpanded, setShippingExpanded] = useState(false)
   // Stacked vertically images
   const displayImages = []
   if (product.images && product.images.length > 0) {
@@ -228,8 +228,8 @@ export default function ProductDetailClient({ product }) {
       <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
 
       <div 
-        className="w-full max-w-none pl-6 pr-0 md:pl-12 md:pr-0 pb-24 mt-[-32px]"
-        style={{ paddingTop: 'var(--header-total)' }}
+        className="w-full max-w-none pl-6 pr-0 md:pl-12 md:pr-0 pb-24"
+        style={{ paddingTop: '177px' }}
       >
         <div className="flex flex-col lg:flex-row items-start justify-between gap-16 lg:gap-0">
           
@@ -238,13 +238,13 @@ export default function ProductDetailClient({ product }) {
             {displayImages.map((imgUrl, i) => (
               <div 
                 key={i}
-                className="w-full overflow-hidden bg-zinc-50 relative"
-                style={{ width: '100%', aspectRatio: '127.31 / 100' }}
+                className="w-full overflow-hidden relative"
+                style={{ width: '100%', aspectRatio: '127.31 / 100', backgroundColor: '#f5f5f5', marginBottom: '0' }}
               >
                 <img
                   src={imgUrl}
                   alt={`${product.name} view ${i + 1}`}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-contain"
                 />
 
                 {/* Circular Hanger Wishlist button on first image */}
@@ -286,7 +286,7 @@ export default function ProductDetailClient({ product }) {
 
           {/* Right Column — Sticky Product Info */}
           <div 
-            className="w-full lg:w-[47%] lg:sticky flex flex-col gap-6 pr-6 md:pr-12 lg:pl-16"
+            className="w-full lg:w-[47%] lg:sticky flex flex-col gap-6 pr-6 md:pr-12 lg:pl-[48px]"
             style={{ top: 'var(--header-total)', paddingTop: 'var(--space-5)' }} // 48px top padding on the info column
           >
             
@@ -422,70 +422,6 @@ export default function ProductDetailClient({ product }) {
               <div className="border-b border-zinc-200 mt-6" />
             </div>
 
-            {/* Section 5: Collapsible VIEW DETAILS accordion */}
-            <div>
-              <button
-                onClick={() => setShowDetails(!showDetails)}
-                className="w-full flex items-center justify-between text-left font-medium text-xs tracking-widest uppercase hover:opacity-60 transition-opacity"
-                style={{ fontFamily: 'var(--font-ui)', color: 'var(--black)', padding: '12px 0', marginBottom: '40px' }}
-              >
-                <span>{showDetails ? '— VIEW DETAILS' : '+ VIEW DETAILS'}</span>
-              </button>
-              {showDetails && (
-                <div className="mt-4 space-y-6 text-[11px] font-light text-zinc-500 leading-[1.8] tracking-wide border-t border-zinc-100 pt-4" style={{ fontFamily: 'var(--font-ui)', letterSpacing: '0.05em' }}>
-                  {/* Description */}
-                  <div>
-                    <h4 className="font-semibold text-zinc-800 uppercase mb-1">Description</h4>
-                    <p>{product.description || 'Crafted with premium Indian linen, this clothing piece combines breathability with architectural silhouette lines. Designed for effortless transitions from morning to evening settings.'}</p>
-                  </div>
-                  {/* Details & Care */}
-                  <div>
-                    <h4 className="font-semibold text-zinc-800 uppercase mb-1">Details & Care</h4>
-                    <div className="space-y-1">
-                      <p>Handcrafted linen knitwear</p>
-                      <p>Unstructured relaxed shoulder</p>
-                      <p>Rib knit collar and clean hem</p>
-                      <p>Special workmanship</p>
-                      <div className="font-medium text-zinc-800 tracking-widest text-[10px] pt-1">
-                        100% ORGANIC LINEN
-                      </div>
-                    </div>
-                  </div>
-                  {/* Materials */}
-                  <div>
-                    <h4 className="font-semibold text-zinc-800 uppercase mb-1">Materials</h4>
-                    <p>{product.fabric || '100% Organic hand-spun Indian linen yarns. Structured yet lightweight breathable weave.'}</p>
-                    <p>Our items are manufactured in limited artisanal batches in India, respecting local craft traditions and community development.</p>
-                  </div>
-                  {/* Packaging */}
-                  <div>
-                    <h4 className="font-semibold text-zinc-800 uppercase mb-1">Packaging</h4>
-                    <div className="flex gap-4 items-start mt-2">
-                      <div className="w-1/3 max-w-[120px] aspect-[4/3] bg-zinc-100 flex items-center justify-center overflow-hidden border border-zinc-100 shrink-0">
-                        <img
-                          src="/images/packaging.png"
-                          alt="Packaging boxes"
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            e.target.style.display = 'none';
-                          }}
-                        />
-                      </div>
-                      <p className="text-[11px] font-light text-zinc-500 leading-[1.6]">
-                        All linen garments are folded carefully in tissue layers and shipped inside our signature architectural boxes, completely plastic-free and reusable.
-                      </p>
-                    </div>
-                  </div>
-                  {/* Shipping & Returns */}
-                  <div>
-                    <h4 className="font-semibold text-zinc-800 uppercase mb-1">Shipping & Returns</h4>
-                    <p className="mb-2"><strong>Shipping:</strong> Free shipping across India, usually delivered within 3-5 working days.</p>
-                    <p><strong>Returns:</strong> Free size exchanges and returns within 7 days of delivery.</p>
-                  </div>
-                </div>
-              )}
-            </div>
-
             {/* Section 6: Action Buttons */}
             <div className="space-y-4 pt-4">
               <button
@@ -531,6 +467,179 @@ export default function ProductDetailClient({ product }) {
               </div>
             </div>
 
+          </div>
+        </div>
+
+        {/* Full-width Description Section */}
+        <div style={{ paddingTop: '26px', paddingLeft: '125px', paddingRight: '125px' }} className="w-full mt-12 hidden lg:block">
+          {/* Top area: two columns side by side */}
+          <div className="flex flex-row w-full mb-12">
+            <div className="w-1/2" style={{ padding: '0 15px' }}>
+              <h2 style={{ fontSize: '32px', fontWeight: 500, color: '#262626', marginBottom: '16px', fontFamily: 'var(--font-display)' }}>DESCRIPTION</h2>
+              <p style={{ fontSize: '16px', fontWeight: 300, lineHeight: '20px', color: '#6f6f6f', letterSpacing: '0.6px', marginBottom: '24px', fontFamily: 'var(--font-ui)' }}>
+                {product.description || 'Crafted with premium Indian linen, this clothing piece combines breathability with architectural silhouette lines. Designed for effortless transitions from morning to evening settings.'}
+              </p>
+            </div>
+            <div className="w-1/2" style={{ padding: '0 15px' }}>
+              <h2 style={{ fontSize: '32px', fontWeight: 500, color: '#262626', marginBottom: '16px', fontFamily: 'var(--font-display)' }}>MATERIALS</h2>
+              <p style={{ fontSize: '16px', fontWeight: 300, lineHeight: '20px', color: '#6f6f6f', letterSpacing: '0.6px', marginBottom: '24px', fontFamily: 'var(--font-ui)' }}>
+                {product.fabric || '100% Organic hand-spun Indian linen yarns. Structured yet lightweight breathable weave.'}
+                <br/><br/>
+                Our items are manufactured in limited artisanal batches in India, respecting local craft traditions and community development.
+              </p>
+            </div>
+          </div>
+
+          {/* Below the two columns: DETAILS accordion */}
+          <div className="w-full relative" style={{ borderTop: '1px solid #D2D2D2' }}>
+            <button 
+              onClick={() => setDetailsExpanded(!detailsExpanded)}
+              className="w-full text-left relative flex items-center hover:opacity-60 transition-opacity"
+              style={{ height: '56px', padding: '16px 30px 16px 0', fontSize: '18px', fontWeight: 400, color: '#262626', fontFamily: 'var(--font-display)' }}
+            >
+              DETAILS
+              <div style={{ position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)' }}>
+                {detailsExpanded ? (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                  </svg>
+                ) : (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                  </svg>
+                )}
+              </div>
+            </button>
+            <div 
+              style={{ 
+                maxHeight: detailsExpanded ? '1000px' : '0', 
+                overflow: detailsExpanded ? 'visible' : 'hidden', 
+                transition: '0.15s ease-in' 
+              }}
+            >
+              <div style={{ paddingBottom: '24px', paddingLeft: '15px', paddingRight: '15px' }}>
+                <p style={{ fontSize: '16px', fontWeight: 300, lineHeight: '20px', color: '#6f6f6f', letterSpacing: '0.6px', fontFamily: 'var(--font-ui)' }}>
+                  Handcrafted linen knitwear<br/>
+                  Unstructured relaxed shoulder<br/>
+                  Rib knit collar and clean hem<br/>
+                  Special workmanship<br/>
+                  <span style={{ fontWeight: 500, fontSize: '12px', letterSpacing: '1px', marginTop: '10px', display: 'block', color: '#262626' }}>100% ORGANIC LINEN</span>
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* SHIPPING AND RETURNS accordion */}
+          <div className="w-full relative" style={{ borderTop: '1px solid #D2D2D2' }}>
+            <button 
+              onClick={() => setShippingExpanded(!shippingExpanded)}
+              className="w-full text-left relative flex items-center hover:opacity-60 transition-opacity"
+              style={{ height: '56px', padding: '16px 30px 16px 0', fontSize: '18px', fontWeight: 400, color: '#262626', fontFamily: 'var(--font-display)' }}
+            >
+              SHIPPING AND RETURNS
+              <div style={{ position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)' }}>
+                {shippingExpanded ? (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                  </svg>
+                ) : (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                  </svg>
+                )}
+              </div>
+            </button>
+            <div 
+              style={{ 
+                maxHeight: shippingExpanded ? '1000px' : '0', 
+                overflow: shippingExpanded ? 'visible' : 'hidden', 
+                transition: '0.15s ease-in' 
+              }}
+            >
+              <div style={{ paddingBottom: '24px', paddingLeft: '15px', paddingRight: '15px' }}>
+                <p style={{ fontSize: '16px', fontWeight: 300, lineHeight: '20px', color: '#6f6f6f', letterSpacing: '0.6px', marginBottom: '8px', fontFamily: 'var(--font-ui)' }}>
+                  <strong style={{ color: '#262626', fontWeight: 500 }}>Shipping:</strong> Free shipping across India, usually delivered within 3-5 working days.
+                </p>
+                <p style={{ fontSize: '16px', fontWeight: 300, lineHeight: '20px', color: '#6f6f6f', letterSpacing: '0.6px', fontFamily: 'var(--font-ui)' }}>
+                  <strong style={{ color: '#262626', fontWeight: 500 }}>Returns:</strong> Free size exchanges and returns within 7 days of delivery.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile Description Section (No horizontal padding constraints) */}
+        <div className="w-full mt-12 block lg:hidden" style={{ paddingLeft: '24px', paddingRight: '24px' }}>
+           <div className="flex flex-col w-full mb-8 gap-8">
+            <div className="w-full">
+              <h2 style={{ fontSize: '24px', fontWeight: 500, color: '#262626', marginBottom: '12px', fontFamily: 'var(--font-display)' }}>DESCRIPTION</h2>
+              <p style={{ fontSize: '15px', fontWeight: 300, lineHeight: '22px', color: '#6f6f6f', letterSpacing: '0.5px', fontFamily: 'var(--font-ui)' }}>
+                {product.description || 'Crafted with premium Indian linen, this clothing piece combines breathability with architectural silhouette lines. Designed for effortless transitions from morning to evening settings.'}
+              </p>
+            </div>
+            <div className="w-full">
+              <h2 style={{ fontSize: '24px', fontWeight: 500, color: '#262626', marginBottom: '12px', fontFamily: 'var(--font-display)' }}>MATERIALS</h2>
+              <p style={{ fontSize: '15px', fontWeight: 300, lineHeight: '22px', color: '#6f6f6f', letterSpacing: '0.5px', fontFamily: 'var(--font-ui)' }}>
+                {product.fabric || '100% Organic hand-spun Indian linen yarns. Structured yet lightweight breathable weave.'}
+              </p>
+            </div>
+          </div>
+
+          <div className="w-full relative" style={{ borderTop: '1px solid #D2D2D2' }}>
+            <button 
+              onClick={() => setDetailsExpanded(!detailsExpanded)}
+              className="w-full text-left relative flex items-center"
+              style={{ height: '56px', padding: '16px 30px 16px 0', fontSize: '16px', fontWeight: 400, color: '#262626', fontFamily: 'var(--font-display)' }}
+            >
+              DETAILS
+              <div style={{ position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)' }}>
+                {detailsExpanded ? (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                ) : (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                )}
+              </div>
+            </button>
+            <div style={{ maxHeight: detailsExpanded ? '1000px' : '0', overflow: detailsExpanded ? 'visible' : 'hidden', transition: '0.15s ease-in' }}>
+              <div style={{ paddingBottom: '24px' }}>
+                <p style={{ fontSize: '15px', fontWeight: 300, lineHeight: '22px', color: '#6f6f6f', fontFamily: 'var(--font-ui)' }}>
+                  Handcrafted linen knitwear<br/>
+                  Unstructured relaxed shoulder<br/>
+                  Rib knit collar and clean hem<br/>
+                  Special workmanship<br/>
+                  <span style={{ fontWeight: 500, fontSize: '11px', letterSpacing: '1px', marginTop: '10px', display: 'block', color: '#262626' }}>100% ORGANIC LINEN</span>
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="w-full relative" style={{ borderTop: '1px solid #D2D2D2' }}>
+            <button 
+              onClick={() => setShippingExpanded(!shippingExpanded)}
+              className="w-full text-left relative flex items-center"
+              style={{ height: '56px', padding: '16px 30px 16px 0', fontSize: '16px', fontWeight: 400, color: '#262626', fontFamily: 'var(--font-display)' }}
+            >
+              SHIPPING AND RETURNS
+              <div style={{ position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)' }}>
+                {shippingExpanded ? (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                ) : (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                )}
+              </div>
+            </button>
+            <div style={{ maxHeight: shippingExpanded ? '1000px' : '0', overflow: shippingExpanded ? 'visible' : 'hidden', transition: '0.15s ease-in' }}>
+              <div style={{ paddingBottom: '24px' }}>
+                <p style={{ fontSize: '15px', fontWeight: 300, lineHeight: '22px', color: '#6f6f6f', marginBottom: '8px', fontFamily: 'var(--font-ui)' }}>
+                  <strong style={{ color: '#262626', fontWeight: 500 }}>Shipping:</strong> Free shipping across India, usually delivered within 3-5 working days.
+                </p>
+                <p style={{ fontSize: '15px', fontWeight: 300, lineHeight: '22px', color: '#6f6f6f', fontFamily: 'var(--font-ui)' }}>
+                  <strong style={{ color: '#262626', fontWeight: 500 }}>Returns:</strong> Free size exchanges and returns within 7 days of delivery.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>

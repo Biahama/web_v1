@@ -62,7 +62,7 @@ export default function ProductCard({ product, priority = false }) {
       onMouseLeave={() => setHovered(false)}
     >
       {/* Image container */}
-      <div className="relative biahama-card-image" style={{ background: 'var(--light)' }}>
+      <div className="relative biahama-card-image" style={{ background: '#f5f5f5' }}>
         {imagesToCycle.length > 0 ? (
           <>
             <Image
@@ -70,7 +70,7 @@ export default function ProductCard({ product, priority = false }) {
               alt={product.altText || product.name}
               fill
               unoptimized
-              className="object-cover transition-transform duration-700"
+              className="object-contain transition-transform duration-700"
               style={{
                 transform: hovered ? 'scale(1.04)' : 'scale(1)',
                 overflow: 'clip',
@@ -191,7 +191,7 @@ export default function ProductCard({ product, priority = false }) {
       </div>
 
       {/* Info */}
-      <div style={{ marginTop: 'var(--card-image-margin-bottom)' }} className="flex justify-between items-start">
+      <div style={{ marginTop: '3px' }} className="flex justify-between items-start">
         <div className="flex-1" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}>
           <div className="flex justify-between items-start" style={{ gap: 'var(--space-1)' }}>
             <p 
