@@ -23,14 +23,7 @@ export default function ProductCard({ product, priority = false }) {
   useEffect(() => {
     if (!hovered || imagesToCycle.length <= 1) {
       setCurrentImageIndex(0)
-      return
     }
-
-    const interval = setInterval(() => {
-      setCurrentImageIndex(idx => (idx + 1) % imagesToCycle.length)
-    }, 2000)
-
-    return () => clearInterval(interval)
   }, [hovered, imagesToCycle])
 
   const handleAddToCart = async (e) => {
@@ -62,7 +55,7 @@ export default function ProductCard({ product, priority = false }) {
       onMouseLeave={() => setHovered(false)}
     >
       {/* Image container */}
-      <div className="relative biahama-card-image" style={{ background: '#f5f5f5' }}>
+      <div className="relative biahama-card-image overflow-hidden" style={{ background: '#ffffff' }}>
         {imagesToCycle.length > 0 ? (
           <>
             <Image
@@ -70,10 +63,10 @@ export default function ProductCard({ product, priority = false }) {
               alt={product.altText || product.name}
               fill
               unoptimized
-              className="object-contain transition-transform duration-700"
+              className="object-contain"
               style={{
                 transform: hovered ? 'scale(1.04)' : 'scale(1)',
-                overflow: 'clip',
+                transition: 'transform 700ms cubic-bezier(0.4, 0, 0.2, 1)'
               }}
               priority={priority}
             />
@@ -146,7 +139,7 @@ export default function ProductCard({ product, priority = false }) {
         ) : (
           <div
             className="absolute inset-0 flex items-end p-4"
-            style={{ background: 'var(--light)' }}
+            style={{ background: '#ffffff' }}
           >
             <span
               className="text-4xl leading-none"

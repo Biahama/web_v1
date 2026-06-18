@@ -239,12 +239,12 @@ export default function ProductDetailClient({ product }) {
               <div 
                 key={i}
                 className="w-full overflow-hidden relative"
-                style={{ width: '100%', aspectRatio: '127.31 / 100', backgroundColor: '#f5f5f5', marginBottom: '0' }}
+                style={{ width: '100%', marginBottom: '0' }}
               >
                 <img
                   src={imgUrl}
                   alt={`${product.name} view ${i + 1}`}
-                  className="w-full h-full object-contain"
+                  className="w-full h-auto block"
                 />
 
                 {/* Circular Hanger Wishlist button on first image */}
@@ -286,7 +286,7 @@ export default function ProductDetailClient({ product }) {
 
           {/* Right Column — Sticky Product Info */}
           <div 
-            className="w-full lg:w-[47%] lg:sticky flex flex-col gap-6 pr-6 md:pr-12 lg:pl-[48px]"
+            className="w-full lg:w-[44%] lg:sticky flex flex-col gap-6 px-6 lg:px-[48px] bg-white"
             style={{ top: 'var(--header-total)', paddingTop: 'var(--space-5)' }} // 48px top padding on the info column
           >
             
@@ -423,7 +423,7 @@ export default function ProductDetailClient({ product }) {
             </div>
 
             {/* Section 6: Action Buttons */}
-            <div className="space-y-4 pt-4">
+            <div className="flex flex-col pt-4" style={{ gap: '12px' }}>
               <button
                 onClick={handleAddToBag}
                 disabled={adding}
