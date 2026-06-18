@@ -130,32 +130,33 @@ export default function ProductCard({ product, priority = false }) {
 
       {/* Info */}
       <div className="mt-3 flex justify-between items-start gap-4">
-        <div className="space-y-1">
+        <div className="space-y-1 flex-1">
           <p className="text-[10px] tracking-wide" style={{ color: 'var(--gray)', fontFamily: 'Jost, sans-serif', fontWeight: 300, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
             {product.category}
           </p>
-          <p className="text-sm font-medium" style={{ color: 'var(--black)', fontFamily: 'Jost, sans-serif', fontWeight: 400 }}>
-            {product.name}
-          </p>
+          <div className="flex justify-between items-start gap-2">
+            <p className="text-sm font-medium" style={{ color: 'var(--black)', fontFamily: 'Jost, sans-serif', fontWeight: 400 }}>
+              {product.name}
+            </p>
+            {/* Shopping bag button using bag.png */}
+            {!isSoldOut && (
+              <button
+                onClick={handleAddToCart}
+                className="p-1 hover:opacity-75 transition-opacity z-10 shrink-0 mt-0.5"
+                aria-label="Add to cart"
+              >
+                <img
+                  src="/bag.png"
+                  alt="Add to cart"
+                  style={{ width: '18px', height: '18px', objectFit: 'contain' }}
+                />
+              </button>
+            )}
+          </div>
           <p className="text-sm font-bold" style={{ color: 'var(--black)', fontFamily: 'Jost, sans-serif', fontWeight: 600 }}>
             {isSoldOut ? 'Sold Out' : formatPrice(product.price)}
           </p>
         </div>
-
-        {/* Shopping bag button using bag.png */}
-        {!isSoldOut && (
-          <button
-            onClick={handleAddToCart}
-            className="p-1 hover:opacity-75 transition-opacity z-10"
-            aria-label="Add to cart"
-          >
-            <img
-              src="/bag.png"
-              alt="Add to cart"
-              style={{ width: '18px', height: '18px', objectFit: 'contain' }}
-            />
-          </button>
-        )}
       </div>
     </Link>
   )

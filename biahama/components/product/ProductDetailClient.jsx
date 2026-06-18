@@ -323,13 +323,13 @@ export default function ProductDetailClient({ product }) {
             </div>
 
             {/* Color Swatch Panel */}
-            <div className="space-y-2">
-              <span className="text-[10px] tracking-widest text-zinc-400 uppercase font-medium">
-                COLOR: <span className="text-zinc-800">{product.variants?.[0]?.color || 'Natural Cocoa'}</span>
+            <div className="flex items-center gap-4 py-2 border-b border-zinc-100 pb-4">
+              <span className="text-[10px] tracking-widest text-zinc-400 uppercase font-medium w-16">
+                COLOR
               </span>
-              <div className="flex flex-col items-start gap-1">
+              <div className="flex items-center gap-3">
                 <div
-                  className="w-10 h-14 border border-zinc-900 flex items-center justify-center p-0.5 bg-zinc-50"
+                  className="w-10 h-14 border border-zinc-950 flex items-center justify-center p-0.5 bg-zinc-50"
                   title={product.variants?.[0]?.color}
                 >
                   {displayImages[0] ? (
@@ -345,7 +345,7 @@ export default function ProductDetailClient({ product }) {
                     />
                   )}
                 </div>
-                <span className="text-[10px] tracking-wide text-zinc-500 font-light" style={{ fontFamily: 'Jost, sans-serif' }}>
+                <span className="text-xs text-zinc-800 font-light" style={{ fontFamily: 'Jost, sans-serif' }}>
                   {product.variants?.[0]?.color || 'Natural Cocoa'}
                 </span>
               </div>
