@@ -262,7 +262,7 @@ export default function ProductDetailClient({ product }) {
           </div>
 
           {/* Right Column — Sticky product info */}
-          <div className="lg:sticky lg:top-[76px] space-y-6 pt-2 w-full lg:pr-[12px]">
+          <div className="lg:sticky lg:top-[76px] space-y-6 pt-2 w-full lg:max-w-[500px] lg:ml-auto lg:pr-[12px]">
             
             {/* Header utilities (sku, share, wishlist) */}
             <div className="flex items-center justify-between">
@@ -454,7 +454,7 @@ export default function ProductDetailClient({ product }) {
         </div>
 
         {/* Bottom Specifications Accordion Area */}
-        <div id="details-section" className="mt-16 lg:mt-24 pb-24 w-full">
+        <div id="details-section" className="mt-32 lg:mt-48 pb-32 w-full">
           
           {/* 2-Column Grid for Description, Details, Materials, Packaging */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-16 lg:gap-x-24 items-start">
@@ -463,7 +463,7 @@ export default function ProductDetailClient({ product }) {
             <div className="border-t border-zinc-200 flex flex-col">
               
               {/* Description Tab */}
-              <div className="border-b border-zinc-200 pt-4 pb-6">
+              <div className="border-b border-zinc-200 pt-8 pb-12">
                 <button
                   onClick={() => toggleAccordion('description')}
                   className="w-full flex items-center justify-between text-left font-light text-[11px] tracking-[0.25em] uppercase"
@@ -473,14 +473,14 @@ export default function ProductDetailClient({ product }) {
                   <span className="text-[14px] font-light">{accordions.description ? '—' : '+'}</span>
                 </button>
                 {accordions.description && (
-                  <p className="mt-3 text-[11px] font-light text-zinc-500 tracking-wide max-w-xl" style={{ fontFamily: 'Jost, sans-serif', lineHeight: '1.8', letterSpacing: '0.05em' }}>
+                  <p className="mt-6 text-[11px] font-light text-zinc-500 tracking-wide max-w-xl" style={{ fontFamily: 'Jost, sans-serif', lineHeight: '1.8', letterSpacing: '0.05em' }}>
                     {product.description || 'Crafted with premium Indian linen, this clothing piece combines breathability with architectural silhouette lines. Designed for effortless transitions from morning to evening settings.'}
                   </p>
                 )}
               </div>
 
               {/* Details Tab */}
-              <div className="border-b border-zinc-200 pt-4 pb-6">
+              <div className="border-b border-zinc-200 pt-8 pb-12">
                 <button
                   onClick={() => toggleAccordion('details')}
                   className="w-full flex items-center justify-between text-left font-light text-[11px] tracking-[0.25em] uppercase"
@@ -490,7 +490,7 @@ export default function ProductDetailClient({ product }) {
                   <span className="text-[14px] font-light">{accordions.details ? '—' : '+'}</span>
                 </button>
                 {accordions.details && (
-                  <div className="mt-3 text-[11px] font-light text-zinc-500 space-y-2 leading-[1.8] tracking-wide" style={{ fontFamily: 'Jost, sans-serif', letterSpacing: '0.05em' }}>
+                  <div className="mt-6 text-[11px] font-light text-zinc-500 space-y-2 leading-[1.8] tracking-wide" style={{ fontFamily: 'Jost, sans-serif', letterSpacing: '0.05em' }}>
                     <p>Handcrafted linen knitwear</p>
                     <p>Unstructured relaxed shoulder</p>
                     <p>Rib knit collar and clean hem</p>
@@ -508,7 +508,7 @@ export default function ProductDetailClient({ product }) {
             <div className="border-t border-zinc-200 flex flex-col">
               
               {/* Materials Tab */}
-              <div className="border-b border-zinc-200 pt-4 pb-6">
+              <div className="border-b border-zinc-200 pt-8 pb-12">
                 <button
                   onClick={() => toggleAccordion('materials')}
                   className="w-full flex items-center justify-between text-left font-light text-[11px] tracking-[0.25em] uppercase"
@@ -518,7 +518,7 @@ export default function ProductDetailClient({ product }) {
                   <span className="text-[14px] font-light">{accordions.materials ? '—' : '+'}</span>
                 </button>
                 {accordions.materials && (
-                  <div className="mt-3 text-[11px] font-light text-zinc-500 space-y-4 leading-[1.8] tracking-wide max-w-xl" style={{ fontFamily: 'Jost, sans-serif', letterSpacing: '0.05em' }}>
+                  <div className="mt-6 text-[11px] font-light text-zinc-500 space-y-4 leading-[1.8] tracking-wide max-w-xl" style={{ fontFamily: 'Jost, sans-serif', letterSpacing: '0.05em' }}>
                     <p>{product.fabric || '100% Organic hand-spun Indian linen yarns. Structured yet lightweight breathable weave.'}</p>
                     <p>Our items are manufactured in limited artisanal batches in India, respecting local craft traditions and community development.</p>
                     <p>Dry clean or gentle hand wash is recommended to preserve the linen fibers.</p>
@@ -527,7 +527,7 @@ export default function ProductDetailClient({ product }) {
               </div>
 
               {/* Packaging Tab */}
-              <div className="border-b border-zinc-200 pt-4 pb-6">
+              <div className="border-b border-zinc-200 pt-8 pb-12">
                 <button
                   onClick={() => toggleAccordion('packaging')}
                   className="w-full flex items-center justify-between text-left font-light text-[11px] tracking-[0.25em] uppercase"
@@ -537,7 +537,7 @@ export default function ProductDetailClient({ product }) {
                   <span className="text-[14px] font-light">{accordions.packaging ? '—' : '+'}</span>
                 </button>
                 {accordions.packaging && (
-                  <div className="mt-3 flex gap-4 items-start">
+                  <div className="mt-6 flex gap-4 items-start">
                     <div className="w-1/3 max-w-[150px] aspect-[4/3] bg-zinc-100 flex items-center justify-center overflow-hidden border border-zinc-100">
                       <img
                         src="/images/packaging.png"
@@ -560,7 +560,7 @@ export default function ProductDetailClient({ product }) {
           </div>
 
           {/* Shipping & Returns Tab (Full Width) */}
-          <div className="border-b border-zinc-200 mt-4 pt-4 pb-6 w-full">
+          <div className="border-b border-zinc-200 mt-8 pt-8 pb-12 w-full">
             <button
               onClick={() => toggleAccordion('shipping')}
               className="w-full flex items-center justify-between text-left font-light text-[11px] tracking-[0.25em] uppercase"
@@ -570,7 +570,7 @@ export default function ProductDetailClient({ product }) {
               <span className="text-[14px] font-light">{accordions.shipping ? '—' : '+'}</span>
             </button>
             {accordions.shipping && (
-              <div className="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24">
+              <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24">
                 <div>
                   <h4 className="text-[14px] font-light text-zinc-800 tracking-wider uppercase mb-2">
                     Shipping Times and Costs
