@@ -262,7 +262,7 @@ export default function ProductDetailClient({ product }) {
           </div>
 
           {/* Right Column — Sticky product info */}
-          <div className="lg:sticky lg:top-[76px] space-y-6 pt-2 w-full lg:max-w-[500px] lg:ml-auto lg:pr-[12px]">
+          <div className="lg:sticky lg:top-[76px] space-y-8 pt-2 w-full lg:pr-[12px]">
             
             {/* Header utilities (sku, share, wishlist) */}
             <div className="flex items-center justify-between">
@@ -307,7 +307,8 @@ export default function ProductDetailClient({ product }) {
             </div>
 
             {/* Product Title and Price */}
-            <div className="space-y-2 border-b border-zinc-100 pb-5">
+            {/* Product Title and Price */}
+            <div className="space-y-2 border-b border-zinc-100 pb-8">
               <h1
                 className="text-2xl md:text-3xl leading-tight font-light"
                 style={{ fontFamily: 'Jost, sans-serif', color: 'var(--black)' }}
@@ -321,9 +322,9 @@ export default function ProductDetailClient({ product }) {
                 {formatPrice(product.variants?.[0]?.price || 0)}
               </p>
             </div>
-
+ 
             {/* Color Swatch Panel */}
-            <div className="flex items-start gap-4 py-4 border-b border-zinc-100 pb-5">
+            <div className="flex items-start gap-4 pt-8 pb-8 border-b border-zinc-100">
               <span className="text-[10px] tracking-widest text-zinc-400 uppercase font-medium w-16 pt-1">
                 COLOR
               </span>
@@ -350,9 +351,9 @@ export default function ProductDetailClient({ product }) {
                 </span>
               </div>
             </div>
-
+ 
             {/* Sizes Selection Pills */}
-            <div className="space-y-3 pt-2">
+            <div className="space-y-4 pt-8 pb-8 border-b border-zinc-100">
               <span className="text-[10px] tracking-widest text-zinc-400 uppercase font-medium">
                 Select Size
               </span>
@@ -360,7 +361,7 @@ export default function ProductDetailClient({ product }) {
                 {availableSizes.map(size => {
                   const isInStock = inStockSizes.includes(size.toUpperCase())
                   const isSelected = selectedSize === size
-
+ 
                   return (
                     <button
                       key={size}
@@ -399,9 +400,9 @@ export default function ProductDetailClient({ product }) {
                 </p>
               )}
             </div>
-
+ 
             {/* PDP Action Buttons */}
-            <div className="space-y-3 pt-6">
+            <div className="pt-8 space-y-6">
               
               {/* + VIEW DETAILS (Link above Add to Bag) */}
               <button
@@ -411,7 +412,7 @@ export default function ProductDetailClient({ product }) {
               >
                 + View Details
               </button>
-
+ 
               {/* Add to Bag Button */}
               <button
                 onClick={handleAddToBag}
@@ -426,7 +427,7 @@ export default function ProductDetailClient({ product }) {
               >
                 {adding ? 'Adding...' : 'ADD TO BAG 👜'}
               </button>
-
+ 
               {/* Razorpay Express Checkout */}
               <button
                 onClick={handleFastCheckout}
@@ -435,21 +436,20 @@ export default function ProductDetailClient({ product }) {
                 style={{
                   fontFamily: 'Jost, sans-serif',
                   borderColor: '#1c2c54',
-                  marginTop: '24px',
                   height: '60px',
                 }}
               >
                 {checkoutLoading ? 'Opening checkout...' : 'Pay with Razorpay'}
               </button>
             </div>
-
+ 
             {/* Delivery/Shipping details text */}
             <div className="pt-2 text-center">
               <span className="text-[10px] tracking-widest text-zinc-500 uppercase font-medium">
                 Free shipping and 7 Days to Return
               </span>
             </div>
-
+ 
           </div>
         </div>
 
