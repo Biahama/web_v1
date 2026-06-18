@@ -64,15 +64,85 @@ export default function ProductCard({ product, priority = false }) {
       {/* Image container */}
       <div className="relative biahama-card-image" style={{ background: 'var(--light)' }}>
         {imagesToCycle.length > 0 ? (
-          <Image
-            src={imagesToCycle[currentImageIndex]}
-            alt={product.altText || product.name}
-            fill
-            unoptimized
-            className="object-cover transition-transform duration-700"
-            style={{ transform: hovered ? 'scale(1.04)' : 'scale(1)' }}
-            priority={priority}
-          />
+          <>
+            <Image
+              src={imagesToCycle[currentImageIndex]}
+              alt={product.altText || product.name}
+              fill
+              unoptimized
+              className="object-cover transition-transform duration-700"
+              style={{
+                transform: hovered ? 'scale(1.04)' : 'scale(1)',
+                overflow: 'clip',
+              }}
+              priority={priority}
+            />
+            {imagesToCycle.length > 1 && (
+              <>
+                {/* Prev Arrow */}
+                <button
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    setCurrentImageIndex(idx => (idx - 1 + imagesToCycle.length) % imagesToCycle.length)
+                  }}
+                  className="opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                  style={{
+                    position: 'absolute',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '50%',
+                    background: 'rgba(255,255,255,0.7)',
+                    border: 'none',
+                    zIndex: 10,
+                    left: '8px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer'
+                  }}
+                  aria-label="Previous image"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#262626" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M15 18l-6-6 6-6" />
+                  </svg>
+                </button>
+
+                {/* Next Arrow */}
+                <button
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    setCurrentImageIndex(idx => (idx + 1) % imagesToCycle.length)
+                  }}
+                  className="opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                  style={{
+                    position: 'absolute',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '50%',
+                    background: 'rgba(255,255,255,0.7)',
+                    border: 'none',
+                    zIndex: 10,
+                    right: '8px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer'
+                  }}
+                  aria-label="Next image"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#262626" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M9 18l6-6-6-6" />
+                  </svg>
+                </button>
+              </>
+            )}
+          </>
         ) : (
           <div
             className="absolute inset-0 flex items-end p-4"

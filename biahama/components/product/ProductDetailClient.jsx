@@ -228,58 +228,63 @@ export default function ProductDetailClient({ product }) {
       <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
 
       <div className="w-full max-w-none pl-6 pr-0 md:pl-12 md:pr-0 pb-24 mt-[-32px] pt-[10px]">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-start">
+        <div className="flex flex-col lg:flex-row items-start justify-between gap-16 lg:gap-0">
           
-          {/* Left Column — Sticky Product Image */}
-          <div 
-            className="lg:sticky w-full overflow-hidden bg-zinc-50 relative aspect-[4/5] lg:h-[calc(100vh-var(--header-height))]"
-            style={{ top: 'var(--header-height)' }}
-          >
-            {displayImages[0] && (
-              <img
-                src={displayImages[0]}
-                alt={`${product.name} primary view`}
-                className="w-full h-full object-cover"
-              />
-            )}
+          {/* Left Column — Stacked Image Gallery */}
+          <div className="w-full lg:w-[53%] flex flex-col gap-0">
+            {displayImages.map((imgUrl, i) => (
+              <div 
+                key={i}
+                className="w-full overflow-hidden bg-zinc-50 relative"
+                style={{ width: '100%', aspectRatio: '127.31 / 100' }}
+              >
+                <img
+                  src={imgUrl}
+                  alt={`${product.name} view ${i + 1}`}
+                  className="w-full h-full object-cover"
+                />
 
-            {/* Circular Hanger Wishlist button */}
-            <button
-              onClick={() => setWishlisted(!wishlisted)}
-              aria-label="Save to wardrobe"
-              className="biahama-hanger-btn z-20 transition-colors"
-              style={{
-                width: 'var(--icon-hanger-btn)',
-                height: 'var(--icon-hanger-btn)',
-                borderRadius: '50%',
-                background: 'var(--icon-hanger-btn-bg)',
-                position: 'absolute',
-                top: 'var(--space-2)',
-                right: 'var(--space-2)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                border: 'none',
-              }}
-            >
-              <img
-                src="/cloth-hanger.png"
-                alt="Save to wardrobe"
-                style={{
-                  width: 'var(--icon-hanger)',
-                  height: 'var(--icon-hanger)',
-                  objectFit: 'contain',
-                  opacity: wishlisted ? 1.0 : 0.6,
-                  filter: 'drop-shadow(0px 1px 2px rgba(255, 255, 255, 0.4))'
-                }}
-              />
-            </button>
+                {/* Circular Hanger Wishlist button on first image */}
+                {i === 0 && (
+                  <button
+                    onClick={() => setWishlisted(!wishlisted)}
+                    aria-label="Save to wardrobe"
+                    className="biahama-hanger-btn z-20 transition-colors"
+                    style={{
+                      width: 'var(--icon-hanger-btn)',
+                      height: 'var(--icon-hanger-btn)',
+                      borderRadius: '50%',
+                      background: 'var(--icon-hanger-btn-bg)',
+                      position: 'absolute',
+                      top: 'var(--space-2)',
+                      right: 'var(--space-2)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      border: 'none',
+                    }}
+                  >
+                    <img
+                      src="/cloth-hanger.png"
+                      alt="Save to wardrobe"
+                      style={{
+                        width: 'var(--icon-hanger)',
+                        height: 'var(--icon-hanger)',
+                        objectFit: 'contain',
+                        opacity: wishlisted ? 1.0 : 0.6,
+                        filter: 'drop-shadow(0px 1px 2px rgba(255, 255, 255, 0.4))'
+                      }}
+                    />
+                  </button>
+                )}
+              </div>
+            ))}
           </div>
 
-          {/* Right Column — Scrollable Product Info */}
+          {/* Right Column — Sticky Product Info */}
           <div 
-            className="w-full pr-6 md:pr-12 flex flex-col gap-6"
-            style={{ paddingTop: 'var(--space-5)' }} // 48px top padding on the info column
+            className="w-full lg:w-[47%] lg:sticky flex flex-col gap-6 pr-6 md:pr-12 lg:pl-16"
+            style={{ top: '120px', paddingTop: 'var(--space-5)' }} // 48px top padding on the info column
           >
             
             {/* Section 1: SKU & Share */}
@@ -419,7 +424,7 @@ export default function ProductDetailClient({ product }) {
               <button
                 onClick={() => setShowDetails(!showDetails)}
                 className="w-full flex items-center justify-between text-left font-medium text-xs tracking-widest uppercase hover:opacity-60 transition-opacity"
-                style={{ fontFamily: 'var(--font-ui)', color: 'var(--black)', padding: '12px 0' }}
+                style={{ fontFamily: 'var(--font-ui)', color: 'var(--black)', padding: '12px 0', marginBottom: '40px' }}
               >
                 <span>{showDetails ? '— VIEW DETAILS' : '+ VIEW DETAILS'}</span>
               </button>
@@ -488,10 +493,14 @@ export default function ProductDetailClient({ product }) {
                   background: 'var(--black)',
                   color: 'var(--bg)',
                   fontFamily: 'var(--font-ui)',
-                  height: '60px',
+                  width: '100%',
+                  height: '48px',
+                  padding: '11px 33px',
+                  letterSpacing: '4px',
+                  textTransform: 'uppercase',
                 }}
               >
-                {adding ? 'Adding...' : 'ADD TO BAG 👜'}
+                {adding ? 'ADDING...' : 'ADD TO BAG 👜'}
               </button>
 
               <button
@@ -502,13 +511,17 @@ export default function ProductDetailClient({ product }) {
                   background: '#1c2c54',
                   borderColor: '#1c2c54',
                   fontFamily: 'var(--font-ui)',
-                  height: '60px',
+                  width: '100%',
+                  height: '48px',
+                  padding: '11px 33px',
+                  letterSpacing: '4px',
+                  textTransform: 'uppercase',
                 }}
               >
-                {checkoutLoading ? 'Opening checkout...' : 'Pay with Razorpay'}
+                {checkoutLoading ? 'OPENING CHECKOUT...' : 'PAY WITH RAZORPAY'}
               </button>
               
-              <div className="pt-2 text-center">
+              <div className="text-center" style={{ marginTop: '16px' }}>
                 <span className="text-[10px] tracking-widest text-zinc-500 uppercase font-medium">
                   Free shipping and 7 Days to Return
                 </span>
