@@ -262,7 +262,7 @@ export default function ProductDetailClient({ product }) {
           </div>
 
           {/* Right Column — Sticky product info */}
-          <div className="lg:sticky lg:top-[76px] space-y-6 pt-2 w-full">
+          <div className="lg:sticky lg:top-[76px] space-y-6 pt-2 w-full lg:pr-[12px]">
             
             {/* Header utilities (sku, share, wishlist) */}
             <div className="flex items-center justify-between">
