@@ -227,7 +227,10 @@ export default function ProductDetailClient({ product }) {
     <>
       <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
 
-      <div className="w-full max-w-none pl-6 pr-0 md:pl-12 md:pr-0 pb-24 mt-[-32px] pt-[10px]">
+      <div 
+        className="w-full max-w-none pl-6 pr-0 md:pl-12 md:pr-0 pb-24 mt-[-32px]"
+        style={{ paddingTop: 'var(--header-total)' }}
+      >
         <div className="flex flex-col lg:flex-row items-start justify-between gap-16 lg:gap-0">
           
           {/* Left Column — Stacked Image Gallery */}
@@ -284,7 +287,7 @@ export default function ProductDetailClient({ product }) {
           {/* Right Column — Sticky Product Info */}
           <div 
             className="w-full lg:w-[47%] lg:sticky flex flex-col gap-6 pr-6 md:pr-12 lg:pl-16"
-            style={{ top: '120px', paddingTop: 'var(--space-5)' }} // 48px top padding on the info column
+            style={{ top: 'var(--header-total)', paddingTop: 'var(--space-5)' }} // 48px top padding on the info column
           >
             
             {/* Section 1: SKU & Share */}

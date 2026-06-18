@@ -86,6 +86,7 @@
    ------------------------------------------------------------ */
 :root {
   --header-height:          177px;  /* BC total header height */
+  --header-total:           103px;  /* BIAHAMA total header height */
   --utility-bar-height:     34px;   /* BC top utility strip */
   --nav-row-height:         142px;  /* BC logo + nav row */
   --main-nav-height:        62px;   /* BC main nav menu row */
