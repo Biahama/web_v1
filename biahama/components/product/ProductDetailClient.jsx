@@ -244,11 +244,11 @@ export default function ProductDetailClient({ product }) {
     <>
       <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
 
-      <div className="max-w-7xl mx-auto px-6 md:px-12 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+      <div className="max-w-[1440px] mx-auto px-6 md:px-12 pb-24 mt-[-32px] pt-[10px]">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
           
           {/* Left Column — stacked gapless images */}
-          <div className="lg:col-span-7 flex flex-col gap-0 overflow-hidden">
+          <div className="flex flex-col gap-0 overflow-hidden">
             {displayImages.map((src, i) => (
               <div key={i} className="relative w-full overflow-hidden bg-zinc-50" style={{ aspectRatio: '4/5' }}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -262,7 +262,7 @@ export default function ProductDetailClient({ product }) {
           </div>
 
           {/* Right Column — Sticky product info */}
-          <div className="lg:col-span-5 lg:sticky lg:top-[88px] space-y-6 pt-2">
+          <div className="lg:sticky lg:top-[76px] space-y-6 pt-2">
             
             {/* Header utilities (sku, share, wishlist) */}
             <div className="flex items-center justify-between">
@@ -416,12 +416,12 @@ export default function ProductDetailClient({ product }) {
               <button
                 onClick={handleAddToBag}
                 disabled={adding}
-                className="w-full py-4 text-xs tracking-widest uppercase transition-colors flex items-center justify-center gap-2"
+                className="w-full text-sm tracking-widest uppercase transition-colors flex items-center justify-center gap-2 font-medium"
                 style={{
                   background: 'var(--black)',
                   color: '#ffffff',
                   fontFamily: 'Jost, sans-serif',
-                  fontWeight: 400,
+                  height: '60px',
                 }}
               >
                 {adding ? 'Adding...' : 'ADD TO BAG 👜'}
@@ -431,12 +431,12 @@ export default function ProductDetailClient({ product }) {
               <button
                 onClick={handleFastCheckout}
                 disabled={checkoutLoading}
-                className="w-full py-3.5 text-xs tracking-widest uppercase border transition-colors flex items-center justify-center gap-2 bg-[#1c2c54] text-white hover:bg-opacity-95"
+                className="w-full text-sm tracking-widest uppercase border transition-colors flex items-center justify-center gap-2 bg-[#1c2c54] text-white hover:bg-opacity-95 font-medium"
                 style={{
                   fontFamily: 'Jost, sans-serif',
-                  fontWeight: 400,
                   borderColor: '#1c2c54',
-                  marginTop: '20px'
+                  marginTop: '24px',
+                  height: '60px',
                 }}
               >
                 {checkoutLoading ? 'Opening checkout...' : 'Pay with Razorpay'}
@@ -451,44 +451,43 @@ export default function ProductDetailClient({ product }) {
             </div>
 
           </div>
-
         </div>
 
         {/* Bottom Specifications Accordion Area */}
-        <div id="details-section" className="border-t border-zinc-200 pt-16 mt-20 grid grid-cols-1 md:grid-cols-2 gap-12">
+        <div id="details-section" className="border-t border-zinc-200 pt-20 mt-36 grid grid-cols-1 md:grid-cols-2 gap-16 pb-20">
           
           {/* Left Column: Description & Details */}
           <div className="space-y-6">
             
             {/* Description Tab */}
-            <div className="border-b border-zinc-100 pb-6">
+            <div className="border-b border-zinc-150 pb-6">
               <button
                 onClick={() => toggleAccordion('description')}
-                className="w-full flex items-center justify-between text-left font-light text-base tracking-wide py-2"
-                style={{ fontFamily: 'Jost, sans-serif', color: 'var(--black)' }}
+                className="w-full flex items-center justify-between text-left font-semibold text-xs tracking-widest uppercase py-4"
+                style={{ fontFamily: 'Jost, sans-serif', color: 'var(--black)', letterSpacing: '0.15em' }}
               >
-                <span>Description</span>
+                <span>DESCRIPTION</span>
                 <span>{accordions.description ? '—' : '+'}</span>
               </button>
               {accordions.description && (
-                <p className="mt-4 text-sm font-light text-zinc-600 leading-relaxed max-w-xl">
+                <p className="mt-4 text-xs font-light text-zinc-500 leading-relaxed tracking-wide max-w-xl" style={{ fontFamily: 'Jost, sans-serif' }}>
                   {product.description || 'Crafted with premium Indian linen, this clothing piece combines breathability with architectural silhouette lines. Designed for effortless transitions from morning to evening settings.'}
                 </p>
               )}
             </div>
 
             {/* Details Tab */}
-            <div className="border-b border-zinc-100 pb-6">
+            <div className="border-b border-zinc-150 pb-6">
               <button
                 onClick={() => toggleAccordion('details')}
-                className="w-full flex items-center justify-between text-left font-light text-base tracking-wide py-2"
-                style={{ fontFamily: 'Jost, sans-serif', color: 'var(--black)' }}
+                className="w-full flex items-center justify-between text-left font-semibold text-xs tracking-widest uppercase py-4"
+                style={{ fontFamily: 'Jost, sans-serif', color: 'var(--black)', letterSpacing: '0.15em' }}
               >
-                <span>Details & Care</span>
+                <span>DETAILS & CARE</span>
                 <span>{accordions.details ? '—' : '+'}</span>
               </button>
               {accordions.details && (
-                <div className="mt-4 text-sm font-light text-zinc-600 space-y-2 leading-relaxed">
+                <div className="mt-4 text-xs font-light text-zinc-500 space-y-2 leading-relaxed tracking-wide" style={{ fontFamily: 'Jost, sans-serif' }}>
                   <p>{product.care || 'Gentle hand wash in cold water with mild detergent.'}</p>
                   <p>Do not tumble dry. Dry flat in shade. Cool iron on reverse if needed.</p>
                   <p>Handcrafted in limited batches in India.</p>
@@ -502,51 +501,51 @@ export default function ProductDetailClient({ product }) {
           <div className="space-y-6">
             
             {/* Materials Tab */}
-            <div className="border-b border-zinc-100 pb-6">
+            <div className="border-b border-zinc-150 pb-6">
               <button
                 onClick={() => toggleAccordion('materials')}
-                className="w-full flex items-center justify-between text-left font-light text-base tracking-wide py-2"
-                style={{ fontFamily: 'Jost, sans-serif', color: 'var(--black)' }}
+                className="w-full flex items-center justify-between text-left font-semibold text-xs tracking-widest uppercase py-4"
+                style={{ fontFamily: 'Jost, sans-serif', color: 'var(--black)', letterSpacing: '0.15em' }}
               >
-                <span>Materials</span>
+                <span>MATERIALS</span>
                 <span>{accordions.materials ? '—' : '+'}</span>
               </button>
               {accordions.materials && (
-                <p className="mt-4 text-sm font-light text-zinc-600 leading-relaxed">
+                <p className="mt-4 text-xs font-light text-zinc-500 leading-relaxed tracking-wide" style={{ fontFamily: 'Jost, sans-serif' }}>
                   {product.fabric || '100% Organic hand-spun Indian linen yarns. Structured yet lightweight breathable weave.'}
                 </p>
               )}
             </div>
 
             {/* Packaging Tab */}
-            <div className="border-b border-zinc-100 pb-6">
+            <div className="border-b border-zinc-150 pb-6">
               <button
                 onClick={() => toggleAccordion('packaging')}
-                className="w-full flex items-center justify-between text-left font-light text-base tracking-wide py-2"
-                style={{ fontFamily: 'Jost, sans-serif', color: 'var(--black)' }}
+                className="w-full flex items-center justify-between text-left font-semibold text-xs tracking-widest uppercase py-4"
+                style={{ fontFamily: 'Jost, sans-serif', color: 'var(--black)', letterSpacing: '0.15em' }}
               >
-                <span>Packaging</span>
+                <span>PACKAGING</span>
                 <span>{accordions.packaging ? '—' : '+'}</span>
               </button>
               {accordions.packaging && (
-                <p className="mt-4 text-sm font-light text-zinc-600 leading-relaxed">
+                <p className="mt-4 text-xs font-light text-zinc-500 leading-relaxed tracking-wide" style={{ fontFamily: 'Jost, sans-serif' }}>
                   All linen garments are folded carefully in tissue layers and shipped inside our signature architectural boxes, completely plastic-free and reusable.
                 </p>
               )}
             </div>
 
             {/* Shipping & Returns Tab */}
-            <div className="border-b border-zinc-100 pb-6">
+            <div className="border-b border-zinc-150 pb-6">
               <button
                 onClick={() => toggleAccordion('shipping')}
-                className="w-full flex items-center justify-between text-left font-light text-base tracking-wide py-2"
-                style={{ fontFamily: 'Jost, sans-serif', color: 'var(--black)' }}
+                className="w-full flex items-center justify-between text-left font-semibold text-xs tracking-widest uppercase py-4"
+                style={{ fontFamily: 'Jost, sans-serif', color: 'var(--black)', letterSpacing: '0.15em' }}
               >
-                <span>Shipping & Returns</span>
+                <span>SHIPPING & RETURNS</span>
                 <span>{accordions.shipping ? '—' : '+'}</span>
               </button>
               {accordions.shipping && (
-                <p className="mt-4 text-sm font-light text-zinc-600 leading-relaxed">
+                <p className="mt-4 text-xs font-light text-zinc-500 leading-relaxed tracking-wide" style={{ fontFamily: 'Jost, sans-serif' }}>
                   Free express shipping on all orders across India. Orders are dispatched within 24 hours. We offer hassle-free home returns and size exchanges within 7 days of delivery.
                 </p>
               )}
