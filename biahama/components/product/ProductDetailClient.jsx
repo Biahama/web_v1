@@ -244,7 +244,7 @@ export default function ProductDetailClient({ product }) {
     <>
       <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
 
-      <div className="w-full max-w-none px-6 md:px-12 pb-24 mt-[-32px] pt-[10px]">
+      <div className="w-full max-w-none pl-6 pr-0 md:pl-12 md:pr-0 pb-24 mt-[-32px] pt-[10px]">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-start">
           
           {/* Left Column — stacked gapless images */}
@@ -262,7 +262,7 @@ export default function ProductDetailClient({ product }) {
           </div>
 
           {/* Right Column — Sticky product info */}
-          <div className="lg:sticky lg:top-[76px] space-y-8 pt-2 w-full lg:pr-[12px]">
+          <div className="lg:sticky lg:top-[76px] space-y-8 pt-2 w-full pr-6 md:pr-12">
             
             {/* Header utilities (sku, share, wishlist) */}
             <div className="flex items-center justify-between">
@@ -454,7 +454,7 @@ export default function ProductDetailClient({ product }) {
         </div>
 
         {/* Bottom Specifications Accordion Area */}
-        <div id="details-section" className="mt-32 lg:mt-48 pb-32 w-full">
+        <div id="details-section" className="mt-32 lg:mt-48 pb-32 w-full pr-6 md:pr-12">
           
           {/* 2-Column Grid for Description, Details, Materials, Packaging */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-16 lg:gap-x-24 items-start">
