@@ -67,7 +67,7 @@ export default function ProductCard({ product, priority = false, index = 0 }) {
                 height: 'auto',
                 aspectRatio: '900/1146',
                 objectFit: 'cover',
-                objectPosition: '50% 15%',
+                objectPosition: product.category?.toLowerCase() === 'shirts' || product.category?.toLowerCase() === 'shirt' ? '50% 50%' : '50% 15%',
                 display: 'block',
                 transform: hovered ? 'scale(1.04)' : 'scale(1)',
                 transition: 'transform 700ms cubic-bezier(0.4, 0, 0.2, 1)'

@@ -50,12 +50,12 @@ export default function ProductGrid({ products = [], category = 'all' }) {
         )}
         {/* Desktop Layout */}
         <div className="hidden lg:block space-y-14">
-          <div className="relative w-full overflow-hidden" style={{ background: 'var(--light)' }}>
+          <div className="relative w-full overflow-hidden" style={{ aspectRatio: '9/16', width: '100%', overflow: 'hidden', background: 'var(--light)' }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="https://res.cloudinary.com/dc30t7io2/image/upload/v1781911173/biahama/banners/shirts-banner.webp"
               alt="Shirts Campaign"
-              style={{ width: '100%', height: 'auto', objectFit: 'cover', objectPosition: '50% 20%' }}
+              style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: '50% 20%' }}
             />
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '32px 8px', marginTop: 'var(--space-5)' }}>
@@ -67,12 +67,12 @@ export default function ProductGrid({ products = [], category = 'all' }) {
 
         {/* Mobile Layout */}
         <div className="block lg:hidden space-y-10">
-          <div className="relative w-full overflow-hidden" style={{ background: 'var(--light)' }}>
+          <div className="relative w-full overflow-hidden" style={{ aspectRatio: '9/16', width: '100%', overflow: 'hidden', background: 'var(--light)' }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="https://res.cloudinary.com/dc30t7io2/image/upload/v1781911173/biahama/banners/shirts-banner.webp"
               alt="Shirts Campaign"
-              style={{ width: '100%', height: 'auto', objectFit: 'cover', objectPosition: '50% 20%' }}
+              style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: '50% 20%' }}
             />
           </div>
           <div className="grid grid-cols-2 mt-10" style={{ columnGap: 'var(--grid-col-gap)', rowGap: 'var(--grid-row-gap)' }}>
