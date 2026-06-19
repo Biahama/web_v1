@@ -43,12 +43,13 @@ export async function updateSession(request) {
 
   if (isProtectedRoute && !user) {
     const url = request.nextUrl.clone()
-    url.pathname = '/login'
+    url.pathname = '/'
+    url.searchParams.set('login', 'true')
     return NextResponse.redirect(url)
   }
 
   // Redirect logged-in users away from auth pages
-  const authRoutes = ['/login', '/register', '/signup']
+  const authRoutes = ['/register', '/signup']
   const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route))
 
   if (isAuthRoute && user) {

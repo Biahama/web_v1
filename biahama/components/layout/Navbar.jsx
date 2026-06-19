@@ -6,6 +6,7 @@ import { useState, useRef, useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import CartDrawer from '@/components/ui/CartDrawer'
+import LoginDrawer from '@/components/auth/LoginDrawer'
 import { useCart } from '@/lib/cart'
 
 const DROPDOWN_CATEGORIES = [
@@ -23,6 +24,7 @@ export default function Navbar() {
   const [searchActive, setSearchActive] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [cartOpen, setCartOpen] = useState(false)
+  const [loginOpen, setLoginOpen] = useState(false)
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const { count } = useCart()
@@ -40,6 +42,15 @@ export default function Navbar() {
     }
     window.addEventListener('scroll', handleScroll)
     handleScroll() // set initial state
+
+    // Open login drawer if redirected from protected route
+    if (window.location.search.includes('login=true')) {
+      setLoginOpen(true)
+      // Clean up URL without triggering a page reload
+      const newUrl = window.location.pathname
+      window.history.replaceState({}, '', newUrl)
+    }
+
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
@@ -302,16 +313,29 @@ export default function Navbar() {
           </form>
 
           {/* Wardrobe */}
-          <Link
-            href={session ? '/account/wardrobe' : '/login'}
-            className="flex items-center gap-2 hover:opacity-60 transition-opacity h-full"
-            style={{ color: themeColor }}
-          >
-            <WardrobeIcon themeColor={themeColor} />
-            <span className="tracking-widest uppercase hidden lg:block" style={{ fontFamily: 'var(--font-ui)', fontSize: '14px', fontWeight: '400', letterSpacing: '1.2px' }}>
-              Wardrobe
-            </span>
-          </Link>
+          {session ? (
+            <Link
+              href="/account/wardrobe"
+              className="flex items-center gap-2 hover:opacity-60 transition-opacity h-full"
+              style={{ color: themeColor }}
+            >
+              <WardrobeIcon themeColor={themeColor} />
+              <span className="tracking-widest uppercase hidden lg:block" style={{ fontFamily: 'var(--font-ui)', fontSize: '14px', fontWeight: '400', letterSpacing: '1.2px' }}>
+                Wardrobe
+              </span>
+            </Link>
+          ) : (
+            <button
+              onClick={() => setLoginOpen(true)}
+              className="flex items-center gap-2 hover:opacity-60 transition-opacity h-full"
+              style={{ color: themeColor, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+            >
+              <WardrobeIcon themeColor={themeColor} />
+              <span className="tracking-widest uppercase hidden lg:block" style={{ fontFamily: 'var(--font-ui)', fontSize: '14px', fontWeight: '400', letterSpacing: '1.2px' }}>
+                Wardrobe
+              </span>
+            </button>
+          )}
 
           {/* Cart */}
           <button
@@ -341,18 +365,30 @@ export default function Navbar() {
           </button>
 
           {/* Profile */}
-          <Link
-            href={session ? '/account' : '/login'}
-            className="hover:opacity-60 transition-opacity flex items-center h-full"
-            style={{ color: themeColor }}
-            aria-label="Account"
-          >
-            <ProfileIcon />
-          </Link>
+          {session ? (
+            <Link
+              href="/account"
+              className="hover:opacity-60 transition-opacity flex items-center h-full"
+              style={{ color: themeColor }}
+              aria-label="Account"
+            >
+              <ProfileIcon />
+            </Link>
+          ) : (
+            <button
+              onClick={() => setLoginOpen(true)}
+              className="hover:opacity-60 transition-opacity flex items-center h-full"
+              style={{ color: themeColor, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+              aria-label="Log In"
+            >
+              <ProfileIcon />
+            </button>
+          )}
         </div>
       </nav>
 
-      <CartDrawer    open={cartOpen}   onClose={() => setCartOpen(false)} />
+      <CartDrawer open={cartOpen} onClose={() => setCartOpen(false)} />
+      <LoginDrawer open={loginOpen} onClose={() => setLoginOpen(false)} />
     </>
   )
 }
