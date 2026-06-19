@@ -230,7 +230,7 @@ export default function ProductDetailClient({ product }) {
 
       <div 
         className="w-full max-w-none pl-6 pr-0 md:pl-12 md:pr-0 pb-24"
-        style={{ paddingTop: '80px' }}
+        style={{ paddingTop: '56px' }}
       >
         <div className="flex flex-col lg:flex-row items-start justify-between gap-16 lg:gap-12">
           
