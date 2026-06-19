@@ -55,14 +55,17 @@ export default function ProductCard({ product, priority = false }) {
       onMouseLeave={() => setHovered(false)}
     >
       {/* Image container */}
-      <div className="relative biahama-card-image overflow-hidden" style={{ background: '#ffffff' }}>
+      <div className="relative biahama-card-image overflow-hidden" style={{ width: '356px', height: '453px' }}>
         {imagesToCycle.length > 0 ? (
           <>
             <img
               src={imagesToCycle[currentImageIndex]}
               alt={product.altText || product.name}
-              className="w-full h-auto block"
+              className="w-full h-full block"
               style={{
+                objectFit: 'cover',
+                objectPosition: '50% 50%',
+                aspectRatio: '900/1146',
                 transform: hovered ? 'scale(1.04)' : 'scale(1)',
                 transition: 'transform 700ms cubic-bezier(0.4, 0, 0.2, 1)'
               }}
@@ -183,39 +186,39 @@ export default function ProductCard({ product, priority = false }) {
       {/* Info */}
       <div style={{ marginTop: '3px' }} className="flex justify-between items-start">
         <div className="flex-1" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}>
-          <div className="flex justify-between items-start" style={{ gap: 'var(--space-1)' }}>
+          <div className="flex justify-between items-center w-full" style={{ gap: '8px' }}>
             <p 
               className="biahama-product-name"
               style={{
                 fontSize: 'var(--text-product-name-size)',
                 letterSpacing: 'var(--text-product-name-tracking)',
+                margin: 0
               }}
             >
               {product.name}
             </p>
-            {/* Shopping bag button using bag.png */}
+            {/* + quick-add button */}
             {!isSoldOut && (
               <button
                 onClick={handleAddToCart}
-                className="biahama-bag-btn hover:opacity-75 transition-opacity z-10 shrink-0 mt-0.5"
+                className="hover:opacity-75 transition-opacity shrink-0 max-[1199px]:hidden min-[1200px]:flex flex-row items-start"
                 aria-label="Add to cart"
                 style={{
-                  width: 'var(--icon-bag-container)',
+                  width: '24px',
+                  height: '20px',
+                  paddingRight: '4px',
                   background: 'transparent',
                   border: 'none',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
+                  marginLeft: 'auto'
                 }}
               >
                 <img
-                  src="/bag.png"
-                  alt="Add to cart"
+                  src="/icons/plus.png"
+                  alt="View sizes"
                   style={{
-                    width: 'var(--icon-bag)',
-                    height: 'var(--icon-bag)',
-                    objectFit: 'contain'
+                    width: '20px',
+                    height: '20px',
+                    color: '#1A202C'
                   }}
                 />
               </button>

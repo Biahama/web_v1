@@ -121,14 +121,15 @@ export default function ProductGrid({ products = [], category = 'all' }) {
 
             {/* Right side: 1 campaign banner */}
             <div
-              className="col-span-1 relative w-full h-full bg-zinc-100 overflow-hidden"
-              style={{ border: '1px solid var(--border)', minHeight: '550px' }}
+              className="col-span-1 relative bg-zinc-100 overflow-hidden"
+              style={{ width: '727px', height: '1048px' }}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={bannerUrl}
                 alt="Campaign Banner"
-                className="object-cover w-full h-full absolute inset-0"
+                className="w-full h-full block"
+                style={{ objectFit: 'cover', objectPosition: '50% 0%' }}
               />
               <div className="absolute bottom-6 left-6 text-white text-3xl font-light italic" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
                 {cat === 'kurta' || cat === 'kurtas' ? 'Kurta Collection' : 'Linen Pants'}
