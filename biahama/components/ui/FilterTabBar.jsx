@@ -15,10 +15,8 @@ export default function FilterTabBar() {
   const searchParams = useSearchParams()
   const activeCategory = searchParams.get('cat') || 'kurtas'
 
-  // Only render if pathname includes /collection/
-  if (!pathname.includes('/collection/')) {
-    return null
-  }
+  const showFilterBar = pathname.startsWith('/shop') || pathname.startsWith('/collection');
+  if (!showFilterBar) return null;
 
   return (
     <div 
