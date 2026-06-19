@@ -59,8 +59,8 @@ export default function ProductGrid({ products = [], category = 'all' }) {
             />
           </div>
           <div className="biahama-grid" style={{ marginTop: 'var(--space-5)' }}>
-            {displayProducts.map(p => (
-              <ProductCard key={p.id} product={p} />
+            {displayProducts.map((p, i) => (
+              <ProductCard key={p.id} product={p} index={i} />
             ))}
           </div>
         </div>
@@ -76,8 +76,8 @@ export default function ProductGrid({ products = [], category = 'all' }) {
             />
           </div>
           <div className="grid grid-cols-2 mt-10" style={{ columnGap: 'var(--grid-col-gap)', rowGap: 'var(--grid-row-gap)' }}>
-            {displayProducts.map(p => (
-              <ProductCard key={p.id} product={p} />
+            {displayProducts.map((p, i) => (
+              <ProductCard key={p.id} product={p} index={i} />
             ))}
           </div>
         </div>
@@ -112,8 +112,8 @@ export default function ProductGrid({ products = [], category = 'all' }) {
         <div className="hidden lg:block space-y-14">
           {/* Top Section: Asymmetric Layout (25% 25% 50%) */}
           <div className="grid" style={{ gridTemplateColumns: '1fr 1fr 2fr', columnGap: 'var(--grid-col-gap)', rowGap: 'var(--grid-row-gap)' }}>
-            {displayProducts[0] && <ProductCard key={displayProducts[0].id} product={displayProducts[0]} priority={true} />}
-            {displayProducts[1] && <ProductCard key={displayProducts[1].id} product={displayProducts[1]} priority={true} />}
+            {displayProducts[0] && <ProductCard key={displayProducts[0].id} product={displayProducts[0]} priority={true} index={0} />}
+            {displayProducts[1] && <ProductCard key={displayProducts[1].id} product={displayProducts[1]} priority={true} index={1} />}
 
             {/* Right side: 1 campaign banner */}
             <div
@@ -129,15 +129,15 @@ export default function ProductGrid({ products = [], category = 'all' }) {
               />
             </div>
 
-            {displayProducts[2] && <ProductCard key={displayProducts[2].id} product={displayProducts[2]} priority={true} />}
-            {displayProducts[3] && <ProductCard key={displayProducts[3].id} product={displayProducts[3]} priority={true} />}
+            {displayProducts[2] && <ProductCard key={displayProducts[2].id} product={displayProducts[2]} priority={true} index={2} />}
+            {displayProducts[3] && <ProductCard key={displayProducts[3].id} product={displayProducts[3]} priority={true} index={3} />}
           </div>
 
           {/* Bottom Section: Remaining products in a standard 3-column grid */}
           {displayProducts.length > 4 && (
             <div className="biahama-grid" style={{ marginTop: 'var(--space-5)' }}>
-              {displayProducts.slice(4).map(p => (
-                <ProductCard key={p.id} product={p} />
+              {displayProducts.slice(4).map((p, i) => (
+                <ProductCard key={p.id} product={p} index={i + 4} />
               ))}
             </div>
           )}
@@ -145,8 +145,8 @@ export default function ProductGrid({ products = [], category = 'all' }) {
 
         {/* Mobile Layout */}
         <div className="grid lg:hidden grid-cols-2" style={{ columnGap: 'var(--grid-col-gap)', rowGap: 'var(--grid-row-gap)' }}>
-          {displayProducts.map(p => (
-            <ProductCard key={p.id} product={p} />
+          {displayProducts.map((p, i) => (
+            <ProductCard key={p.id} product={p} index={i} />
           ))}
         </div>
       </>
@@ -163,7 +163,7 @@ export default function ProductGrid({ products = [], category = 'all' }) {
       )}
       <div className="grid grid-cols-2 lg:biahama-grid" style={{ columnGap: 'var(--grid-col-gap)', rowGap: 'var(--grid-row-gap)' }}>
         {displayProducts.map((product, i) => (
-          <ProductCard key={product.id} product={product} priority={i < 4} />
+          <ProductCard key={product.id} product={product} priority={i < 4} index={i} />
         ))}
       </div>
     </>

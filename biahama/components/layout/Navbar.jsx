@@ -24,6 +24,7 @@ export default function Navbar() {
   const [searchQuery, setSearchQuery] = useState('')
   const [cartOpen, setCartOpen] = useState(false)
   const [dropdownOpen, setDropdownOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
   const { count } = useCart()
 
   const collectionRef = useRef(null)
@@ -38,12 +39,26 @@ export default function Navbar() {
     }
     updateOffset()
     window.addEventListener('resize', updateOffset)
-    return () => window.removeEventListener('resize', updateOffset)
+    
+    const handleScroll = () => {
+      if (window.scrollY > 80) {
+        setScrolled(true)
+      } else {
+        setScrolled(false)
+      }
+    }
+    window.addEventListener('scroll', handleScroll)
+    handleScroll()
+    
+    return () => {
+      window.removeEventListener('resize', updateOffset)
+      window.removeEventListener('scroll', handleScroll)
+    }
   }, [])
 
   const isHome = pathname === '/'
-  const showSolidNavbar = true // Always solid
-  const themeColor = 'var(--black)'
+  const showSolidNavbar = !isHome || dropdownOpen || scrolled
+  const themeColor = showSolidNavbar ? 'var(--black)' : '#ffffff'
   
   const handleSearchSubmit = (e) => {
     e.preventDefault()
@@ -91,8 +106,8 @@ export default function Navbar() {
           height: '56px',
           paddingLeft: 'var(--space-5)',
           paddingRight: 'var(--space-5)',
-          background: '#ffffff',
-          borderBottom: '1px solid #e5e5e5',
+          background: showSolidNavbar ? '#ffffff' : 'transparent',
+          borderBottom: showSolidNavbar ? '1px solid #e5e5e5' : 'none',
         }}
       >
         {/* Left Section — Home, Collection, Contact Us */}
@@ -308,8 +323,8 @@ export default function Navbar() {
                   height: 13,
                   top: -5,
                   right: -7,
-                  background: isHome ? 'var(--bg)' : 'var(--black)',
-                  color: isHome ? 'var(--black)' : 'var(--bg)',
+                  background: showSolidNavbar ? 'var(--black)' : '#ffffff',
+                  color: showSolidNavbar ? '#ffffff' : 'var(--black)',
                   fontSize: 8,
                   fontFamily: 'var(--font-ui)',
                 }}

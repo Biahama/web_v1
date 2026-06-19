@@ -9,7 +9,7 @@ function formatPrice(paise) {
   return `₹${(paise / 100).toLocaleString('en-IN')}`
 }
 
-export default function ProductCard({ product, priority = false }) {
+export default function ProductCard({ product, priority = false, index = 0 }) {
   const [wishlisted, setWishlisted] = useState(false)
   const [hovered, setHovered] = useState(false)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
@@ -64,7 +64,7 @@ export default function ProductCard({ product, priority = false }) {
               className="w-full h-full block"
               style={{
                 objectFit: 'cover',
-                objectPosition: '50% 0%',
+                objectPosition: index >= 6 ? '50% 15%' : '50% 0%',
                 aspectRatio: '900/1146',
                 transform: hovered ? 'scale(1.04)' : 'scale(1)',
                 transition: 'transform 700ms cubic-bezier(0.4, 0, 0.2, 1)'
