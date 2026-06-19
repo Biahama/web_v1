@@ -110,18 +110,14 @@ export default function ProductGrid({ products = [], category = 'all' }) {
         )}
         {/* Desktop Layout — Asymmetric Top (4 products left, 1 banner right) + Bottom (6 products below) */}
         <div className="hidden lg:block space-y-14">
-          {/* Top Section: 4 products left, 1 banner right */}
-          <div className="grid grid-cols-3" style={{ columnGap: 'var(--grid-col-gap)' }}>
-            {/* Left side: 2x2 grid for the first 4 products */}
-            <div className="col-span-2 grid grid-cols-2" style={{ columnGap: 'var(--grid-col-gap)', rowGap: 'var(--grid-row-gap)' }}>
-              {displayProducts.slice(0, 4).map((p, i) => (
-                <ProductCard key={p.id} product={p} priority={i < 4} />
-              ))}
-            </div>
+          {/* Top Section: Asymmetric Layout (25% 25% 50%) */}
+          <div className="grid" style={{ gridTemplateColumns: '1fr 1fr 2fr', columnGap: 'var(--grid-col-gap)', rowGap: 'var(--grid-row-gap)' }}>
+            {displayProducts[0] && <ProductCard key={displayProducts[0].id} product={displayProducts[0]} priority={true} />}
+            {displayProducts[1] && <ProductCard key={displayProducts[1].id} product={displayProducts[1]} priority={true} />}
 
             {/* Right side: 1 campaign banner */}
             <div
-              className="col-span-1 relative bg-zinc-100 overflow-hidden"
+              className="relative bg-zinc-100 overflow-hidden"
               style={{ gridRow: 'span 2', width: '100%', height: '100%' }}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -135,6 +131,9 @@ export default function ProductGrid({ products = [], category = 'all' }) {
                 {cat === 'kurta' || cat === 'kurtas' ? 'Kurta Collection' : 'Linen Pants'}
               </div>
             </div>
+
+            {displayProducts[2] && <ProductCard key={displayProducts[2].id} product={displayProducts[2]} priority={true} />}
+            {displayProducts[3] && <ProductCard key={displayProducts[3].id} product={displayProducts[3]} priority={true} />}
           </div>
 
           {/* Bottom Section: Remaining products in a standard 3-column grid */}
