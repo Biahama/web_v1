@@ -32,17 +32,9 @@ export default function Navbar() {
   const collectionRef = useRef(null)
   const [leftOffset, setLeftOffset] = useState(0)
 
-  useEffect(() => {
-    const handleScroll = () => {
-      if (window.scrollY > window.innerHeight * 0.8) {
-        setScrolled(true)
-      } else {
-        setScrolled(false)
-      }
-    }
-    window.addEventListener('scroll', handleScroll)
-    handleScroll() // set initial state
+  const isHome = pathname === '/'
 
+  useEffect(() => {
     // Open login drawer if redirected from protected route
     if (window.location.search.includes('login=true')) {
       setLoginOpen(true)
@@ -51,8 +43,16 @@ export default function Navbar() {
       window.history.replaceState({}, '', newUrl)
     }
 
+    if (!isHome) {
+      setScrolled(true)
+      return
+    }
+
+    const handleScroll = () => setScrolled(window.scrollY > 50)
+    handleScroll()
+    window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
+  }, [isHome])
 
   useEffect(() => {
     function updateOffset() {
@@ -66,8 +66,7 @@ export default function Navbar() {
     return () => window.removeEventListener('resize', updateOffset)
   }, [])
 
-  const isHome = pathname === '/'
-  const showSolidNavbar = !isHome || dropdownOpen || scrolled
+  const showSolidNavbar = scrolled || dropdownOpen
   const themeColor = showSolidNavbar ? '#1A202C' : '#ffffff'
   
   const handleSearchSubmit = (e) => {
@@ -117,7 +116,7 @@ export default function Navbar() {
           paddingLeft: 'var(--space-5)',
           paddingRight: 'var(--space-5)',
           background: showSolidNavbar ? '#ffffff' : 'transparent',
-          borderBottom: showSolidNavbar ? '1px solid #e5e5e5' : '1px solid transparent',
+          borderBottom: showSolidNavbar ? '1px solid #e5e5e5' : 'none',
           transition: 'background 0.4s ease, border-bottom 0.4s ease, color 0.4s ease',
         }}
       >

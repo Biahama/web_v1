@@ -67,7 +67,7 @@ export default function LoginDrawer({ open, onClose }) {
         position: 'fixed',
         top: 0,
         right: 0,
-        width: 400,
+        width: 'min(400px, 100vw)',
         height: '100vh',
         background: '#ffffff',
         zIndex: 200,
