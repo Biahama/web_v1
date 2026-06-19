@@ -48,7 +48,7 @@ export default function Navbar() {
       return
     }
 
-    const handleScroll = () => setScrolled(window.scrollY > 50)
+    const handleScroll = () => setScrolled(window.scrollY > window.innerHeight * 0.9)
     handleScroll()
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
