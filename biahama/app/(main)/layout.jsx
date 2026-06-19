@@ -13,7 +13,7 @@ export default function MainLayout({ children }) {
     <div className="flex flex-col min-h-screen">
       <AnnouncementBar />
       <Navbar />
-      <main className="flex-1" style={{ paddingTop: isHome ? 0 : 'calc(56px + 32px)' }}>
+      <main className="flex-1" style={{ paddingTop: isHome ? 0 : '56px' }}>
         {children}
       </main>
       <Footer />
