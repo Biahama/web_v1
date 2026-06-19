@@ -50,13 +50,32 @@ export default function ProductGrid({ products = [], category = 'all' }) {
         )}
         {/* Desktop Layout */}
         <div className="hidden lg:block space-y-14">
-          <div className="relative w-full overflow-hidden" style={{ aspectRatio: '9/16', width: '100%', overflow: 'hidden', background: 'var(--light)' }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="https://res.cloudinary.com/dc30t7io2/image/upload/v1781911173/biahama/banners/shirts-banner.webp"
-              alt="Shirts Campaign"
-              style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: '50% 20%' }}
-            />
+          <div style={{
+            aspectRatio: '9/16',
+            width: '100%',
+            background: '#f2f2f2',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'flex-end',
+            padding: '40px 32px'
+          }}>
+            <p style={{
+              fontFamily: 'var(--font-ui)',
+              fontSize: '10px',
+              fontWeight: 500,
+              letterSpacing: '2px',
+              textTransform: 'uppercase',
+              color: '#6f6f6f',
+              marginBottom: '12px'
+            }}>New Arrival</p>
+            <h2 style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: '32px',
+              fontWeight: 300,
+              fontStyle: 'italic',
+              color: '#262626',
+              lineHeight: '1.2'
+            }}>Linen Column<br/>Shirts</h2>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '32px 8px', marginTop: 'var(--space-5)' }}>
             {displayProducts.map((p, i) => (
@@ -67,13 +86,32 @@ export default function ProductGrid({ products = [], category = 'all' }) {
 
         {/* Mobile Layout */}
         <div className="block lg:hidden space-y-10">
-          <div className="relative w-full overflow-hidden" style={{ aspectRatio: '9/16', width: '100%', overflow: 'hidden', background: 'var(--light)' }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="https://res.cloudinary.com/dc30t7io2/image/upload/v1781911173/biahama/banners/shirts-banner.webp"
-              alt="Shirts Campaign"
-              style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: '50% 20%' }}
-            />
+          <div style={{
+            aspectRatio: '9/16',
+            width: '100%',
+            background: '#f2f2f2',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'flex-end',
+            padding: '40px 32px'
+          }}>
+            <p style={{
+              fontFamily: 'var(--font-ui)',
+              fontSize: '10px',
+              fontWeight: 500,
+              letterSpacing: '2px',
+              textTransform: 'uppercase',
+              color: '#6f6f6f',
+              marginBottom: '12px'
+            }}>New Arrival</p>
+            <h2 style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: '32px',
+              fontWeight: 300,
+              fontStyle: 'italic',
+              color: '#262626',
+              lineHeight: '1.2'
+            }}>Linen Column<br/>Shirts</h2>
           </div>
           <div className="grid grid-cols-2 mt-10" style={{ columnGap: 'var(--grid-col-gap)', rowGap: 'var(--grid-row-gap)' }}>
             {displayProducts.map((p, i) => (
