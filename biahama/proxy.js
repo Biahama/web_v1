@@ -1,9 +1,18 @@
-import { withAuth } from 'next-auth/middleware'
+import { updateSession } from '@/utils/supabase/middleware'
 
-export const proxy = withAuth({
-  pages: { signIn: '/login' },
-})
+export async function proxy(request) {
+  return await updateSession(request)
+}
 
 export const config = {
-  matcher: ['/account/:path*', '/checkout/:path*', '/orders/:path*'],
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * Feel free to modify this pattern to include more paths.
+     */
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+  ],
 }

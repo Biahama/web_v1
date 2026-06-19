@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useSession } from 'next-auth/react'
+import { useAuth } from '@/components/providers/AuthProvider'
 import { useRouter } from 'next/navigation'
 import { useCart } from '@/lib/cart'
 import Script from 'next/script'
@@ -11,7 +11,7 @@ function formatPrice(paise) {
 }
 
 export default function ProductDetailClient({ product }) {
-  const { data: session } = useSession()
+  const { session } = useAuth()
   const router = useRouter()
   const { add } = useCart()
 

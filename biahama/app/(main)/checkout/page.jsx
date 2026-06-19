@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useSession, signIn } from 'next-auth/react'
+import { useAuth } from '@/components/providers/AuthProvider'
+import { createClient } from '@/utils/supabase/client'
 import { useCart } from '@/lib/cart'
 import Script from 'next/script'
 import Link from 'next/link'
@@ -18,7 +19,9 @@ function formatPrice(paise) {
 export default function CheckoutPage() {
   const router = useRouter()
   const { items, clear } = useCart()
-  const { data: session, status } = useSession()
+  const { session, user, loading } = useAuth()
+  const supabase = createClient()
+  const status = loading ? 'loading' : session ? 'authenticated' : 'unauthenticated'
 
   // Checkout layout states
   const [activeStep, setActiveStep] = useState(1) // 1: Email, 2: Shipping, 3: Payment
@@ -131,13 +134,12 @@ export default function CheckoutPage() {
 
     if (userExists) {
       // Login inline
-      const res = await signIn('credentials', {
+      const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
-        redirect: false,
       })
 
-      if (res?.error) {
+      if (error) {
         setAuthError('Invalid password. Please try again.')
         setAuthLoading(false)
       } else {
@@ -157,37 +159,18 @@ export default function CheckoutPage() {
         return
       }
 
-      try {
-        const signupRes = await fetch('/api/auth/signup', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            name: fullName,
-            email,
-            password,
-          }),
-        })
-
-        const signupData = await signupRes.json()
-        if (!signupRes.ok) {
-          setAuthError(signupData.error || 'Failed to register.')
-          setAuthLoading(false)
-          return
+      const { error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { first_name: fullName }
         }
+      })
 
-        // Login after register
-        const res = await signIn('credentials', {
-          email,
-          password,
-          redirect: false,
-        })
-        
-        if (res?.error) {
-          setAuthError('Failed to log in automatically after signup.')
-          setAuthLoading(false)
-        }
-      } catch {
-        setAuthError('Failed to sign up. Please try again.')
+      if (signUpError) {
+        setAuthError(signUpError.message || 'Failed to register.')
+        setAuthLoading(false)
+      } else {
         setAuthLoading(false)
       }
     }

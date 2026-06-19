@@ -1,16 +1,17 @@
 import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { createClient } from '@/utils/supabase/server'
+
 import { prisma } from '@/lib/prisma'
 
 export async function GET(req, { params }) {
-  const session = await getServerSession(authOptions)
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { id } = await params
 
   const order = await prisma.order.findFirst({
-    where: { id, userId: session.user.id },
+    where: { id, userId: user.id },
     include: { items: true },
   })
 

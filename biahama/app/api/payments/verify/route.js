@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
+import { createClient } from '@/utils/supabase/server'
 import crypto from 'crypto'
-import { authOptions } from '@/lib/auth'
+
 import { prisma } from '@/lib/prisma'
 
 const SHIPPING_THRESHOLD = 300000
@@ -9,8 +9,9 @@ const SHIPPING_COST      = 9900
 const GST_RATE           = 0.05
 
 export async function POST(req) {
-  const session = await getServerSession(authOptions)
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { razorpay_order_id, razorpay_payment_id, razorpay_signature, addressId, paymentMethod } = await req.json()
 
@@ -26,12 +27,12 @@ export async function POST(req) {
   }
 
   const address = await prisma.address.findFirst({
-    where: { id: addressId, userId: session.user.id },
+    where: { id: addressId, userId: user.id },
   })
   if (!address) return NextResponse.json({ error: 'Address not found' }, { status: 404 })
 
   const cartItems = await prisma.cart.findMany({
-    where: { userId: session.user.id },
+    where: { userId: user.id },
     include: {
       variant: {
         include: { product: { select: { id: true, name: true, slug: true } } },
@@ -70,7 +71,7 @@ export async function POST(req) {
 
     const newOrder = await tx.order.create({
       data: {
-        userId:          session.user.id,
+        userId:          user.id,
         status:          paymentMethod === 'cod' ? 'confirmed' : 'confirmed',
         totalAmount:     total,
         shippingAmount:  shipping,
@@ -92,7 +93,7 @@ export async function POST(req) {
       },
     })
 
-    await tx.cart.deleteMany({ where: { userId: session.user.id } })
+    await tx.cart.deleteMany({ where: { userId: user.id } })
 
     return newOrder
   })

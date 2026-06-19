@@ -1,27 +1,29 @@
 import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { createClient } from '@/utils/supabase/server'
+
 import { prisma } from '@/lib/prisma'
 
 export async function DELETE(req, { params }) {
-  const session = await getServerSession(authOptions)
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { id } = await params
 
-  await prisma.address.deleteMany({ where: { id, userId: session.user.id } })
+  await prisma.address.deleteMany({ where: { id, userId: user.id } })
   return NextResponse.json({ ok: true })
 }
 
 export async function PATCH(req, { params }) {
-  const session = await getServerSession(authOptions)
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { id } = await params
   const body = await req.json()
 
   if (body.isDefault) {
-    await prisma.address.updateMany({ where: { userId: session.user.id }, data: { isDefault: false } })
+    await prisma.address.updateMany({ where: { userId: user.id }, data: { isDefault: false } })
   }
 
   const address = await prisma.address.update({

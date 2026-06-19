@@ -1,7 +1,7 @@
 'use client'
 
 import { createContext, useContext, useState, useEffect } from 'react'
-import { useSession } from 'next-auth/react'
+import { useAuth } from '@/components/providers/AuthProvider'
 
 const CartContext = createContext({ items: [], count: 0, add: () => {}, remove: () => {}, updateQty: () => {}, clear: () => {} })
 
@@ -16,7 +16,8 @@ function writeLocalCart(items) {
 }
 
 export function CartProvider({ children }) {
-  const { data: session, status } = useSession()
+  const { session, loading } = useAuth()
+  const status = loading ? 'loading' : session ? 'authenticated' : 'unauthenticated'
   const [items, setItems] = useState([])
 
   useEffect(() => {

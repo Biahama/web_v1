@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useSession } from 'next-auth/react'
+import { useAuth } from '@/components/providers/AuthProvider'
 import { useState, useRef, useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -16,7 +16,7 @@ const DROPDOWN_CATEGORIES = [
 ]
 
 export default function Navbar() {
-  const { data: session } = useSession()
+  const { session } = useAuth()
   const pathname = usePathname()
   const router = useRouter()
   const searchInputRef = useRef(null)

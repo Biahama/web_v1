@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { createClient } from '@/utils/supabase/server'
+
 import { prisma } from '@/lib/prisma'
 import { getRazorpay } from '@/lib/razorpay'
 
@@ -9,19 +9,20 @@ const SHIPPING_COST      = 9900
 const GST_RATE           = 0.05
 
 export async function POST(req) {
-  const session = await getServerSession(authOptions)
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { addressId } = await req.json()
   if (!addressId) return NextResponse.json({ error: 'Address required' }, { status: 400 })
 
   const address = await prisma.address.findFirst({
-    where: { id: addressId, userId: session.user.id },
+    where: { id: addressId, userId: user.id },
   })
   if (!address) return NextResponse.json({ error: 'Address not found' }, { status: 404 })
 
   const cartItems = await prisma.cart.findMany({
-    where: { userId: session.user.id },
+    where: { userId: user.id },
     include: {
       variant: {
         include: { product: { select: { name: true, slug: true, category: true } } },
@@ -40,7 +41,7 @@ export async function POST(req) {
     amount:   total,
     currency: 'INR',
     notes: {
-      userId:    session.user.id,
+      userId:    user.id,
       addressId: address.id,
     },
   })

@@ -1,7 +1,5 @@
 import type { Metadata } from 'next'
 import { Cormorant_Garamond, Jost } from 'next/font/google'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
 import Providers from '@/components/providers'
 import './globals.css'
 
@@ -24,12 +22,10 @@ export const metadata: Metadata = {
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const session = await getServerSession(authOptions)
-
   return (
     <html lang="en" className={`${cormorant.variable} ${jost.variable}`}>
       <body>
-        <Providers session={session}>
+        <Providers>
           {children}
         </Providers>
       </body>
