@@ -376,7 +376,10 @@ export default function Navbar() {
             </Link>
           ) : (
             <button
-              onClick={() => setLoginOpen(true)}
+              onClick={() => {
+                console.log('drawer open')
+                setLoginOpen(true)
+              }}
               className="hover:opacity-60 transition-opacity flex items-center h-full"
               style={{ color: themeColor, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
               aria-label="Log In"
