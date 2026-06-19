@@ -41,7 +41,7 @@ export default function Navbar() {
     window.addEventListener('resize', updateOffset)
     
     const handleScroll = () => {
-      if (window.scrollY > 80) {
+      if (window.scrollY > window.innerHeight * 0.8) {
         setScrolled(true)
       } else {
         setScrolled(false)
@@ -101,13 +101,14 @@ export default function Navbar() {
   return (
     <>
       <nav
-        className="fixed top-0 left-0 right-0 z-40 flex items-center justify-between transition-all duration-300"
+        className="fixed top-0 left-0 right-0 z-40 flex items-center justify-between"
         style={{
           height: '56px',
           paddingLeft: 'var(--space-5)',
           paddingRight: 'var(--space-5)',
           background: showSolidNavbar ? '#ffffff' : 'transparent',
-          borderBottom: showSolidNavbar ? '1px solid #e5e5e5' : 'none',
+          borderBottom: showSolidNavbar ? '1px solid #e5e5e5' : '1px solid transparent',
+          transition: 'background 0.4s ease, border-bottom 0.4s ease, color 0.4s ease',
         }}
       >
         {/* Left Section — Home, Collection, Contact Us */}
@@ -141,7 +142,7 @@ export default function Navbar() {
                   animate={{ height: 'auto', opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}
                   transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-                  className="fixed z-50"
+                  className="fixed"
                   style={{
                     top: '56px',
                     left: leftOffset > 0 ? leftOffset - 16 : 0,
@@ -153,6 +154,7 @@ export default function Navbar() {
                     paddingRight: 0,
                     paddingBottom: 'var(--space-2)',
                     overflow: 'hidden',
+                    zIndex: 50,
                   }}
                   onMouseEnter={() => setDropdownOpen(true)}
                   onMouseLeave={() => setDropdownOpen(false)}
@@ -166,6 +168,11 @@ export default function Navbar() {
                       <Link
                         key={cat.slug}
                         href={`/shop?cat=${cat.slug}`}
+                        onClick={(e) => {
+                          e.preventDefault()
+                          setDropdownOpen(false)
+                          router.push(`/shop?cat=${cat.slug}`)
+                        }}
                         className="group relative block overflow-hidden"
                         style={{ flex: 1, aspectRatio: '2/3', border: 'none' }}
                       >
