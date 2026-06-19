@@ -423,23 +423,15 @@ export default function ProductDetailClient({ product }) {
               <div className="border-b border-zinc-200 mt-6" />
             </div>
 
-            {/* VIEW DETAILS accordion */}
-            <div style={{ borderTop: '1px solid #e5e5e5', marginTop: '0' }}>
-              <button
-                onClick={() => setViewDetailsExpanded(!viewDetailsExpanded)}
-                className="w-full text-left flex items-center justify-between hover:opacity-60 transition-opacity"
-                style={{ height: '48px', padding: '0', fontSize: '13px', fontWeight: 400, color: '#262626', letterSpacing: '1px', fontFamily: 'var(--font-ui)', background: 'none', border: 'none', cursor: 'pointer' }}
-              >
-                <span>+ VIEW DETAILS</span>
-              </button>
-              <div style={{ maxHeight: viewDetailsExpanded ? '500px' : '0', overflow: 'hidden', transition: '0.15s ease-in' }}>
-                <div style={{ paddingBottom: '16px' }}>
-                  <p style={{ fontSize: '14px', fontWeight: 300, lineHeight: '22px', color: '#6f6f6f', letterSpacing: '0.6px', fontFamily: 'var(--font-ui)' }}>
-                    {product.description || 'Crafted with premium Indian linen. Relaxed fit with structured silhouette lines.'}
-                  </p>
-                </div>
-              </div>
-            </div>
+            {/* VIEW DETAILS link */}
+            <button
+              onClick={() => {
+                document.getElementById('description-section')?.scrollIntoView({ behavior: 'smooth' })
+              }}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '12px 0', fontSize: '13px', fontWeight: 400, color: '#262626', letterSpacing: '1px', fontFamily: 'var(--font-ui)', textDecoration: 'underline', textAlign: 'left' }}
+            >
+              + VIEW DETAILS
+            </button>
 
             {/* Section 6: Action Buttons */}
             <div className="flex flex-col pt-4" style={{ gap: '12px' }}>
@@ -490,7 +482,7 @@ export default function ProductDetailClient({ product }) {
         </div>
 
         {/* Full-width Description Section */}
-        <div style={{ paddingTop: '26px', paddingLeft: '125px', paddingRight: '125px' }} className="w-full mt-12 hidden lg:block">
+        <div id="description-section" style={{ paddingTop: '26px', paddingLeft: '125px', paddingRight: '125px' }} className="w-full mt-12 hidden lg:block">
           {/* Top area: two columns side by side */}
           <div className="flex flex-row w-full mb-12">
             <div className="w-1/2" style={{ padding: '0 15px' }}>
