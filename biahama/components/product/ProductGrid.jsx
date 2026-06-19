@@ -58,7 +58,7 @@ export default function ProductGrid({ products = [], category = 'all' }) {
               className="object-cover w-full h-full"
             />
           </div>
-          <div className="biahama-grid" style={{ marginTop: 'var(--space-5)' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '32px 8px', marginTop: 'var(--space-5)' }}>
             {displayProducts.map((p, i) => (
               <ProductCard key={p.id} product={p} index={i} />
             ))}
@@ -110,8 +110,8 @@ export default function ProductGrid({ products = [], category = 'all' }) {
         )}
         {/* Desktop Layout — Asymmetric Top (4 products left, 1 banner right) + Bottom (6 products below) */}
         <div className="hidden lg:block space-y-14">
-          {/* Top Section: Asymmetric Layout (25% 25% 50%) */}
-          <div className="grid" style={{ gridTemplateColumns: '1fr 1fr 2fr', columnGap: 'var(--grid-col-gap)', rowGap: 'var(--grid-row-gap)' }}>
+          {/* Top Section: Asymmetric Layout (33% 33% 33%) */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '32px 8px' }}>
             {displayProducts[0] && <ProductCard key={displayProducts[0].id} product={displayProducts[0]} priority={true} index={0} />}
             {displayProducts[1] && <ProductCard key={displayProducts[1].id} product={displayProducts[1]} priority={true} index={1} />}
 
@@ -135,7 +135,7 @@ export default function ProductGrid({ products = [], category = 'all' }) {
 
           {/* Bottom Section: Remaining products in a standard 3-column grid */}
           {displayProducts.length > 4 && (
-            <div className="biahama-grid" style={{ marginTop: 'var(--space-5)' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '32px 8px', marginTop: 'var(--space-5)' }}>
               {displayProducts.slice(4).map((p, i) => (
                 <ProductCard key={p.id} product={p} index={i + 4} />
               ))}
@@ -161,7 +161,7 @@ export default function ProductGrid({ products = [], category = 'all' }) {
           Showing layout preview placeholders
         </p>
       )}
-      <div className="grid grid-cols-2 lg:biahama-grid" style={{ columnGap: 'var(--grid-col-gap)', rowGap: 'var(--grid-row-gap)' }}>
+      <div className="grid grid-cols-2 lg:grid-cols-3" style={{ gap: '32px 8px' }}>
         {displayProducts.map((product, i) => (
           <ProductCard key={product.id} product={product} priority={i < 4} index={i} />
         ))}

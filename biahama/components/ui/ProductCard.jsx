@@ -55,17 +55,20 @@ export default function ProductCard({ product, priority = false, index = 0 }) {
       onMouseLeave={() => setHovered(false)}
     >
       {/* Image container */}
-      <div className="relative biahama-card-image overflow-hidden" style={{ width: '100%', height: 'auto', aspectRatio: '900/1146' }}>
+      <div className="relative w-full overflow-hidden" style={{ width: '100%' }}>
         {imagesToCycle.length > 0 ? (
           <>
             <img
               src={imagesToCycle[currentImageIndex]}
               alt={product.altText || product.name}
-              className="w-full h-full block"
+              className="w-full h-auto block"
               style={{
-                objectFit: 'cover',
-                objectPosition: index >= 6 ? '50% 15%' : '50% 0%',
+                width: '100%',
+                height: 'auto',
                 aspectRatio: '900/1146',
+                objectFit: 'cover',
+                objectPosition: '50% 15%',
+                display: 'block',
                 transform: hovered ? 'scale(1.04)' : 'scale(1)',
                 transition: 'transform 700ms cubic-bezier(0.4, 0, 0.2, 1)'
               }}
@@ -79,7 +82,7 @@ export default function ProductCard({ product, priority = false, index = 0 }) {
                     e.stopPropagation()
                     setCurrentImageIndex(idx => (idx - 1 + imagesToCycle.length) % imagesToCycle.length)
                   }}
-                  className="opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                  className="transition-opacity duration-200"
                   style={{
                     position: 'absolute',
                     top: '50%',
@@ -94,7 +97,8 @@ export default function ProductCard({ product, priority = false, index = 0 }) {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    opacity: hovered ? 1 : 0
                   }}
                   aria-label="Previous image"
                 >
@@ -110,7 +114,7 @@ export default function ProductCard({ product, priority = false, index = 0 }) {
                     e.stopPropagation()
                     setCurrentImageIndex(idx => (idx + 1) % imagesToCycle.length)
                   }}
-                  className="opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                  className="transition-opacity duration-200"
                   style={{
                     position: 'absolute',
                     top: '50%',
@@ -125,7 +129,8 @@ export default function ProductCard({ product, priority = false, index = 0 }) {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    opacity: hovered ? 1 : 0
                   }}
                   aria-label="Next image"
                 >
