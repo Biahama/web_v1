@@ -231,7 +231,7 @@ export default function ProductDetailClient({ product }) {
         className="w-full max-w-none pl-6 pr-0 md:pl-12 md:pr-0 pb-24"
         style={{ paddingTop: '80px' }}
       >
-        <div className="flex flex-col lg:flex-row items-start justify-between gap-16 lg:gap-0">
+        <div className="flex flex-col lg:flex-row items-start justify-between gap-16 lg:gap-12">
           
           {/* Left Column — Stacked Image Gallery */}
           <div className="w-full lg:w-[53%] flex flex-col gap-0">
@@ -286,8 +286,8 @@ export default function ProductDetailClient({ product }) {
 
           {/* Right Column — Sticky Product Info */}
           <div 
-            className="w-full lg:w-[44%] lg:sticky flex flex-col gap-6 px-6 lg:px-[48px] bg-white"
-            style={{ top: 'var(--header-total)', paddingTop: 'var(--space-5)' }} // 48px top padding on the info column
+            className="w-full lg:w-[44%] flex flex-col gap-6 bg-white lg:sticky lg:top-[56px]"
+            style={{ paddingTop: 'var(--space-5)', paddingLeft: '48px', paddingRight: '48px' }} // 48px top padding on the info column
           >
             
             {/* Section 1: SKU & Share */}
