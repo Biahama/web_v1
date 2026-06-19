@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import ProductGrid from '@/components/product/ProductGrid'
+import FilterTabBar from '@/components/ui/FilterTabBar'
 import { getKurtasFromFilesystem } from '@/lib/kurtas'
 import { prisma } from '@/lib/prisma'
 
@@ -76,48 +77,7 @@ export default async function ShopPage({ searchParams }) {
   return (
     <div>
       {/* Category subheader bar */}
-      <div 
-        style={{ 
-          position: 'sticky',
-          top: '56px',
-          zIndex: 40,
-          width: '100%', 
-          height: '47px',
-          display: 'flex', 
-          justifyContent: 'center', 
-          alignItems: 'center',
-          background: '#f2f2f2',
-          borderBottom: '1px solid #e5e5e5'
-        }}
-      >
-        <div style={{ display: 'flex', gap: '48px' }}>
-          {CATEGORIES.map(cat => {
-            const isActive = activeCategory === cat.slug
-            return (
-              <Link
-                key={cat.slug}
-                href={`/shop?cat=${cat.slug}`}
-                className={isActive ? 'biahama-tab active' : 'biahama-tab'}
-                style={{
-                  textDecoration: 'none',
-                  transition: 'color 0.2s, border-color 0.2s',
-                  fontFamily: 'var(--font-ui)',
-                  fontSize: '12px',
-                  fontWeight: '500',
-                  letterSpacing: '1.5px',
-                  textTransform: 'uppercase',
-                  color: isActive ? '#262626' : '#6f6f6f',
-                  borderBottom: isActive ? '1px solid #262626' : '1px solid transparent',
-                  paddingBottom: '2px',
-                  cursor: 'pointer'
-                }}
-              >
-                {cat.name}
-              </Link>
-            )
-          })}
-        </div>
-      </div>
+      <FilterTabBar />
 
       {/* Category centered title */}
       <div 

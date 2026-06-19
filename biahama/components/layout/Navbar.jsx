@@ -31,15 +31,6 @@ export default function Navbar() {
   const [leftOffset, setLeftOffset] = useState(0)
 
   useEffect(() => {
-    function updateOffset() {
-      if (collectionRef.current) {
-        const rect = collectionRef.current.getBoundingClientRect()
-        setLeftOffset(rect.left)
-      }
-    }
-    updateOffset()
-    window.addEventListener('resize', updateOffset)
-    
     const handleScroll = () => {
       if (window.scrollY > window.innerHeight * 0.8) {
         setScrolled(true)
@@ -48,17 +39,25 @@ export default function Navbar() {
       }
     }
     window.addEventListener('scroll', handleScroll)
-    handleScroll()
-    
-    return () => {
-      window.removeEventListener('resize', updateOffset)
-      window.removeEventListener('scroll', handleScroll)
+    handleScroll() // set initial state
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
+  useEffect(() => {
+    function updateOffset() {
+      if (collectionRef.current) {
+        const rect = collectionRef.current.getBoundingClientRect()
+        setLeftOffset(rect.left)
+      }
     }
+    updateOffset()
+    window.addEventListener('resize', updateOffset)
+    return () => window.removeEventListener('resize', updateOffset)
   }, [])
 
   const isHome = pathname === '/'
   const showSolidNavbar = !isHome || dropdownOpen || scrolled
-  const themeColor = showSolidNavbar ? 'var(--black)' : '#ffffff'
+  const themeColor = showSolidNavbar ? '#1A202C' : '#ffffff'
   
   const handleSearchSubmit = (e) => {
     e.preventDefault()
@@ -154,7 +153,7 @@ export default function Navbar() {
                     paddingRight: 0,
                     paddingBottom: 'var(--space-2)',
                     overflow: 'hidden',
-                    zIndex: 50,
+                    zIndex: 100,
                   }}
                   onMouseEnter={() => setDropdownOpen(true)}
                   onMouseLeave={() => setDropdownOpen(false)}

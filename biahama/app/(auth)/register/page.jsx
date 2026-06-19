@@ -1,30 +1,48 @@
 'use client'
 
 import { useState } from 'react'
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
 
-export default function LoginPage() {
+export default function RegisterPage() {
   const router = useRouter()
+  const [step, setStep] = useState(1)
   const [email, setEmail] = useState('')
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const handleLogin = async (e) => {
+  const handleStep1 = (e) => {
+    e.preventDefault()
+    if (!email) {
+      setError('Email is required')
+      return
+    }
+    setError('')
+    setStep(2)
+  }
+
+  const handleRegister = async (e) => {
     e.preventDefault()
     setError('')
     setLoading(true)
 
     try {
-      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+      const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          data: {
+            first_name: firstName,
+            last_name: lastName,
+          }
+        }
       })
 
-      if (signInError) throw signInError
+      if (signUpError) throw signUpError
 
       router.push('/account')
     } catch (err) {
@@ -35,9 +53,8 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen">
-      {/* Left Half: Login Form */}
-      <div className="flex-1 flex flex-col items-center justify-center bg-white p-8">
+    <div className="min-h-screen bg-[#fafafa]" style={{ padding: '72px 100px 95px' }}>
+      <div className="max-w-md mx-auto">
         <h1
           style={{
             fontFamily: 'var(--font-display)',
@@ -45,22 +62,26 @@ export default function LoginPage() {
             fontWeight: 200,
             letterSpacing: '1.2px',
             color: '#262626',
+            marginBottom: '58px',
+            textAlign: 'center'
           }}
         >
-          LOGIN
+          REGISTER
         </h1>
 
-        <div style={{ marginTop: '58px', padding: '0 80px', maxWidth: '430px', width: '100%' }}>
-          <form onSubmit={handleLogin} className="flex flex-col gap-6">
+        {step === 1 ? (
+          <form onSubmit={handleStep1} className="flex flex-col gap-6">
+            <h2 style={{ fontSize: '16px', fontWeight: 400, color: '#262626', marginBottom: '8px' }}>
+              1/2 ENTER YOUR E-MAIL
+            </h2>
+            
             <div className="flex flex-col gap-2">
-              <label style={{ fontSize: '14px', fontWeight: 400, letterSpacing: '1px', color: '#262626' }}>
-                EMAIL
-              </label>
               <input
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                placeholder="Email Address"
                 style={{
                   width: '100%',
                   height: '54px',
@@ -75,11 +96,94 @@ export default function LoginPage() {
                   outline: 'none',
                 }}
               />
+              {error && (
+                <span style={{ fontSize: '14px', color: '#dc3545', marginTop: '4px' }}>
+                  {error}
+                </span>
+              )}
+            </div>
+
+            <button
+              type="submit"
+              className="hover:opacity-80 transition-opacity"
+              style={{
+                width: '100%',
+                height: '48px',
+                background: '#262626',
+                color: '#ffffff',
+                fontSize: '16px',
+                fontWeight: 300,
+                letterSpacing: '4px',
+                textTransform: 'uppercase',
+                border: '1px solid #262626',
+                borderRadius: 0,
+                padding: '11px 33px',
+                marginTop: '16px',
+                cursor: 'pointer',
+              }}
+            >
+              CONTINUE
+            </button>
+          </form>
+        ) : (
+          <form onSubmit={handleRegister} className="flex flex-col gap-6">
+            <h2 style={{ fontSize: '16px', fontWeight: 400, color: '#262626', marginBottom: '8px' }}>
+              2/2 ENTER YOUR DETAILS
+            </h2>
+            
+            <div className="flex flex-col gap-2">
+              <label style={{ fontSize: '14px', fontWeight: 400, letterSpacing: '1px', color: '#262626' }}>
+                First Name
+              </label>
+              <input
+                type="text"
+                required
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                style={{
+                  width: '100%',
+                  height: '54px',
+                  border: '1px solid #262626',
+                  borderRadius: 0,
+                  background: 'transparent',
+                  padding: '14px 12px',
+                  fontFamily: 'var(--font-ui)',
+                  fontSize: '16px',
+                  fontWeight: 400,
+                  letterSpacing: '0.6px',
+                  outline: 'none',
+                }}
+              />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label style={{ fontSize: '14px', fontWeight: 400, letterSpacing: '1px', color: '#262626' }}>
+                Last Name
+              </label>
+              <input
+                type="text"
+                required
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                style={{
+                  width: '100%',
+                  height: '54px',
+                  border: '1px solid #262626',
+                  borderRadius: 0,
+                  background: 'transparent',
+                  padding: '14px 12px',
+                  fontFamily: 'var(--font-ui)',
+                  fontSize: '16px',
+                  fontWeight: 400,
+                  letterSpacing: '0.6px',
+                  outline: 'none',
+                }}
+              />
             </div>
 
             <div className="flex flex-col gap-2 relative">
               <label style={{ fontSize: '14px', fontWeight: 400, letterSpacing: '1px', color: '#262626' }}>
-                PASSWORD
+                Create Password
               </label>
               <div className="relative w-full">
                 <input
@@ -130,27 +234,11 @@ export default function LoginPage() {
                   )}
                 </button>
               </div>
-              <div className="mt-1 flex justify-between items-start">
-                {error ? (
-                  <span style={{ fontSize: '14px', color: '#dc3545', marginTop: '4px' }}>
-                    {error}
-                  </span>
-                ) : (
-                  <span />
-                )}
-                <Link
-                  href="/forgot-password"
-                  style={{
-                    fontSize: '16px',
-                    fontWeight: 400,
-                    color: '#262626',
-                    textDecoration: 'none',
-                    marginTop: '4px',
-                  }}
-                >
-                  Forgot your password?
-                </Link>
-              </div>
+              {error && (
+                <span style={{ fontSize: '14px', color: '#dc3545', marginTop: '4px' }}>
+                  {error}
+                </span>
+              )}
             </div>
 
             <button
@@ -159,72 +247,24 @@ export default function LoginPage() {
               className="hover:opacity-80 transition-opacity"
               style={{
                 width: '100%',
-                height: '54px',
+                height: '48px',
                 background: '#262626',
                 color: '#ffffff',
                 fontSize: '16px',
                 fontWeight: 300,
                 letterSpacing: '4px',
                 textTransform: 'uppercase',
-                border: 'none',
+                border: '1px solid #262626',
                 borderRadius: 0,
-                padding: '15px 33px',
+                padding: '11px 33px',
                 marginTop: '16px',
                 cursor: loading ? 'not-allowed' : 'pointer',
               }}
             >
-              {loading ? 'LOGGING IN...' : 'LOGIN'}
+              {loading ? 'REGISTERING...' : 'REGISTER'}
             </button>
           </form>
-        </div>
-      </div>
-
-      {/* Right Half: Create an Account Panel */}
-      <div className="flex-1 flex flex-col items-center justify-center bg-[#fafafa] p-8 border-l border-[#e5e5e5]">
-        <h2
-          style={{
-            fontFamily: 'var(--font-display)',
-            fontSize: '36px',
-            fontWeight: 200,
-            letterSpacing: '1px',
-            color: '#262626',
-            marginBottom: '32px',
-          }}
-        >
-          NEW CUSTOMER
-        </h2>
-        <p
-          className="text-center max-w-sm mb-12"
-          style={{
-            fontFamily: 'var(--font-ui)',
-            fontSize: '16px',
-            fontWeight: 400,
-            color: '#6f6f6f',
-            lineHeight: 1.6,
-          }}
-        >
-          Create an account to check out faster, track your orders, and save your favorite items.
-        </p>
-        <Link
-          href="/register"
-          className="flex items-center justify-center hover:opacity-80 transition-opacity"
-          style={{
-            width: '100%',
-            maxWidth: '300px',
-            height: '54px',
-            background: 'transparent',
-            color: '#262626',
-            fontSize: '16px',
-            fontWeight: 300,
-            letterSpacing: '4px',
-            textTransform: 'uppercase',
-            border: '1px solid #262626',
-            borderRadius: 0,
-            textDecoration: 'none',
-          }}
-        >
-          REGISTER
-        </Link>
+        )}
       </div>
     </div>
   )
