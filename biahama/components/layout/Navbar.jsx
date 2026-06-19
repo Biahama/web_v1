@@ -89,6 +89,7 @@ export default function Navbar() {
         className="fixed top-0 left-0 right-0 z-40 flex items-center justify-between transition-all duration-300"
         style={{
           height: 'var(--header-height)',
+          paddingTop: '20px',
           paddingLeft: 'var(--space-5)',
           paddingRight: 'var(--space-5)',
           background: dropdownOpen ? 'var(--border)' : (isHome ? 'transparent' : 'var(--bg)'),
@@ -100,7 +101,7 @@ export default function Navbar() {
           <Link
             href="/"
             className="tracking-widest uppercase hover:opacity-60 transition-opacity flex items-center h-full"
-            style={{ fontFamily: 'var(--font-ui)', fontSize: 'var(--text-nav-size)', fontWeight: 'var(--text-nav-weight)', color: themeColor }}
+            style={{ fontFamily: 'var(--font-ui)', fontSize: '12px', fontWeight: '300', letterSpacing: '1.2px', color: themeColor }}
           >
             Home
           </Link>
@@ -113,7 +114,7 @@ export default function Navbar() {
             <Link
               href="/shop"
               className="tracking-widest uppercase hover:opacity-60 transition-opacity flex items-center h-full"
-              style={{ fontFamily: 'var(--font-ui)', fontSize: 'var(--text-nav-size)', fontWeight: 'var(--text-nav-weight)', color: themeColor }}
+              style={{ fontFamily: 'var(--font-ui)', fontSize: '12px', fontWeight: '300', letterSpacing: '1.2px', color: themeColor }}
             >
               Collection
             </Link>
@@ -189,7 +190,7 @@ export default function Navbar() {
           <Link
             href="/#footer"
             className="tracking-widest uppercase hover:opacity-60 transition-opacity flex items-center h-full"
-            style={{ fontFamily: 'var(--font-ui)', fontSize: 'var(--text-nav-size)', fontWeight: 'var(--text-nav-weight)', color: themeColor }}
+            style={{ fontFamily: 'var(--font-ui)', fontSize: '12px', fontWeight: '300', letterSpacing: '1.2px', color: themeColor }}
           >
             Contact Us
           </Link>
@@ -199,7 +200,7 @@ export default function Navbar() {
         <Link
           href="/"
           className="absolute left-1/2 -translate-x-1/2 select-none z-50 h-full flex items-center"
-          style={{ fontFamily: 'var(--font-display)', fontWeight: 'var(--text-heading-weight)', fontSize: 28, color: themeColor, letterSpacing: '0.3em' }}
+          style={{ fontFamily: 'var(--font-display)', fontWeight: '500', fontSize: '24px', color: themeColor, letterSpacing: '4px' }}
         >
           BIAHAMA
         </Link>
@@ -273,7 +274,7 @@ export default function Navbar() {
             >
               <SearchIcon />
               {!searchActive && (
-                <span className="tracking-widest uppercase hidden lg:block" style={{ fontFamily: 'var(--font-ui)', fontSize: 'var(--text-nav-size)', fontWeight: 'var(--text-nav-weight)' }}>
+                <span className="tracking-widest uppercase hidden lg:block" style={{ fontFamily: 'var(--font-ui)', fontSize: '12px', fontWeight: '300', letterSpacing: '1.2px' }}>
                   Search
                 </span>
               )}
@@ -287,7 +288,7 @@ export default function Navbar() {
             style={{ color: themeColor }}
           >
             <WardrobeIcon themeColor={themeColor} />
-            <span className="tracking-widest uppercase hidden lg:block" style={{ fontFamily: 'var(--font-ui)', fontSize: 'var(--text-nav-size)', fontWeight: 'var(--text-nav-weight)' }}>
+            <span className="tracking-widest uppercase hidden lg:block" style={{ fontFamily: 'var(--font-ui)', fontSize: '12px', fontWeight: '300', letterSpacing: '1.2px' }}>
               Wardrobe
             </span>
           </Link>

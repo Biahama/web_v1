@@ -17,7 +17,7 @@ export default function HomePage() {
           fill
           priority
           unoptimized
-          className="object-cover object-center pointer-events-none"
+          className="object-cover object-[60%_20%] md:object-[50%_20%] pointer-events-none"
         />
         {/* Soft shadow overlay for text legibility */}
         <div className="absolute inset-0 bg-black/15" />

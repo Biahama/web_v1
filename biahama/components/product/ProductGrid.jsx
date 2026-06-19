@@ -127,9 +127,6 @@ export default function ProductGrid({ products = [], category = 'all' }) {
                 className="w-full h-full block"
                 style={{ objectFit: 'cover', objectPosition: '50% 0%' }}
               />
-              <div className="absolute bottom-6 left-6 text-white text-3xl font-light italic" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
-                {cat === 'kurta' || cat === 'kurtas' ? 'Kurta Collection' : 'Linen Pants'}
-              </div>
             </div>
 
             {displayProducts[2] && <ProductCard key={displayProducts[2].id} product={displayProducts[2]} priority={true} />}

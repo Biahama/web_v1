@@ -79,13 +79,15 @@ export default async function ShopPage({ searchParams }) {
       <div 
         style={{ 
           width: '100%', 
+          height: '47px',
           display: 'flex', 
           justifyContent: 'center', 
-          background: 'var(--light)',
+          alignItems: 'center',
+          background: '#f2f2f2',
           borderBottom: '1px solid var(--border)'
         }}
       >
-        <div style={{ display: 'flex', gap: 'var(--space-5)' }}>
+        <div style={{ display: 'flex', gap: '48px' }}>
           {CATEGORIES.map(cat => {
             const isActive = activeCategory === cat.slug
             return (
@@ -95,10 +97,15 @@ export default async function ShopPage({ searchParams }) {
                 className={isActive ? 'biahama-tab active' : 'biahama-tab'}
                 style={{
                   textDecoration: 'none',
-                  opacity: isActive ? 1 : 0.7,
                   transition: 'opacity 0.2s',
-                  fontSize: 'var(--text-tab-size)',
-                  fontWeight: 'var(--text-tab-weight)',
+                  fontFamily: 'var(--font-ui)',
+                  fontSize: '10px',
+                  fontWeight: '500',
+                  letterSpacing: '1.77px',
+                  textTransform: 'uppercase',
+                  color: isActive ? '#262626' : '#6f6f6f',
+                  borderBottom: isActive ? '1px solid #262626' : '1px solid transparent',
+                  paddingBottom: '2px'
                 }}
               >
                 {cat.name}
