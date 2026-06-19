@@ -55,7 +55,7 @@ export default function ProductCard({ product, priority = false }) {
       onMouseLeave={() => setHovered(false)}
     >
       {/* Image container */}
-      <div className="relative biahama-card-image overflow-hidden" style={{ width: '356px', height: '453px' }}>
+      <div className="relative biahama-card-image overflow-hidden" style={{ width: '100%', height: 'auto', aspectRatio: '900/1146' }}>
         {imagesToCycle.length > 0 ? (
           <>
             <img
@@ -184,7 +184,7 @@ export default function ProductCard({ product, priority = false }) {
       </div>
 
       {/* Info */}
-      <div style={{ marginTop: '3px' }} className="flex justify-between items-start">
+      <div style={{ marginTop: '8px' }} className="flex justify-between items-start">
         <div className="flex-1" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}>
           <div className="flex justify-between items-center w-full" style={{ gap: '8px' }}>
             <p 

@@ -126,8 +126,8 @@ export default async function ShopPage({ searchParams }) {
       {/* Product grid */}
       <div 
         style={{ 
-          paddingLeft: 'var(--space-5)', 
-          paddingRight: 'var(--space-5)', 
+          paddingLeft: '16px', 
+          paddingRight: '16px', 
           paddingBottom: 'var(--space-6)' 
         }}
       >

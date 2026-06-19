@@ -122,7 +122,7 @@ export default function ProductGrid({ products = [], category = 'all' }) {
             {/* Right side: 1 campaign banner */}
             <div
               className="col-span-1 relative bg-zinc-100 overflow-hidden"
-              style={{ width: '727px', height: '1048px' }}
+              style={{ gridRow: 'span 2', width: '100%', height: '100%' }}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img

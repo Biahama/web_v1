@@ -145,7 +145,7 @@
    ------------------------------------------------------------ */
 :root {
   --grid-columns:      3;
-  --grid-col-gap:      16px;   /* BC: column gap */
+  --grid-col-gap:      8px;    /* Updated to 8px */
   --grid-row-gap:      32px;   /* BC: row gap */
   --grid-padding:      16px;   /* BC: container left/right padding */
 }
