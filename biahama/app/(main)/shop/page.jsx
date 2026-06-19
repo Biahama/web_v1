@@ -75,7 +75,7 @@ export default async function ShopPage({ searchParams }) {
   const products = await getProducts(activeCategory)
 
   return (
-    <div>
+    <div style={{ paddingTop: '56px' }}>
       {/* Category subheader bar */}
       <FilterTabBar />
 
