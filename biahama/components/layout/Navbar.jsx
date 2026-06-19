@@ -42,8 +42,8 @@ export default function Navbar() {
   }, [])
 
   const isHome = pathname === '/'
-  const showSolidNavbar = !isHome || dropdownOpen
-  const themeColor = showSolidNavbar ? 'var(--black)' : 'var(--bg)'
+  const showSolidNavbar = true // Always solid
+  const themeColor = 'var(--black)'
   
   const handleSearchSubmit = (e) => {
     e.preventDefault()
@@ -60,9 +60,9 @@ export default function Navbar() {
       <nav
         className="fixed top-0 left-0 right-0 z-40 flex items-center justify-center"
         style={{
-          height: 'var(--header-height)',
-          background: 'var(--bg)',
-          borderBottom: '1px solid var(--border)',
+          height: '56px',
+          background: '#ffffff',
+          borderBottom: '1px solid #e5e5e5',
         }}
       >
         <Link
@@ -88,12 +88,11 @@ export default function Navbar() {
       <nav
         className="fixed top-0 left-0 right-0 z-40 flex items-center justify-between transition-all duration-300"
         style={{
-          height: 'var(--header-height)',
-          paddingTop: '20px',
+          height: '56px',
           paddingLeft: 'var(--space-5)',
           paddingRight: 'var(--space-5)',
-          background: dropdownOpen ? 'var(--border)' : (isHome ? 'transparent' : 'var(--bg)'),
-          borderBottom: (dropdownOpen || !isHome) ? '1px solid var(--border)' : 'none',
+          background: '#ffffff',
+          borderBottom: '1px solid #e5e5e5',
         }}
       >
         {/* Left Section — Home, Collection, Contact Us */}
@@ -129,7 +128,7 @@ export default function Navbar() {
                   transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
                   className="fixed z-50"
                   style={{
-                    top: 'var(--header-height)',
+                    top: '56px',
                     left: leftOffset > 0 ? leftOffset - 16 : 0,
                     right: 0,
                     background: 'var(--border)',

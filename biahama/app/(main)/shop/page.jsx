@@ -78,13 +78,16 @@ export default async function ShopPage({ searchParams }) {
       {/* Category subheader bar */}
       <div 
         style={{ 
+          position: 'sticky',
+          top: '56px',
+          zIndex: 40,
           width: '100%', 
           height: '47px',
           display: 'flex', 
           justifyContent: 'center', 
           alignItems: 'center',
           background: '#f2f2f2',
-          borderBottom: '1px solid var(--border)'
+          borderBottom: '1px solid #e5e5e5'
         }}
       >
         <div style={{ display: 'flex', gap: '48px' }}>
@@ -97,7 +100,7 @@ export default async function ShopPage({ searchParams }) {
                 className={isActive ? 'biahama-tab active' : 'biahama-tab'}
                 style={{
                   textDecoration: 'none',
-                  transition: 'opacity 0.2s',
+                  transition: 'color 0.2s, border-color 0.2s',
                   fontFamily: 'var(--font-ui)',
                   fontSize: '10px',
                   fontWeight: '500',
@@ -105,7 +108,8 @@ export default async function ShopPage({ searchParams }) {
                   textTransform: 'uppercase',
                   color: isActive ? '#262626' : '#6f6f6f',
                   borderBottom: isActive ? '1px solid #262626' : '1px solid transparent',
-                  paddingBottom: '2px'
+                  paddingBottom: '2px',
+                  cursor: 'pointer'
                 }}
               >
                 {cat.name}
