@@ -20,7 +20,7 @@ export default function CategoryTabs({ activeCategory }) {
           ? activeCategory.toLowerCase() === slug || (slug === 'all' && !activeCategory)
           : slug === 'all'
 
-        const href = slug === 'all' ? '/shop' : `/shop/${slug}`
+        const href = slug === 'all' ? '/shop' : `/shop?cat=${slug}`
 
         return (
           <Link
