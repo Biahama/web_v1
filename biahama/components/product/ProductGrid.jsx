@@ -167,7 +167,7 @@ export default function ProductGrid({ products = [], category = 'all' }) {
                 src={bannerUrl}
                 alt="Campaign Banner"
                 className="w-full h-full block"
-                style={{ objectFit: 'cover', objectPosition: (cat === 'trousers' || cat === 'pant' || cat === 'pants') ? '50% 20%' : '50% 0%' }}
+                style={{ objectFit: 'cover', objectPosition: (cat === 'trousers' || cat === 'pant' || cat === 'pants') ? '50% 50%' : '50% 0%' }}
               />
             </div>
 
