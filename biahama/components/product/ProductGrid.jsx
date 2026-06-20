@@ -136,7 +136,7 @@ export default function ProductGrid({ products = [], category = 'all' }) {
 
     if (productWithImage) {
       const imgs = productWithImage.images?.map(img => typeof img === 'string' ? img : img.url) || (productWithImage.image ? [productWithImage.image] : [])
-      bannerUrl = imgs[0]
+      bannerUrl = imgs[2] || imgs[0]
     }
 
     return (

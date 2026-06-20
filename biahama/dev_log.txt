@@ -1,0 +1,12 @@
+
+> biahama@0.1.0 dev
+> next dev --webpack
+
+▲ Next.js 16.2.4 (webpack)
+- Local:         http://localhost:3000
+- Network:       http://100.69.36.184:3000
+- Environments: .env.local
+✓ Ready in 330ms
+
+ GET /shop/trousers 307 in 2.8s (next.js: 2.6s, proxy.ts: 113ms, application-code: 132ms)
+[?25h
