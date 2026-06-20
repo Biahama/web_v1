@@ -129,14 +129,18 @@ export default function ProductGrid({ products = [], category = 'all' }) {
       ? 'https://images.unsplash.com/photo-1608748010899-18f300247112?auto=format&fit=crop&w=800&q=80'
       : 'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?auto=format&fit=crop&w=800&q=80'
 
-    const productWithImage = displayProducts.find(p => {
-      const imgs = p.images?.map(img => typeof img === 'string' ? img : img.url) || (p.image ? [p.image] : [])
-      return imgs && imgs.length > 0
-    })
+    if (cat === 'trousers' || cat === 'pant' || cat === 'pants') {
+      bannerUrl = 'https://res.cloudinary.com/dc30t7io2/image/upload/v1781913067/biahama/pants/grape-shake-volume-trouser-1.webp'
+    } else {
+      const productWithImage = displayProducts.find(p => {
+        const imgs = p.images?.map(img => typeof img === 'string' ? img : img.url) || (p.image ? [p.image] : [])
+        return imgs && imgs.length > 0
+      })
 
-    if (productWithImage) {
-      const imgs = productWithImage.images?.map(img => typeof img === 'string' ? img : img.url) || (productWithImage.image ? [productWithImage.image] : [])
-      bannerUrl = imgs[2] || imgs[0]
+      if (productWithImage) {
+        const imgs = productWithImage.images?.map(img => typeof img === 'string' ? img : img.url) || (productWithImage.image ? [productWithImage.image] : [])
+        bannerUrl = imgs[2] || imgs[0]
+      }
     }
 
     return (
