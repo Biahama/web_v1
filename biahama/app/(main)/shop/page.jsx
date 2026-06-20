@@ -73,6 +73,7 @@ export default async function ShopPage({ searchParams }) {
   const displayName = activeCatObj.name.charAt(0).toUpperCase() + activeCatObj.name.slice(1).toLowerCase()
 
   const products = await getProducts(activeCategory)
+  console.log('category:', activeCategory, 'products count:', products.length)
 
   return (
     <div style={{ paddingTop: '56px' }}>
