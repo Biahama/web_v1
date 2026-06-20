@@ -3,7 +3,14 @@ import { notFound } from 'next/navigation'
 import ProductDetailClient from '@/components/product/ProductDetailClient'
 import { getKurtaBySlug } from '@/lib/kurtas'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 3600
+
+export async function generateStaticParams() {
+  const products = await prisma.product.findMany({
+    select: { slug: true }
+  })
+  return products.map(p => ({ slug: p.slug }))
+}
 
 function getMockProduct(slug) {
   const parts = slug.split('-')
