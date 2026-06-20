@@ -3,6 +3,8 @@ import { notFound } from 'next/navigation'
 import ProductDetailClient from '@/components/product/ProductDetailClient'
 import { getKurtaBySlug } from '@/lib/kurtas'
 
+export const dynamic = 'force-dynamic'
+
 function getMockProduct(slug) {
   const parts = slug.split('-')
   const categorySlug = parts[1] || 'kurtas'

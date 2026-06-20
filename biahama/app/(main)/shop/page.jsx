@@ -4,6 +4,8 @@ import FilterTabBar from '@/components/ui/FilterTabBar'
 import { getKurtasFromFilesystem } from '@/lib/kurtas'
 import { prisma } from '@/lib/prisma'
 
+export const dynamic = 'force-dynamic'
+
 export const metadata = { title: 'Collections — Biahama' }
 
 const CATEGORIES = [
