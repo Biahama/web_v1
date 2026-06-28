@@ -160,7 +160,10 @@ export default function ProductGrid({ products = [], category = 'all' }) {
             {/* Right side: 1 campaign banner */}
             <div
               className="relative bg-zinc-100 overflow-hidden"
-              style={{ gridRow: 'span 2', width: '100%', height: '100%' }}
+              style={(cat === 'trousers' || cat === 'pant' || cat === 'pants')
+                ? { gridRow: 'span 2', width: '100%', height: '100%' }
+                : { aspectRatio: '4/5', width: '100%', overflow: 'hidden' }
+              }
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
