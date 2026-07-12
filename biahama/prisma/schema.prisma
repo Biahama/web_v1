@@ -178,6 +178,27 @@ model Review {
   createdAt   DateTime @default(now())
 }
 
+// Editable site settings, changed from the /admin panel.
+// One row per area: "theme" (fonts, colors, sizes) and
+// "layout" (announcement bar, hero text, banner position).
+// If a row is missing, the site uses its built-in defaults —
+// so deleting rows can never break anything.
+model SiteSetting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt
+}
+
+// Editable text pages (About, Sizing Guide, Shipping, Returns...).
+// Edited from /admin. If a page has no row here, the site shows
+// its built-in default text.
+model ContentPage {
+  slug      String   @id
+  title     String
+  body      String
+  updatedAt DateTime @updatedAt
+}
+
 // Every unexpected error on the site is saved here with a timestamp,
 // so you can always see WHAT broke, WHERE, and WHEN.
 // View in Supabase: Table Editor -> ErrorLog (newest first).

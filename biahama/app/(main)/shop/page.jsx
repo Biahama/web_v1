@@ -3,6 +3,7 @@ import ProductGrid from '@/components/product/ProductGrid'
 import FilterTabBar from '@/components/ui/FilterTabBar'
 import { prisma } from '@/lib/prisma'
 import { logError } from '@/lib/logger'
+import { getSiteSettings } from '@/lib/site-settings'
 
 export const revalidate = 3600
 
@@ -79,6 +80,10 @@ export default async function ShopPage({ searchParams }) {
   const products = await getProducts(activeCategory)
   console.log('category:', activeCategory, 'products count:', products.length)
 
+  // Admin panel setting: put the big campaign banner on the
+  // 'right' (default) or 'left' of the product cards.
+  const settings = await getSiteSettings()
+
   return (
     <div style={{ paddingTop: '56px' }}>
       {/* Category subheader bar */}
@@ -117,7 +122,11 @@ export default async function ShopPage({ searchParams }) {
           paddingBottom: 'var(--space-6)' 
         }}
       >
-        <ProductGrid products={products} category={activeCategory} />
+        <ProductGrid
+          products={products}
+          category={activeCategory}
+          bannerSide={settings.layout.collectionBannerSide}
+        />
       </div>
     </div>
   )

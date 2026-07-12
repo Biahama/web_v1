@@ -1,17 +1,26 @@
 import Link from 'next/link'
 import Image from 'next/image'
+import { getSiteSettings } from '@/lib/site-settings'
 
 export const metadata = {
   title: 'Biahama — Luxury Linen',
   description: 'Luxury linen clothing handcrafted in India.',
 }
 
-export default function HomePage() {
+export default async function HomePage() {
+  // Headline, button text, and image focus point are editable
+  // in the admin panel (they fall back to sensible defaults).
+  const settings = await getSiteSettings()
+  const { heroHeadline, heroButtonText, heroFocalX, heroFocalY } = settings.layout
+
+  // The headline can have line breaks — each line becomes its own row.
+  const headlineLines = heroHeadline.split('\n')
+
   return (
     // Hero size: always fills the whole screen (footer only appears after
     // scrolling). Monitors come in different shapes, so the image edges must
     // crop — but object-position on the image below anchors the crop to the
-    // model, so the composition looks consistent everywhere.
+    // model, and the admin panel controls that focus point (X/Y percent).
     <div className="relative w-full h-[100svh] overflow-hidden bg-zinc-900">
       {/* Background Campaign Image */}
       <div className="absolute inset-0 w-full h-full">
@@ -21,14 +30,15 @@ export default function HomePage() {
           fill
           priority
           unoptimized
-          className="object-cover object-[65%_25%] pointer-events-none"
+          className="object-cover pointer-events-none"
+          style={{ objectPosition: `${heroFocalX}% ${heroFocalY}%` }}
         />
         {/* Soft shadow overlay for text legibility */}
         <div className="absolute inset-0 bg-black/15" />
       </div>
 
       {/* Caption Overlay — Middle Left */}
-      <div 
+      <div
         className="absolute inset-y-0 left-0 flex flex-col justify-center z-10 text-white max-w-xl"
         style={{ paddingLeft: 'clamp(48px, 10vw, 144px)', paddingRight: '48px' }}
       >
@@ -42,7 +52,12 @@ export default function HomePage() {
             color: '#ffffff',
           }}
         >
-          Quiet forms<br />for modern movement.
+          {headlineLines.map((line, i) => (
+            <span key={i}>
+              {line}
+              {i < headlineLines.length - 1 && <br />}
+            </span>
+          ))}
         </h1>
         <div>
           <Link
@@ -55,7 +70,7 @@ export default function HomePage() {
               borderBottom: '1px solid #ffffff',
             }}
           >
-            Step Inside
+            {heroButtonText}
             <span className="transition-transform duration-300 group-hover:translate-x-1">→</span>
           </Link>
         </div>

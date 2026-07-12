@@ -34,7 +34,9 @@ function getMockProducts(category) {
   return mockList
 }
 
-export default function ProductGrid({ products = [], category = 'all' }) {
+// bannerSide (from the admin panel): 'right' or 'left' — which
+// side of the product cards the big campaign banner sits on.
+export default function ProductGrid({ products = [], category = 'all', bannerSide = 'right' }) {
   const cat = (category || 'all').toLowerCase()
   const isMock = products.length === 0
   const displayProducts = isMock ? getMockProducts(cat) : products
@@ -162,22 +164,37 @@ export default function ProductGrid({ products = [], category = 'all' }) {
             gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
             gap: '32px 8px'
           }}>
-            {displayProducts[0] && <ProductCard key={displayProducts[0].id} product={displayProducts[0]} priority={true} index={0} />}
-            {displayProducts[1] && <ProductCard key={displayProducts[1].id} product={displayProducts[1]} priority={true} index={1} />}
-
-            {/* Right side: 1 campaign banner */}
-            <div
-              className="relative bg-zinc-100 overflow-hidden"
-              style={{ gridColumn: 'span 2', gridRow: 'span 2', width: '100%', height: '100%' }}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={bannerUrl}
-                alt="Campaign Banner"
-                className="w-full h-full block"
-                style={{ objectFit: 'cover', objectPosition: (cat === 'trousers' || cat === 'pant' || cat === 'pants') ? '50% 15%' : '50% 0%', position: 'absolute', inset: 0 }}
-              />
-            </div>
+            {/* The three pieces of the top row: two product cards and
+                one big campaign banner. The admin panel decides whether
+                the banner goes on the LEFT or the RIGHT of the cards —
+                we just change the order they are placed into the grid. */}
+            {(() => {
+              const firstTwoCards = (
+                <>
+                  {displayProducts[0] && <ProductCard key={displayProducts[0].id} product={displayProducts[0]} priority={true} index={0} />}
+                  {displayProducts[1] && <ProductCard key={displayProducts[1].id} product={displayProducts[1]} priority={true} index={1} />}
+                </>
+              )
+              const banner = (
+                <div
+                  key="campaign-banner"
+                  className="relative bg-zinc-100 overflow-hidden"
+                  style={{ gridColumn: 'span 2', gridRow: 'span 2', width: '100%', height: '100%' }}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={bannerUrl}
+                    alt="Campaign Banner"
+                    className="w-full h-full block"
+                    style={{ objectFit: 'cover', objectPosition: (cat === 'trousers' || cat === 'pant' || cat === 'pants') ? '50% 15%' : '50% 0%', position: 'absolute', inset: 0 }}
+                  />
+                </div>
+              )
+              // banner first = banner on the left, cards flow to its right
+              return bannerSide === 'left'
+                ? <>{banner}{firstTwoCards}</>
+                : <>{firstTwoCards}{banner}</>
+            })()}
 
             {displayProducts[2] && <ProductCard key={displayProducts[2].id} product={displayProducts[2]} priority={true} index={2} />}
             {displayProducts[3] && <ProductCard key={displayProducts[3].id} product={displayProducts[3]} priority={true} index={3} />}
