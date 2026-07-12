@@ -14,6 +14,7 @@ export default function RegisterPage() {
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
+  const [info, setInfo] = useState('') // friendly (non-error) message, e.g. "check your email"
   const [loading, setLoading] = useState(false)
 
   const handleStep1 = (e) => {
@@ -45,7 +46,17 @@ export default function RegisterPage() {
 
       if (signUpError) throw signUpError
 
-      router.push('/account')
+      // If Supabase requires email confirmation, sign-up succeeds but
+      // there is no session yet. Show a friendly message instead of
+      // redirecting to a page they can't use while logged out.
+      if (data?.user && !data?.session) {
+        setInfo('Almost done! Check your email to confirm your account, then log in.')
+        return
+      }
+
+      // Signed in right away — send them to the homepage.
+      // (The old code sent people to /account, which does not exist and showed a 404.)
+      router.push('/')
     } catch (err) {
       setError(err.message)
     } finally {
@@ -242,9 +253,16 @@ export default function RegisterPage() {
               )}
             </div>
 
+            {/* Friendly success message shown when email confirmation is needed */}
+            {info && (
+              <p style={{ fontSize: '14px', color: '#1a7f37', marginTop: '4px' }}>
+                {info}
+              </p>
+            )}
+
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || Boolean(info)}
               className="hover:opacity-80 transition-opacity"
               style={{
                 width: '100%',

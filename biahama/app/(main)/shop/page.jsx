@@ -1,7 +1,6 @@
 import Link from 'next/link'
 import ProductGrid from '@/components/product/ProductGrid'
 import FilterTabBar from '@/components/ui/FilterTabBar'
-import { getKurtasFromFilesystem } from '@/lib/kurtas'
 import { prisma } from '@/lib/prisma'
 
 export const revalidate = 3600
@@ -16,15 +15,14 @@ const CATEGORIES = [
 ]
 
 async function getProducts(category) {
-  // 1. Check if category is kurtas
-  if (category.toLowerCase() === 'kurtas' || category.toLowerCase() === 'kurta') {
-    return getKurtasFromFilesystem()
-  }
+  // Every category (kurtas included) comes from the database.
+  // Shop links use plural names ("kurtas") but some products are
+  // stored singular ("Kurta"), so we accept both spellings.
+  const categoryForms = [category, category.replace(/s$/i, '')]
 
-  // 2. Query other categories from database
   const where = {
     isActive: true,
-    category: { equals: category, mode: 'insensitive' },
+    category: { in: categoryForms, mode: 'insensitive' },
   }
 
   let products = []

@@ -450,7 +450,7 @@ export default function ProductDetailClient({ product }) {
                   textTransform: 'uppercase',
                 }}
               >
-                {adding ? 'ADDING...' : 'ADD TO BAG 👜'}
+                {adding ? 'ADDING...' : 'ADD TO BAG'}
               </button>
 
               <button

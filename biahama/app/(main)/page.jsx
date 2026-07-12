@@ -8,7 +8,10 @@ export const metadata = {
 
 export default function HomePage() {
   return (
-    <div className="relative w-full h-screen overflow-hidden bg-zinc-900">
+    // Hero size: fixed 700px on desktop so the image looks the SAME on
+    // every screen (h-screen made it grow/shrink with the window).
+    // Mobile keeps full-screen height.
+    <div className="relative w-full h-[100svh] md:h-[700px] overflow-hidden bg-zinc-900">
       {/* Background Campaign Image */}
       <div className="absolute inset-0 w-full h-full">
         <Image

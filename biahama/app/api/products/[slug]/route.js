@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { withErrorLogging } from '@/lib/logger'
 
-export async function GET(req, { params }) {
+// Returns one product by its slug (the name in the web address).
+// If anything crashes, the error is logged to the ErrorLog table
+// and the browser gets a clear 500 error.
+export const GET = withErrorLogging('api/products/[slug] GET', async (req, { params }) => {
   const { slug } = await params
 
   const product = await prisma.product.findUnique({
@@ -18,4 +22,4 @@ export async function GET(req, { params }) {
   }
 
   return NextResponse.json(product)
-}
+})

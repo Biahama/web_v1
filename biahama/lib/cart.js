@@ -15,6 +15,20 @@ function writeLocalCart(items) {
   localStorage.setItem(LS_KEY, JSON.stringify(items))
 }
 
+// Send a cart change to the server. If it fails, say so clearly in
+// the browser console instead of silently ignoring it — otherwise the
+// cart on screen and the cart in the database quietly drift apart.
+async function syncToServer(action, doFetch) {
+  try {
+    const res = await doFetch()
+    if (!res.ok) {
+      console.error(`[cart] Could not ${action}: server responded with status ${res.status}`)
+    }
+  } catch (err) {
+    console.error(`[cart] Could not ${action}: ${err.message}`)
+  }
+}
+
 export function CartProvider({ children }) {
   const { session, loading } = useAuth()
   const status = loading ? 'loading' : session ? 'authenticated' : 'unauthenticated'
@@ -41,11 +55,13 @@ export function CartProvider({ children }) {
           for (const g of guestCart) {
             if (!merged.find(i => i.variantId === g.variantId)) {
               merged.push(g)
-              fetch('/api/cart', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ variantId: g.variantId, quantity: g.quantity }),
-              })
+              syncToServer('merge guest cart item', () =>
+                fetch('/api/cart', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ variantId: g.variantId, quantity: g.quantity }),
+                })
+              )
             }
           }
 
@@ -59,10 +75,16 @@ export function CartProvider({ children }) {
   }, [session, status])
 
   async function add(variant, quantity = 1) {
+    // Compute the new quantity INSIDE the state updater, where "prev"
+    // is always the latest cart. The old code read the outer "items"
+    // variable, which on rapid clicks could be a stale snapshot and
+    // sent the wrong quantity to the server.
+    let newQty = quantity
     setItems(prev => {
       const existing = prev.find(i => i.variantId === variant.id)
+      newQty = (existing?.quantity || 0) + quantity
       const next = existing
-        ? prev.map(i => i.variantId === variant.id ? { ...i, quantity: i.quantity + quantity } : i)
+        ? prev.map(i => i.variantId === variant.id ? { ...i, quantity: newQty } : i)
         : [...prev, { variantId: variant.id, variant, quantity }]
 
       if (!session) writeLocalCart(next)
@@ -70,13 +92,13 @@ export function CartProvider({ children }) {
     })
 
     if (session) {
-      const existing = items.find(i => i.variantId === variant.id)
-      const newQty = (existing?.quantity || 0) + quantity
-      await fetch('/api/cart', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ variantId: variant.id, quantity: newQty }),
-      })
+      await syncToServer('add item to cart', () =>
+        fetch('/api/cart', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ variantId: variant.id, quantity: newQty }),
+        })
+      )
     }
   }
 
@@ -86,7 +108,11 @@ export function CartProvider({ children }) {
       if (!session) writeLocalCart(next)
       return next
     })
-    if (session) await fetch(`/api/cart?variantId=${variantId}`, { method: 'DELETE' })
+    if (session) {
+      await syncToServer('remove item from cart', () =>
+        fetch(`/api/cart?variantId=${variantId}`, { method: 'DELETE' })
+      )
+    }
   }
 
   async function updateQty(variantId, quantity) {
@@ -99,11 +125,13 @@ export function CartProvider({ children }) {
     })
 
     if (session) {
-      await fetch('/api/cart', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ variantId, quantity }),
-      })
+      await syncToServer('update item quantity', () =>
+        fetch('/api/cart', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ variantId, quantity }),
+        })
+      )
     }
   }
 
@@ -112,7 +140,7 @@ export function CartProvider({ children }) {
     if (!session) {
       localStorage.removeItem(LS_KEY)
     } else {
-      await fetch('/api/cart', { method: 'DELETE' })
+      await syncToServer('clear cart', () => fetch('/api/cart', { method: 'DELETE' }))
     }
   }
 

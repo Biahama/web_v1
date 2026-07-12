@@ -29,7 +29,7 @@ export default function FilterTabBar() {
         display: 'flex', 
         justifyContent: 'center', 
         alignItems: 'center',
-        background: '#f2f2f2',
+        background: '#f5f4f4', // bar color per design spec
         borderBottom: '1px solid #e5e5e5'
       }}
     >
@@ -47,7 +47,7 @@ export default function FilterTabBar() {
                 fontFamily: 'var(--font-ui)',
                 fontSize: '12px',
                 fontWeight: '500',
-                letterSpacing: '1.5px',
+                letterSpacing: '0.177em', // design spec "177" (tracking units: 177/1000 of the font size)
                 textTransform: 'uppercase',
                 color: isActive ? '#262626' : '#6f6f6f',
                 borderBottom: isActive ? '1px solid #262626' : '1px solid transparent',

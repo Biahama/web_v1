@@ -107,7 +107,7 @@ model Order {
   discountAmount  Int         @default(0)
   shippingAmount  Int         @default(0)
   paymentMethod   String
-  paymentId       String?
+  paymentId       String?     @unique // one order per payment — prevents duplicate orders if verification runs twice
   paymentStatus   String      @default("pending")
   shippingAddress Json
   couponCode      String?
@@ -176,6 +176,20 @@ model Review {
   isVerified  Boolean  @default(false)
   isPublished Boolean  @default(false)
   createdAt   DateTime @default(now())
+}
+
+// Every unexpected error on the site is saved here with a timestamp,
+// so you can always see WHAT broke, WHERE, and WHEN.
+// View in Supabase: Table Editor -> ErrorLog (newest first).
+model ErrorLog {
+  id        String   @id @default(uuid())
+  source    String // which part of the site broke, e.g. "api/cart POST"
+  message   String // the human-readable error
+  stack     String? // technical details for debugging
+  context   Json? // extra info (user id, what they were doing)
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
 }
 
 model AbandonedCart {

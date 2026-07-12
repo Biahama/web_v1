@@ -5,10 +5,9 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useCart } from '@/lib/cart'
 import ProductCard from '@/components/ui/ProductCard'
-
-const SHIPPING_THRESHOLD = 300000 // ₹3,000 in paise
-const SHIPPING_COST      = 9900   // ₹99 in paise
-const GST_RATE           = 0.05
+// Pricing rules live in ONE shared file so the cart, checkout and
+// payment server can never disagree about the total.
+import { computeTotals, SHIPPING_THRESHOLD, SHIPPING_COST, GST_RATE } from '@/lib/pricing'
 
 function formatPrice(paise) {
   return `₹${(paise / 100).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
@@ -71,9 +70,9 @@ export default function CartPage() {
     router.push('/checkout')
   }
 
-  // Calculations
-  const subtotal = items.reduce((s, i) => s + i.variant.price * i.quantity, 0)
-  
+  // Calculations — shared pricing rules from lib/pricing
+  const { subtotal } = computeTotals(items)
+
   // Apply coupon discount if any
   let discount = 0
   if (appliedCoupon) {
@@ -84,8 +83,10 @@ export default function CartPage() {
 
   const discountedSubtotal = subtotal - discount
   const shipping = discountedSubtotal >= SHIPPING_THRESHOLD || items.length === 0 ? 0 : SHIPPING_COST
-  const gst = Math.round(discountedSubtotal * GST_RATE)
-  const total = discountedSubtotal + shipping + gst
+  // GST is already INSIDE the prices — this is the portion of the
+  // total that is GST, shown for information only (never added on top).
+  const gstIncluded = Math.round(discountedSubtotal - discountedSubtotal / (1 + GST_RATE))
+  const total = discountedSubtotal + shipping
 
   return (
     <div style={{ background: '#ffffff', minHeight: '100vh', padding: '40px 48px 100px 48px' }}>
@@ -475,9 +476,10 @@ export default function CartPage() {
                 )}
               </div>
 
-              {/* Total Taxes inc. */}
+              {/* Total — GST is already inside the prices, so it is
+                  shown as information only, never added on top */}
               <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid var(--border)', paddingTop: 16, marginBottom: 24 }}>
-                <span style={{ fontFamily: 'Jost, sans-serif', fontSize: 13, fontWeight: 400, color: 'var(--black)' }}>Total Taxes inc.</span>
+                <span style={{ fontFamily: 'Jost, sans-serif', fontSize: 13, fontWeight: 400, color: 'var(--black)' }}>Total <span style={{ fontSize: 10, color: 'var(--gray)' }}>Includes {formatPrice(gstIncluded)} GST</span></span>
                 <span style={{ fontFamily: 'Jost, sans-serif', fontSize: 14, fontWeight: 500, color: 'var(--black)' }}>{formatPrice(total)}</span>
               </div>
 

@@ -7,10 +7,9 @@ import { createClient } from '@/utils/supabase/client'
 import { useCart } from '@/lib/cart'
 import Script from 'next/script'
 import Link from 'next/link'
-
-const SHIPPING_THRESHOLD = 300000 // ₹3,000 in paise
-const SHIPPING_COST      = 9900   // ₹99 in paise
-const GST_RATE           = 0.05
+// Pricing rules live in ONE shared file so the cart, checkout and
+// payment server can never disagree about the total.
+import { computeTotals } from '@/lib/pricing'
 
 function formatPrice(paise) {
   return `₹${(paise / 100).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
@@ -383,11 +382,9 @@ export default function CheckoutPage() {
     }
   }
 
-  // Calculations
-  const subtotal = items.reduce((s, i) => s + i.variant.price * i.quantity, 0)
-  const shipping = subtotal >= SHIPPING_THRESHOLD || items.length === 0 ? 0 : SHIPPING_COST
-  const gst = Math.round(subtotal * GST_RATE)
-  const total = subtotal + shipping + gst
+  // Calculations — prices are GST-inclusive, so the payable total is
+  // just subtotal + shipping. gstIncluded is shown for information only.
+  const { subtotal, shipping, gstIncluded, total } = computeTotals(items)
 
   return (
     <>
@@ -1053,9 +1050,10 @@ export default function CheckoutPage() {
                   </span>
                 </div>
 
-                {/* Total */}
+                {/* Total — GST is already inside the prices, so it is
+                    shown as information only, never added on top */}
                 <div style={{ display: 'flex', justifyBetween: 'space-between', marginBottom: 8 }}>
-                  <span style={{ fontFamily: 'Jost, sans-serif', fontSize: 13, fontWeight: 400, color: 'var(--black)' }}>TOTAL <span style={{ fontSize: 10, color: 'var(--gray)' }}>Taxes inc.</span></span>
+                  <span style={{ fontFamily: 'Jost, sans-serif', fontSize: 13, fontWeight: 400, color: 'var(--black)' }}>TOTAL <span style={{ fontSize: 10, color: 'var(--gray)' }}>Includes {formatPrice(gstIncluded)} GST</span></span>
                   <span style={{ fontFamily: 'Jost, sans-serif', fontSize: 14, fontWeight: 500, color: 'var(--black)', marginLeft: 'auto' }}>{formatPrice(total)}</span>
                 </div>
 

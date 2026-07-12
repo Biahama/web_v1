@@ -65,7 +65,7 @@ export default function ProductCard({ product, priority = false, index = 0 }) {
               style={{
                 width: '100%',
                 height: 'auto',
-                aspectRatio: '900/1146',
+                aspectRatio: '4/5', // listing image ratio per design spec (1200 x 1500)
                 objectFit: 'cover',
                 objectPosition: product.category?.toLowerCase() === 'shirts' || product.category?.toLowerCase() === 'shirt' ? '50% 50%' : '50% 15%',
                 display: 'block',
@@ -209,20 +209,22 @@ export default function ProductCard({ product, priority = false, index = 0 }) {
                 className="hover:opacity-75 transition-opacity shrink-0 max-[1199px]:hidden min-[1200px]:flex flex-row items-start"
                 aria-label="Add to cart"
                 style={{
-                  width: '24px',
-                  height: '20px',
-                  paddingRight: '4px',
+                  width: '18px',
+                  height: '16px',
+                  paddingRight: '2px',
                   background: 'transparent',
                   border: 'none',
                   marginLeft: 'auto'
                 }}
               >
+                {/* Smaller + icon (was 20px) so it sits subtly next to the
+                    product name, like the reference design */}
                 <img
                   src="/icons/plus.png"
                   alt="View sizes"
                   style={{
-                    width: '20px',
-                    height: '20px',
+                    width: '14px',
+                    height: '14px',
                     color: '#1A202C'
                   }}
                 />

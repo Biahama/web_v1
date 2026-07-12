@@ -3,6 +3,8 @@ import { createClient } from '@/utils/supabase/server'
 import { z } from 'zod'
 
 import { prisma } from '@/lib/prisma'
+import { withErrorLogging } from '@/lib/logger'
+import { ensureUser } from '@/lib/ensure-user'
 
 const schema = z.object({
   fullName: z.string().min(2),
@@ -15,7 +17,7 @@ const schema = z.object({
   isDefault: z.boolean().optional(),
 })
 
-export async function GET() {
+export const GET = withErrorLogging('api/addresses GET', async () => {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -26,9 +28,9 @@ export async function GET() {
   })
 
   return NextResponse.json(addresses)
-}
+})
 
-export async function POST(req) {
+export const POST = withErrorLogging('api/addresses POST', async (req) => {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -36,6 +38,10 @@ export async function POST(req) {
   const body = await req.json()
   const parsed = schema.safeParse(body)
   if (!parsed.success) return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 })
+
+  // Make sure this Supabase user has a row in our own User table,
+  // otherwise saving the address would fail with a database error.
+  await ensureUser(user)
 
   const { isDefault, ...data } = parsed.data
 
@@ -48,4 +54,4 @@ export async function POST(req) {
   })
 
   return NextResponse.json(address, { status: 201 })
-}
+})

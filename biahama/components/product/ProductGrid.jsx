@@ -150,10 +150,20 @@ export default function ProductGrid({ products = [], category = 'all' }) {
             Showing layout preview placeholders
           </p>
         )}
-        {/* Desktop Layout — Asymmetric Top (4 products left, 1 banner right) + Bottom (6 products below) */}
+        {/* Desktop Layout — matches the approved design:
+            KURTA:  4-column grid. Left = 2x2 product cards.
+                    Right = one banner spanning 2 columns x 2 rows,
+                    so the banner box is ~4:5 overall (2 cards wide,
+                    2 rows tall) exactly like the reference picture.
+            PANTS:  unchanged (banner 1 column wide, 2 rows tall). */}
         <div className="hidden lg:block space-y-14">
-          {/* Top Section: Asymmetric Layout (33% 33% 33%) */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '32px 8px' }}>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: (cat === 'trousers' || cat === 'pant' || cat === 'pants')
+              ? 'repeat(3, minmax(0, 1fr))'
+              : 'repeat(4, minmax(0, 1fr))',
+            gap: '32px 8px'
+          }}>
             {displayProducts[0] && <ProductCard key={displayProducts[0].id} product={displayProducts[0]} priority={true} index={0} />}
             {displayProducts[1] && <ProductCard key={displayProducts[1].id} product={displayProducts[1]} priority={true} index={1} />}
 
@@ -162,7 +172,7 @@ export default function ProductGrid({ products = [], category = 'all' }) {
               className="relative bg-zinc-100 overflow-hidden"
               style={(cat === 'trousers' || cat === 'pant' || cat === 'pants')
                 ? { gridRow: 'span 2', width: '100%', height: '100%' }
-                : { aspectRatio: '4/5', width: '100%', overflow: 'hidden' }
+                : { gridColumn: 'span 2', gridRow: 'span 2', width: '100%', height: '100%' }
               }
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -170,7 +180,7 @@ export default function ProductGrid({ products = [], category = 'all' }) {
                 src={bannerUrl}
                 alt="Campaign Banner"
                 className="w-full h-full block"
-                style={{ objectFit: 'cover', objectPosition: (cat === 'trousers' || cat === 'pant' || cat === 'pants') ? '50% 15%' : '50% 0%' }}
+                style={{ objectFit: 'cover', objectPosition: (cat === 'trousers' || cat === 'pant' || cat === 'pants') ? '50% 15%' : '50% 0%', position: 'absolute', inset: 0 }}
               />
             </div>
 

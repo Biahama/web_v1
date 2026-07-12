@@ -1,51 +1,36 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { getKurtasFromFilesystem } from '@/lib/kurtas'
+import { withErrorLogging } from '@/lib/logger'
 
-export async function GET(req) {
+// Lists products from the database. Every category (kurtas, pants,
+// shirts, tunics...) comes from the same place: the Product table.
+// If the database is down, the error is logged to the ErrorLog table
+// and the browser gets a clear 500 error instead of an empty store.
+export const GET = withErrorLogging('api/products GET', async (req) => {
   const { searchParams } = new URL(req.url)
   const category = searchParams.get('category')
   const limit    = parseInt(searchParams.get('limit') || '50')
   const slug     = searchParams.get('slug')
 
-  // Intercept category=kurtas or category=kurta
-  if (category && (category.toLowerCase() === 'kurtas' || category.toLowerCase() === 'kurta')) {
-    let kurtas = getKurtasFromFilesystem()
-    if (slug) {
-      kurtas = kurtas.filter(k => k.slug === slug)
-    }
-    return NextResponse.json(kurtas.slice(0, limit))
-  }
-
-  // Intercept slug if it matches a Kurta
-  if (slug) {
-    const kurtas = getKurtasFromFilesystem()
-    const found = kurtas.find(k => k.slug === slug)
-    if (found) {
-      return NextResponse.json([found])
-    }
-  }
+  // Shop links use plural names ("kurtas") but some products are
+  // stored singular ("Kurta"), so we accept both spellings.
+  const categoryForms = category ? [category, category.replace(/s$/i, '')] : []
 
   const where = {
     isActive: true,
-    ...(category ? { category: { equals: category, mode: 'insensitive' } } : {}),
-    ...(slug     ? { slug }                                                 : {}),
+    ...(category ? { category: { in: categoryForms, mode: 'insensitive' } } : {}),
+    ...(slug     ? { slug }                                                  : {}),
   }
 
-  let products = []
-  try {
-    products = await prisma.product.findMany({
-      where,
-      take: limit,
-      orderBy: { createdAt: 'desc' },
-      include: {
-        images:   { where: { isPrimary: true }, take: 1 },
-        variants: { select: { id: true, price: true, comparePrice: true, stockQty: true, color: true, colorHex: true, size: true } },
-      },
-    })
-  } catch (err) {
-    console.error("Products API database query failed:", err)
-  }
+  const products = await prisma.product.findMany({
+    where,
+    take: limit,
+    orderBy: { createdAt: 'desc' },
+    include: {
+      images:   { where: { isPrimary: true }, take: 1 },
+      variants: { select: { id: true, price: true, comparePrice: true, stockQty: true, color: true, colorHex: true, size: true } },
+    },
+  })
 
   const mapped = products.map(p => {
     const prices   = p.variants.map(v => v.price)
@@ -69,4 +54,4 @@ export async function GET(req) {
   })
 
   return NextResponse.json(mapped)
-}
+})

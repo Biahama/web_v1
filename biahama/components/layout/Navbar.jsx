@@ -320,7 +320,7 @@ export default function Navbar() {
             >
               <WardrobeIcon themeColor={themeColor} />
               <span className="tracking-widest uppercase hidden lg:block" style={{ fontFamily: 'var(--font-ui)', fontSize: '14px', fontWeight: '400', letterSpacing: '1.2px' }}>
-                Wardrobe
+                My Wardrobe
               </span>
             </Link>
           ) : (
@@ -331,7 +331,7 @@ export default function Navbar() {
             >
               <WardrobeIcon themeColor={themeColor} />
               <span className="tracking-widest uppercase hidden lg:block" style={{ fontFamily: 'var(--font-ui)', fontSize: '14px', fontWeight: '400', letterSpacing: '1.2px' }}>
-                Wardrobe
+                My Wardrobe
               </span>
             </button>
           )}
