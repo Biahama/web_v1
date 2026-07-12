@@ -8,10 +8,11 @@ export const metadata = {
 
 export default function HomePage() {
   return (
-    // Hero size: fixed 700px on desktop so the image looks the SAME on
-    // every screen (h-screen made it grow/shrink with the window).
-    // Mobile keeps full-screen height.
-    <div className="relative w-full h-[100svh] md:h-[700px] overflow-hidden bg-zinc-900">
+    // Hero size: always fills the whole screen (footer only appears after
+    // scrolling). Monitors come in different shapes, so the image edges must
+    // crop — but object-position on the image below anchors the crop to the
+    // model, so the composition looks consistent everywhere.
+    <div className="relative w-full h-[100svh] overflow-hidden bg-zinc-900">
       {/* Background Campaign Image */}
       <div className="absolute inset-0 w-full h-full">
         <Image
@@ -20,7 +21,7 @@ export default function HomePage() {
           fill
           priority
           unoptimized
-          className="object-cover object-[60%_20%] md:object-[50%_20%] pointer-events-none"
+          className="object-cover object-[65%_25%] pointer-events-none"
         />
         {/* Soft shadow overlay for text legibility */}
         <div className="absolute inset-0 bg-black/15" />

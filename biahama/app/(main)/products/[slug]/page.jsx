@@ -5,10 +5,24 @@ import ProductDetailClient from '@/components/product/ProductDetailClient'
 export const revalidate = 3600
 
 export async function generateStaticParams() {
-  const products = await prisma.product.findMany({
-    select: { slug: true }
-  })
-  return products.map(p => ({ slug: p.slug }))
+  // This runs while Vercel BUILDS the site. If the database is
+  // unreachable at that moment (e.g. Supabase paused it), we must
+  // not crash the whole deploy — return an empty list instead.
+  // Product pages are then simply built on first visit, once the
+  // database is back.
+  try {
+    const products = await prisma.product.findMany({
+      select: { slug: true }
+    })
+    return products.map(p => ({ slug: p.slug }))
+  } catch (error) {
+    console.error(
+      '[BUILD WARNING] Could not reach the database while building product pages. ' +
+      'The deploy will continue; pages will be generated on first visit. ' +
+      'Check if the Supabase project is paused. Details: ' + error.message
+    )
+    return []
+  }
 }
 
 // Look up one product (with its photos and size options) in the

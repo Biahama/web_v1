@@ -150,18 +150,16 @@ export default function ProductGrid({ products = [], category = 'all' }) {
             Showing layout preview placeholders
           </p>
         )}
-        {/* Desktop Layout — matches the approved design:
-            KURTA:  4-column grid. Left = 2x2 product cards.
-                    Right = one banner spanning 2 columns x 2 rows,
-                    so the banner box is ~4:5 overall (2 cards wide,
-                    2 rows tall) exactly like the reference picture.
-            PANTS:  unchanged (banner 1 column wide, 2 rows tall). */}
+        {/* Desktop Layout — matches the approved design.
+            Both KURTA and PANT pages use the same layout:
+            4-column grid. Left = 2x2 product cards.
+            Right = one banner spanning 2 columns x 2 rows,
+            so the banner box is ~4:5 overall (2 cards wide,
+            2 rows tall) exactly like the reference picture. */}
         <div className="hidden lg:block space-y-14">
           <div style={{
             display: 'grid',
-            gridTemplateColumns: (cat === 'trousers' || cat === 'pant' || cat === 'pants')
-              ? 'repeat(3, minmax(0, 1fr))'
-              : 'repeat(4, minmax(0, 1fr))',
+            gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
             gap: '32px 8px'
           }}>
             {displayProducts[0] && <ProductCard key={displayProducts[0].id} product={displayProducts[0]} priority={true} index={0} />}
@@ -170,10 +168,7 @@ export default function ProductGrid({ products = [], category = 'all' }) {
             {/* Right side: 1 campaign banner */}
             <div
               className="relative bg-zinc-100 overflow-hidden"
-              style={(cat === 'trousers' || cat === 'pant' || cat === 'pants')
-                ? { gridRow: 'span 2', width: '100%', height: '100%' }
-                : { gridColumn: 'span 2', gridRow: 'span 2', width: '100%', height: '100%' }
-              }
+              style={{ gridColumn: 'span 2', gridRow: 'span 2', width: '100%', height: '100%' }}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img

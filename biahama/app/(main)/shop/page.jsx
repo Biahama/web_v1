@@ -2,6 +2,7 @@ import Link from 'next/link'
 import ProductGrid from '@/components/product/ProductGrid'
 import FilterTabBar from '@/components/ui/FilterTabBar'
 import { prisma } from '@/lib/prisma'
+import { logError } from '@/lib/logger'
 
 export const revalidate = 3600
 
@@ -37,7 +38,10 @@ async function getProducts(category) {
       },
     })
   } catch (err) {
-    console.error("Local products query failed:", err)
+    // Record it in the ErrorLog table (with a timestamp) so this can
+    // never fail invisibly again — when this happens, the shop shows
+    // "layout preview placeholders" instead of real products.
+    await logError('shop page — load products', err, { category })
     return []
   }
 
@@ -90,7 +94,17 @@ export default async function ShopPage({ searchParams }) {
         }} 
         className="text-center"
       >
-        <h1 className="biahama-heading">
+        {/* The title uses the same Jost font and letter spacing as the category tabs above it */}
+        <h1
+          style={{
+            fontFamily: 'var(--font-ui)',
+            fontSize: '26px',
+            fontWeight: 400,
+            letterSpacing: '0.177em',
+            color: '#404040',
+            margin: 0,
+          }}
+        >
           {displayName}
         </h1>
       </div>

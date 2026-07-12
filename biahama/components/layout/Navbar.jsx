@@ -95,7 +95,7 @@ export default function Navbar() {
           style={{
             fontFamily: 'var(--font-display)',
             fontWeight: '500',
-            fontSize: 20,
+            fontSize: 24,
             color: 'var(--black)',
             letterSpacing: '4px',
             marginLeft: '0.3em',
@@ -230,7 +230,7 @@ export default function Navbar() {
         <Link
           href="/"
           className="absolute left-1/2 -translate-x-1/2 select-none z-50 h-full flex items-center"
-          style={{ fontFamily: 'var(--font-display)', fontWeight: '500', fontSize: '20px', color: themeColor, letterSpacing: '4px' }}
+          style={{ fontFamily: 'var(--font-display)', fontWeight: '500', fontSize: '24px', color: themeColor, letterSpacing: '4px' }}
         >
           BIAHAMA
         </Link>
