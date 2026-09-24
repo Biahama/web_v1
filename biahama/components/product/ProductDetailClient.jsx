@@ -10,7 +10,13 @@ function formatPrice(paise) {
   return `₹${(paise / 100).toLocaleString('en-IN')}`
 }
 
-export default function ProductDetailClient({ product }) {
+// pdpSettings (from the admin panel): the buy button's text and
+// whether the fast checkout button is shown. Defaults keep the
+// page working even if no settings are passed.
+export default function ProductDetailClient({
+  product,
+  pdpSettings = { addToBagText: 'ADD TO BAG', showFastCheckout: true },
+}) {
   const { session } = useAuth()
   const router = useRouter()
   const { add } = useCart()
@@ -24,6 +30,8 @@ export default function ProductDetailClient({ product }) {
   const [copied, setCopied] = useState(false)
   const [detailsExpanded, setDetailsExpanded] = useState(false)
   const [shippingExpanded, setShippingExpanded] = useState(false)
+  const [packagingExpanded, setPackagingExpanded] = useState(false)
+  const [returnExpanded, setReturnExpanded] = useState(false)
   const [viewDetailsExpanded, setViewDetailsExpanded] = useState(false)
   // Stacked vertically images
   const displayImages = []
@@ -450,26 +458,30 @@ export default function ProductDetailClient({ product }) {
                   textTransform: 'uppercase',
                 }}
               >
-                {adding ? 'ADDING...' : 'ADD TO BAG'}
+                {/* Button text comes from the admin panel */}
+                {adding ? 'ADDING...' : (pdpSettings.addToBagText || 'ADD TO BAG')}
               </button>
 
-              <button
-                onClick={handleFastCheckout}
-                disabled={checkoutLoading}
-                className="w-full text-sm tracking-widest uppercase border transition-colors flex items-center justify-center gap-2 text-white hover:bg-opacity-95 font-medium"
-                style={{
-                  background: '#1c2c54',
-                  borderColor: '#1c2c54',
-                  fontFamily: 'var(--font-ui)',
-                  width: '100%',
-                  height: '48px',
-                  padding: '11px 33px',
-                  letterSpacing: '4px',
-                  textTransform: 'uppercase',
-                }}
-              >
-                {checkoutLoading ? 'OPENING CHECKOUT...' : 'PAY WITH RAZORPAY'}
-              </button>
+              {/* Fast checkout can be switched off from the admin panel */}
+              {pdpSettings.showFastCheckout !== false && (
+                <button
+                  onClick={handleFastCheckout}
+                  disabled={checkoutLoading}
+                  className="w-full text-sm tracking-widest uppercase border transition-colors flex items-center justify-center gap-2 text-white hover:bg-opacity-95 font-medium"
+                  style={{
+                    background: '#1c2c54',
+                    borderColor: '#1c2c54',
+                    fontFamily: 'var(--font-ui)',
+                    width: '100%',
+                    height: '48px',
+                    padding: '11px 33px',
+                    letterSpacing: '4px',
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  {checkoutLoading ? 'OPENING CHECKOUT...' : 'PAY WITH RAZORPAY'}
+                </button>
+              )}
               
               <div className="text-center" style={{ marginTop: '16px' }}>
                 <span className="text-[10px] tracking-widest text-zinc-500 uppercase font-medium">
@@ -541,6 +553,19 @@ export default function ProductDetailClient({ product }) {
             </div>
           </div>
 
+          <PdpAccordion
+            title="PACKAGING"
+            open={packagingExpanded}
+            onToggle={() => setPackagingExpanded(!packagingExpanded)}
+            desktop={true}
+          >
+              <>
+                Every order is packed in reusable cotton cloth and recycled paper — no plastic anywhere in the parcel.
+                <br/><br/>
+                The outer box is FSC-certified and designed to be flattened and stored, so it can be reused for a return or kept for another use.
+              </>
+          </PdpAccordion>
+
           {/* SHIPPING AND RETURNS accordion */}
           <div className="w-full relative" style={{ borderTop: '1px solid #D2D2D2' }}>
             <button 
@@ -579,6 +604,19 @@ export default function ProductDetailClient({ product }) {
               </div>
             </div>
           </div>
+          <PdpAccordion
+            title="METHOD OF RETURN"
+            open={returnExpanded}
+            onToggle={() => setReturnExpanded(!returnExpanded)}
+            desktop={true}
+          >
+              <>
+                We guarantee 7 days from the delivery date to request a return or exchange. Pieces must be unworn, unwashed and in their original condition with tags attached.
+                <br/><br/>
+                Write to us with your order number and we will arrange a pickup where available. Size exchanges are always free.
+              </>
+          </PdpAccordion>
+
         </div>
 
         {/* Mobile Description Section (No horizontal padding constraints) */}
@@ -626,6 +664,19 @@ export default function ProductDetailClient({ product }) {
             </div>
           </div>
 
+          <PdpAccordion
+            title="PACKAGING"
+            open={packagingExpanded}
+            onToggle={() => setPackagingExpanded(!packagingExpanded)}
+            desktop={false}
+          >
+              <>
+                Every order is packed in reusable cotton cloth and recycled paper — no plastic anywhere in the parcel.
+                <br/><br/>
+                The outer box is FSC-certified and designed to be flattened and stored, so it can be reused for a return or kept for another use.
+              </>
+          </PdpAccordion>
+
           <div className="w-full relative" style={{ borderTop: '1px solid #D2D2D2' }}>
             <button 
               onClick={() => setShippingExpanded(!shippingExpanded)}
@@ -652,8 +703,50 @@ export default function ProductDetailClient({ product }) {
               </div>
             </div>
           </div>
+          <PdpAccordion
+            title="METHOD OF RETURN"
+            open={returnExpanded}
+            onToggle={() => setReturnExpanded(!returnExpanded)}
+            desktop={false}
+          >
+              <>
+                We guarantee 7 days from the delivery date to request a return or exchange. Pieces must be unworn, unwashed and in their original condition with tags attached.
+                <br/><br/>
+                Write to us with your order number and we will arrange a pickup where available. Size exchanges are always free.
+              </>
+          </PdpAccordion>
+
         </div>
       </div>
     </>
+  )
+}
+
+// Collapsible section under the PDP images. The client's spec keeps
+// DESCRIPTION and MATERIALS open and these ones closed by default.
+function PdpAccordion({ title, open, onToggle, desktop, children }) {
+  return (
+    <div className="w-full relative" style={{ borderTop: '1px solid #D2D2D2' }}>
+      <button
+        onClick={onToggle}
+        className="w-full text-left relative flex items-center hover:opacity-60 transition-opacity"
+        style={{ height: '56px', padding: '16px 30px 16px 0', fontSize: desktop ? '18px' : '16px', fontWeight: 400, color: '#262626', fontFamily: 'var(--font-display)' }}
+      >
+        {title}
+        <div style={{ position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)' }}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+            {!open && <line x1="12" y1="5" x2="12" y2="19"></line>}
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+        </div>
+      </button>
+      <div style={{ maxHeight: open ? '1000px' : '0', overflow: open ? 'visible' : 'hidden', transition: '0.15s ease-in' }}>
+        <div style={{ paddingBottom: '24px', paddingLeft: desktop ? '15px' : 0, paddingRight: desktop ? '15px' : 0 }}>
+          <p style={{ fontSize: desktop ? '16px' : '15px', fontWeight: 300, lineHeight: desktop ? '20px' : '22px', color: '#6f6f6f', letterSpacing: desktop ? '0.6px' : 'normal', fontFamily: 'var(--font-ui)' }}>
+            {children}
+          </p>
+        </div>
+      </div>
+    </div>
   )
 }

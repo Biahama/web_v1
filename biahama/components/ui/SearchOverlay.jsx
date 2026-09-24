@@ -40,13 +40,13 @@ export default function SearchOverlay({ open, onClose }) {
       <button
         onClick={onClose}
         className="absolute top-5 right-6 text-xs tracking-widest uppercase hover:opacity-50 transition-opacity"
-        style={{ fontFamily: 'Jost, sans-serif', color: 'var(--black)' }}
+        style={{ fontFamily: 'var(--font-ui)', color: 'var(--black)' }}
       >
         Close
       </button>
 
       <form onSubmit={handleSubmit} className="w-full max-w-xl px-8">
-        <p className="text-xs tracking-widest uppercase mb-6 text-center" style={{ color: 'var(--gray)', fontFamily: 'Jost, sans-serif' }}>
+        <p className="text-xs tracking-widest uppercase mb-6 text-center" style={{ color: 'var(--gray)', fontFamily: 'var(--font-ui)' }}>
           Search
         </p>
         <input

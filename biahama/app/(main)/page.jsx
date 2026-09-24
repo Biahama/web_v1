@@ -64,7 +64,7 @@ export default async function HomePage() {
             href="/shop"
             className="group inline-flex items-center gap-3 text-xs tracking-widest uppercase pb-1 hover:opacity-85 transition-opacity"
             style={{
-              fontFamily: 'Jost, sans-serif',
+              fontFamily: 'var(--font-ui)',
               fontWeight: 400,
               color: '#ffffff',
               borderBottom: '1px solid #ffffff',

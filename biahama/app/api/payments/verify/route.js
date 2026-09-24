@@ -18,10 +18,18 @@ import { z } from 'zod'
 
 import { prisma } from '@/lib/prisma'
 import { getRazorpay } from '@/lib/razorpay'
-import { computeTotals } from '@/lib/pricing'
+import { computeTotals, SHIPPING_THRESHOLD, SHIPPING_COST } from '@/lib/pricing'
+import { validateCouponOrThrow } from '@/lib/coupons'
 import { createOrderFromCart } from '@/lib/orders'
 import { ensureUser } from '@/lib/ensure-user'
 import { withErrorLogging, logError } from '@/lib/logger'
+
+// An error whose message is safe to show the customer.
+function userError(message, statusCode) {
+  const err = new Error(message)
+  err.statusCode = statusCode
+  return err
+}
 
 // What a valid request body must look like.
 // The three razorpay_* fields are only required for online payments.
@@ -29,6 +37,7 @@ const bodySchema = z
   .object({
     addressId:           z.string().min(1, 'Address is required'),
     paymentMethod:       z.enum(['razorpay', 'cod']).default('razorpay'),
+    couponCode:          z.string().optional(), // optional discount code
     razorpay_order_id:   z.string().optional(),
     razorpay_payment_id: z.string().optional(),
     razorpay_signature:  z.string().optional(),
@@ -58,7 +67,7 @@ export const POST = withErrorLogging('api/payments/verify', async (req) => {
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 })
   }
-  const { razorpay_order_id, razorpay_payment_id, razorpay_signature, addressId, paymentMethod } = parsed.data
+  const { razorpay_order_id, razorpay_payment_id, razorpay_signature, addressId, paymentMethod, couponCode } = parsed.data
   const isCod = paymentMethod === 'cod'
 
   // Make sure this user exists in OUR User table
@@ -94,7 +103,40 @@ export const POST = withErrorLogging('api/payments/verify', async (req) => {
     include: { variant: true },
   })
   if (cartItems.length === 0) return NextResponse.json({ error: 'Cart is empty' }, { status: 400 })
-  const { total } = computeTotals(cartItems)
+
+  // ---------- COUPON + TOTALS ----------
+  // This EXACT same math also runs in lib/orders.js and
+  // payments/create-order. All three copies must stay identical, or
+  // a couponed payment would fail the amount check below.
+  // Rule: discount comes off the subtotal FIRST, then shipping is
+  // decided on the reduced amount (free at ₹3,000+), then
+  // total = discounted subtotal + shipping.
+  let discount, appliedCoupon, total
+  try {
+    const { subtotal } = computeTotals(cartItems)
+    discount = 0
+    appliedCoupon = null
+    if (couponCode) {
+      // Check the code against every rule (active, dates, usage
+      // limit, minimum order).
+      const result = await validateCouponOrThrow(couponCode, subtotal)
+      // Some coupons are made for ONE specific customer only.
+      if (result.coupon.userSpecific && result.coupon.userSpecific !== user.id) {
+        throw userError('This coupon is not for your account', 400)
+      }
+      appliedCoupon = result.coupon
+      discount = result.discount
+    }
+    const discountedSubtotal = subtotal - discount
+    const shipping = discountedSubtotal >= SHIPPING_THRESHOLD ? 0 : SHIPPING_COST
+    total = discountedSubtotal + shipping
+  } catch (err) {
+    // Coupon problems carry a customer-safe message and status code.
+    if (err.statusCode) {
+      return NextResponse.json({ error: err.message }, { status: err.statusCode })
+    }
+    throw err
+  }
 
   if (!isCod) {
     // CHECK 2 + 3: ask Razorpay what was actually paid, and by whom.
@@ -126,13 +168,16 @@ export const POST = withErrorLogging('api/payments/verify', async (req) => {
   }
 
   try {
+    // The coupon code (if any) rides along so the order stores the
+    // discount and counts the coupon use — for online AND COD orders.
     const order = await createOrderFromCart(user.id, addressId, {
       paymentMethod,
       paymentId:     isCod ? null : razorpay_payment_id,
-      // COD: money not received yet, collect `total` at the door.
+      // COD: money not received yet, collect `total` at the door
+      // (total already has the coupon discount taken off).
       paymentStatus: isCod ? 'pending' : 'paid',
       codAmount:     isCod ? total : null,
-    })
+    }, appliedCoupon ? appliedCoupon.code : null)
     return NextResponse.json({ orderId: order.id })
   } catch (err) {
     // P2002 = the database's unique rule on paymentId fired because

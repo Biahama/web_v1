@@ -34,9 +34,23 @@ function getMockProducts(category) {
   return mockList
 }
 
-// bannerSide (from the admin panel): 'right' or 'left' — which
-// side of the product cards the big campaign banner sits on.
-export default function ProductGrid({ products = [], category = 'all', bannerSide = 'right' }) {
+// collectionSettings (from the admin panel, per category):
+//   bannerSide:  'right' or 'left' — which side of the product
+//                cards the big campaign banner sits on.
+//   bannerImage: a custom banner photo URL. '' means "automatic":
+//                pick a product photo (the old behaviour).
+// The older bannerSide prop still works, but collectionSettings
+// wins if both are given.
+export default function ProductGrid({
+  products = [],
+  category = 'all',
+  bannerSide,
+  collectionSettings,
+}) {
+  const banner = {
+    bannerSide: collectionSettings?.bannerSide ?? bannerSide ?? 'right',
+    bannerImage: collectionSettings?.bannerImage ?? '',
+  }
   const cat = (category || 'all').toLowerCase()
   const isMock = products.length === 0
   const displayProducts = isMock ? getMockProducts(cat) : products
@@ -46,7 +60,7 @@ export default function ProductGrid({ products = [], category = 'all', bannerSid
     return (
       <>
         {isMock && (
-          <p className="text-[10px] tracking-widest uppercase mb-8 text-center text-zinc-400 font-light" style={{ fontFamily: 'Jost, sans-serif' }}>
+          <p className="text-[10px] tracking-widest uppercase mb-8 text-center text-zinc-400 font-light" style={{ fontFamily: 'var(--font-ui)' }}>
             Showing layout preview placeholders
           </p>
         )}
@@ -145,10 +159,16 @@ export default function ProductGrid({ products = [], category = 'all', bannerSid
       }
     }
 
+    // If the admins uploaded their own banner photo for this
+    // category, it wins over the automatic product photo above.
+    if (typeof banner.bannerImage === 'string' && banner.bannerImage.trim() !== '') {
+      bannerUrl = banner.bannerImage
+    }
+
     return (
       <>
         {isMock && (
-          <p className="text-[10px] tracking-widest uppercase mb-8 text-center text-zinc-400 font-light" style={{ fontFamily: 'Jost, sans-serif' }}>
+          <p className="text-[10px] tracking-widest uppercase mb-8 text-center text-zinc-400 font-light" style={{ fontFamily: 'var(--font-ui)' }}>
             Showing layout preview placeholders
           </p>
         )}
@@ -191,7 +211,7 @@ export default function ProductGrid({ products = [], category = 'all', bannerSid
                 </div>
               )
               // banner first = banner on the left, cards flow to its right
-              return bannerSide === 'left'
+              return banner.bannerSide === 'left'
                 ? <>{banner}{firstTwoCards}</>
                 : <>{firstTwoCards}{banner}</>
             })()}

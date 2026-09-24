@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
 import ProductDetailClient from '@/components/product/ProductDetailClient'
+import { getSiteSettings } from '@/lib/site-settings'
 
 export const revalidate = 3600
 
@@ -60,5 +61,9 @@ export default async function ProductDetailPage({ params }) {
     notFound()
   }
 
-  return <ProductDetailClient product={product} />
+  // Admin panel settings for this page (button text, fast checkout
+  // on/off) — edited under Admin -> Product page (PDP).
+  const settings = await getSiteSettings()
+
+  return <ProductDetailClient product={product} pdpSettings={settings.pdp} />
 }

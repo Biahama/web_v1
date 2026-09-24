@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect } from 'react'
 import { useAuth } from '@/components/providers/AuthProvider'
+import { trackEvent } from '@/lib/analytics-client'
 
 const CartContext = createContext({ items: [], count: 0, add: () => {}, remove: () => {}, updateQty: () => {}, clear: () => {} })
 
@@ -90,6 +91,9 @@ export function CartProvider({ children }) {
       if (!session) writeLocalCart(next)
       return next
     })
+
+    // Count this for the admin Analytics page (variant id is fine for counting).
+    trackEvent('add_to_cart', { productId: variant.id })
 
     if (session) {
       await syncToServer('add item to cart', () =>

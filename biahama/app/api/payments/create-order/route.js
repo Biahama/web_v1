@@ -12,13 +12,22 @@ import { z } from 'zod'
 
 import { prisma } from '@/lib/prisma'
 import { getRazorpay } from '@/lib/razorpay'
-import { computeTotals } from '@/lib/pricing'
+import { computeTotals, SHIPPING_THRESHOLD, SHIPPING_COST } from '@/lib/pricing'
+import { validateCouponOrThrow } from '@/lib/coupons'
 import { ensureUser } from '@/lib/ensure-user'
 import { withErrorLogging } from '@/lib/logger'
 
+// An error whose message is safe to show the customer.
+function userError(message, statusCode) {
+  const err = new Error(message)
+  err.statusCode = statusCode
+  return err
+}
+
 // What a valid request body must look like.
 const bodySchema = z.object({
-  addressId: z.string().min(1, 'Address is required'),
+  addressId:  z.string().min(1, 'Address is required'),
+  couponCode: z.string().optional(), // optional discount code
 })
 
 export const POST = withErrorLogging('api/payments/create-order', async (req) => {
@@ -32,7 +41,7 @@ export const POST = withErrorLogging('api/payments/create-order', async (req) =>
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 })
   }
-  const { addressId } = parsed.data
+  const { addressId, couponCode } = parsed.data
 
   // Make sure this user exists in OUR User table
   // (prevents "foreign key" database errors for new customers).
@@ -50,19 +59,51 @@ export const POST = withErrorLogging('api/payments/create-order', async (req) =>
   })
   if (cartItems.length === 0) return NextResponse.json({ error: 'Cart is empty' }, { status: 400 })
 
-  // One source of truth for pricing. Prices are GST-inclusive,
-  // so the total is simply subtotal + shipping (no GST added on top).
-  const { total } = computeTotals(cartItems)
+  // ---------- COUPON + TOTALS ----------
+  // This EXACT same math also runs in lib/orders.js and
+  // payments/verify. All three copies must stay identical, or the
+  // amount Razorpay charges won't match the order we create later.
+  // Rule: discount comes off the subtotal FIRST, then shipping is
+  // decided on the reduced amount (free at ₹3,000+), then
+  // total = discounted subtotal + shipping.
+  let discount, appliedCoupon, total
+  try {
+    const { subtotal } = computeTotals(cartItems)
+    discount = 0
+    appliedCoupon = null
+    if (couponCode) {
+      // Check the code against every rule (active, dates, usage
+      // limit, minimum order).
+      const result = await validateCouponOrThrow(couponCode, subtotal)
+      // Some coupons are made for ONE specific customer only.
+      if (result.coupon.userSpecific && result.coupon.userSpecific !== user.id) {
+        throw userError('This coupon is not for your account', 400)
+      }
+      appliedCoupon = result.coupon
+      discount = result.discount
+    }
+    const discountedSubtotal = subtotal - discount
+    const shipping = discountedSubtotal >= SHIPPING_THRESHOLD ? 0 : SHIPPING_COST
+    total = discountedSubtotal + shipping
+  } catch (err) {
+    // Coupon problems carry a customer-safe message and status code.
+    if (err.statusCode) {
+      return NextResponse.json({ error: err.message }, { status: err.statusCode })
+    }
+    throw err
+  }
 
-  // We store userId and addressId in the Razorpay "notes" so the
-  // webhook can still create the order if the customer pays but
-  // closes the browser before we hear back.
+  // We store userId, addressId and the coupon code in the Razorpay
+  // "notes" so the webhook can still create the order (with the SAME
+  // discount) if the customer pays but closes the browser before we
+  // hear back.
   const rzpOrder = await getRazorpay().orders.create({
     amount:   total,
     currency: 'INR',
     notes: {
-      userId:    user.id,
-      addressId: address.id,
+      userId:     user.id,
+      addressId:  address.id,
+      couponCode: appliedCoupon ? appliedCoupon.code : '',
     },
   })
 
@@ -80,6 +121,10 @@ export const POST = withErrorLogging('api/payments/create-order', async (req) =>
     orderId:  rzpOrder.id,
     amount:   total,
     currency: 'INR',
+    // Server-verified coupon numbers, so the checkout page always
+    // displays exactly what will be charged.
+    discount,
+    couponCode: appliedCoupon ? appliedCoupon.code : null,
     keyId:    process.env.RAZORPAY_KEY_ID,
     prefill: {
       name:    displayName,

@@ -54,6 +54,7 @@ model Product {
   variants        ProductVariant[]
   images          ProductImage[]
   reviews         Review[]
+  wardrobeItems   WardrobeItem[]
 }
 
 model ProductVariant {
@@ -116,6 +117,8 @@ model Order {
   shippingStatus  String      @default("not_shipped")
   codAmount       Int?
   remittanceId    String?
+  srOrderId       String? // Shiprocket order id (set when pushed to Shiprocket)
+  srShipmentId    String? // Shiprocket shipment id (needed for AWB + tracking)
   notes           String?
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
@@ -176,6 +179,46 @@ model Review {
   isVerified  Boolean  @default(false)
   isPublished Boolean  @default(false)
   createdAt   DateTime @default(now())
+}
+
+// Loyalty points ledger — one row per credit/debit, so the
+// history is always auditable. Balance = sum of points.
+// orderId is unique: an order can never award points twice.
+model LoyaltyTransaction {
+  id        String   @id @default(uuid())
+  userId    String
+  orderId   String?  @unique
+  points    Int // positive = earned, negative = spent
+  reason    String // e.g. "Order #abc — ₹2,450"
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+// Lightweight analytics events (page views, add-to-carts...).
+// No personal data — just a random session key, so we can count
+// visitors and conversion without invading privacy.
+model AnalyticsEvent {
+  id         String   @id @default(uuid())
+  type       String // page_view | add_to_cart | wardrobe_save | begin_checkout | coupon_applied
+  path       String?
+  productId  String?
+  sessionKey String?
+  createdAt  DateTime @default(now())
+
+  @@index([type, createdAt])
+}
+
+// "My Wardrobe" — products a customer saved with the hanger
+// button on product cards. One row per (user, product).
+model WardrobeItem {
+  id        String   @id @default(uuid())
+  userId    String
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId])
 }
 
 // Editable site settings, changed from the /admin panel.

@@ -4,16 +4,30 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useCart } from '@/lib/cart'
+import { useWardrobe } from '@/lib/wardrobe'
 
 function formatPrice(paise) {
   return `₹${(paise / 100).toLocaleString('en-IN')}`
 }
 
 export default function ProductCard({ product, priority = false, index = 0 }) {
-  const [wishlisted, setWishlisted] = useState(false)
   const [hovered, setHovered] = useState(false)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const { add } = useCart()
+  // Wardrobe = saved items. Shared state, so the hanger stays
+  // filled everywhere once a product is saved.
+  const { isSaved, toggle } = useWardrobe()
+  const wishlisted = isSaved(product.id)
+
+  async function handleWardrobe(e) {
+    e.preventDefault()
+    e.stopPropagation()
+    const result = await toggle(product.id)
+    if (result === 'login-required') {
+      // Not logged in — send them to the homepage with the login drawer open.
+      window.location.href = '/?login=true'
+    }
+  }
 
   const isLowStock = product.stockQty <= 3 && product.stockQty > 0
   const isSoldOut  = !product.inStock
@@ -157,7 +171,7 @@ export default function ProductCard({ product, priority = false, index = 0 }) {
 
         {/* Wardrobe button — always visible */}
         <button
-          onClick={e => { e.preventDefault(); e.stopPropagation(); setWishlisted(w => !w) }}
+          onClick={handleWardrobe}
           className="biahama-hanger-btn z-10 transition-colors"
           aria-label="Save to wardrobe"
           style={{

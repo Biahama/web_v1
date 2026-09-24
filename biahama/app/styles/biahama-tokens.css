@@ -24,7 +24,7 @@
    BIAHAMA keeps its own fonts (GTEesti not publicly available)
    ------------------------------------------------------------ */
 :root {
-  --font-ui:       'Jost', sans-serif;           /* nav, tabs, product info */
+  --font-ui:       var(--font-dm-sans), 'DM Sans', sans-serif; /* nav, tabs, product info */
   --font-display:  'Cormorant Garamond', serif;  /* headings, page titles (italic) */
 }
 
@@ -50,9 +50,9 @@
   --text-tab-tracking:          normal;
   --text-tab-line-height:       24px;
 
-  /* Product Name — BC: 16px/400/0.8px */
+  /* Product Name — design spec: DM Sans Bold */
   --text-product-name-size:     16px;
-  --text-product-name-weight:   400;
+  --text-product-name-weight:   700;
   --text-product-name-tracking: 0.8px;
   --text-product-name-lh:       20px;
 

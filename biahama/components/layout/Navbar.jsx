@@ -125,7 +125,7 @@ export default function Navbar() {
           <Link
             href="/"
             className="tracking-widest uppercase hover:opacity-60 transition-opacity flex items-center h-full"
-            style={{ fontFamily: 'var(--font-ui)', fontSize: '14px', fontWeight: '400', letterSpacing: '1.2px', color: themeColor }}
+            style={{ fontFamily: 'var(--font-ui)', fontSize: '10px', fontWeight: '400', letterSpacing: '0.14em', color: themeColor }}
           >
             Home
           </Link>
@@ -138,7 +138,7 @@ export default function Navbar() {
             <Link
               href="/shop"
               className="tracking-widest uppercase hover:opacity-60 transition-opacity flex items-center h-full"
-              style={{ fontFamily: 'var(--font-ui)', fontSize: '14px', fontWeight: '400', letterSpacing: '1.2px', color: themeColor }}
+              style={{ fontFamily: 'var(--font-ui)', fontSize: '10px', fontWeight: '400', letterSpacing: '0.14em', color: themeColor }}
             >
               Collection
             </Link>
@@ -220,7 +220,7 @@ export default function Navbar() {
           <Link
             href="/#footer"
             className="tracking-widest uppercase hover:opacity-60 transition-opacity flex items-center h-full"
-            style={{ fontFamily: 'var(--font-ui)', fontSize: '14px', fontWeight: '400', letterSpacing: '1.2px', color: themeColor }}
+            style={{ fontFamily: 'var(--font-ui)', fontSize: '10px', fontWeight: '400', letterSpacing: '0.14em', color: themeColor }}
           >
             Contact Us
           </Link>
@@ -304,7 +304,7 @@ export default function Navbar() {
             >
               <SearchIcon />
               {!searchActive && (
-                <span className="tracking-widest uppercase hidden lg:block" style={{ fontFamily: 'var(--font-ui)', fontSize: '14px', fontWeight: '400', letterSpacing: '1.2px' }}>
+                <span className="tracking-widest uppercase hidden lg:block" style={{ fontFamily: 'var(--font-ui)', fontSize: '10px', fontWeight: '400', letterSpacing: '0.14em' }}>
                   Search
                 </span>
               )}
@@ -319,7 +319,7 @@ export default function Navbar() {
               style={{ color: themeColor }}
             >
               <WardrobeIcon themeColor={themeColor} />
-              <span className="tracking-widest uppercase hidden lg:block" style={{ fontFamily: 'var(--font-ui)', fontSize: '14px', fontWeight: '400', letterSpacing: '1.2px' }}>
+              <span className="tracking-widest uppercase hidden lg:block" style={{ fontFamily: 'var(--font-ui)', fontSize: '10px', fontWeight: '400', letterSpacing: '0.14em' }}>
                 My Wardrobe
               </span>
             </Link>
@@ -330,7 +330,7 @@ export default function Navbar() {
               style={{ color: themeColor, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
             >
               <WardrobeIcon themeColor={themeColor} />
-              <span className="tracking-widest uppercase hidden lg:block" style={{ fontFamily: 'var(--font-ui)', fontSize: '14px', fontWeight: '400', letterSpacing: '1.2px' }}>
+              <span className="tracking-widest uppercase hidden lg:block" style={{ fontFamily: 'var(--font-ui)', fontSize: '10px', fontWeight: '400', letterSpacing: '0.14em' }}>
                 My Wardrobe
               </span>
             </button>

@@ -9,7 +9,7 @@ import Script from 'next/script'
 import Link from 'next/link'
 // Pricing rules live in ONE shared file so the cart, checkout and
 // payment server can never disagree about the total.
-import { computeTotals } from '@/lib/pricing'
+import { computeTotals, SHIPPING_THRESHOLD, SHIPPING_COST, GST_RATE } from '@/lib/pricing'
 
 function formatPrice(paise) {
   return `₹${(paise / 100).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
@@ -262,13 +262,21 @@ export default function CheckoutPage() {
       return
     }
 
-    // Call API to create Razorpay Order
+    // Call API to create Razorpay Order.
+    // If the customer applied a coupon on the cart page, its code is
+    // waiting in sessionStorage — send it so the SERVER computes the
+    // discounted amount (we never trust browser math for money).
+    const savedCouponCode = sessionStorage.getItem('biahama_coupon') || null
+
     setAddressSaving(true)
     try {
       const orderRes = await fetch('/api/payments/create-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ addressId: targetAddressId }),
+        body: JSON.stringify({
+          addressId: targetAddressId,
+          ...(savedCouponCode ? { couponCode: savedCouponCode } : {}),
+        }),
       })
 
       const orderData = await orderRes.json()
@@ -277,6 +285,8 @@ export default function CheckoutPage() {
         return
       }
 
+      // orderData carries the server-verified discount and couponCode,
+      // which the summary panel and the verify step both use.
       setCheckoutData({ ...orderData, addressId: targetAddressId })
       setShippingCompleted(true)
       setActiveStep(3)
@@ -324,16 +334,21 @@ export default function CheckoutPage() {
               razorpay_signature:  response.razorpay_signature,
               addressId:           checkoutData.addressId,
               paymentMethod:       'razorpay',
+              // Same coupon the payment amount was built with —
+              // the server re-checks it before creating the order.
+              ...(checkoutData.couponCode ? { couponCode: checkoutData.couponCode } : {}),
             }),
           })
 
           const data = await res.json()
-          if (!res.ok) { 
-            setPaymentError(data.error || 'Payment verification failed.'); 
-            setPaymentLoading(false); 
-            return 
+          if (!res.ok) {
+            setPaymentError(data.error || 'Payment verification failed.');
+            setPaymentLoading(false);
+            return
           }
 
+          // Order placed — the coupon is used up, so forget it.
+          sessionStorage.removeItem('biahama_coupon')
           await clear()
           router.push(`/orders/${data.orderId}`)
         } catch {
@@ -347,44 +362,17 @@ export default function CheckoutPage() {
     rzp.open()
   }
 
-  async function handlePayCOD() {
-    if (!termsAccepted) {
-      setPaymentError('Please accept the Terms and Conditions of sale.')
-      return
-    }
-    if (!checkoutData) return
-
-    setPaymentLoading(true)
-    setPaymentError('')
-
-    try {
-      const res = await fetch('/api/payments/verify', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          addressId:     checkoutData.addressId,
-          paymentMethod: 'cod',
-        }),
-      })
-
-      const data = await res.json()
-      if (!res.ok) { 
-        setPaymentError(data.error || 'Failed to place COD order.'); 
-        setPaymentLoading(false); 
-        return 
-      }
-
-      await clear()
-      router.push(`/orders/${data.orderId}`)
-    } catch {
-      setPaymentError('Failed to place order. Please try again.')
-      setPaymentLoading(false)
-    }
-  }
-
-  // Calculations — prices are GST-inclusive, so the payable total is
-  // just subtotal + shipping. gstIncluded is shown for information only.
-  const { subtotal, shipping, gstIncluded, total } = computeTotals(items)
+  // Calculations — prices are GST-inclusive. Same order as the
+  // payment server: the coupon discount (the SERVER's number, from
+  // the create-order response) comes off the subtotal FIRST, then
+  // shipping is decided on the reduced amount.
+  const { subtotal } = computeTotals(items)
+  const discount = Math.min(checkoutData?.discount || 0, subtotal)
+  const discountedSubtotal = subtotal - discount
+  const shipping = discountedSubtotal >= SHIPPING_THRESHOLD || items.length === 0 ? 0 : SHIPPING_COST
+  // GST is already INSIDE the prices — shown for information only.
+  const gstIncluded = Math.round(discountedSubtotal - discountedSubtotal / (1 + GST_RATE))
+  const total = discountedSubtotal + shipping
 
   return (
     <>
@@ -417,7 +405,7 @@ export default function CheckoutPage() {
                     background: activeStep === 1 ? 'var(--black)' : '#faf9f6',
                     color: activeStep === 1 ? '#ffffff' : 'var(--black)',
                     padding: '16px 24px',
-                    fontFamily: 'Jost, sans-serif',
+                    fontFamily: 'var(--font-ui)',
                     fontSize: 12,
                     fontWeight: 400,
                     letterSpacing: '0.15em',
@@ -439,7 +427,7 @@ export default function CheckoutPage() {
                 {/* Content */}
                 {activeStep === 1 && (
                   <div style={{ padding: '24px 28px', background: '#ffffff' }}>
-                    <p style={{ fontFamily: 'Jost, sans-serif', fontSize: 13, color: 'var(--gray)', lineHeight: 1.6, margin: '0 0 24px 0' }}>
+                    <p style={{ fontFamily: 'var(--font-ui)', fontSize: 13, color: 'var(--gray)', lineHeight: 1.6, margin: '0 0 24px 0' }}>
                       Enter your e-mail address to proceed to checkout. If you are already registered, you will be asked to enter your password.
                     </p>
 
@@ -452,7 +440,7 @@ export default function CheckoutPage() {
                     {!emailChecked ? (
                       <form onSubmit={handleEmailContinue} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                         <div>
-                          <label style={{ fontFamily: 'Jost, sans-serif', fontSize: 10, textTransform: 'uppercase', color: 'var(--gray)', letterSpacing: '0.1em', display: 'block', marginBottom: 6 }}>
+                          <label style={{ fontFamily: 'var(--font-ui)', fontSize: 10, textTransform: 'uppercase', color: 'var(--gray)', letterSpacing: '0.1em', display: 'block', marginBottom: 6 }}>
                             E-mail address *
                           </label>
                           <input
@@ -460,13 +448,13 @@ export default function CheckoutPage() {
                             required
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            style={{ width: '100%', border: '1px solid var(--border)', padding: '10px 12px', fontSize: 12, fontFamily: 'Jost, sans-serif', outline: 'none' }}
+                            style={{ width: '100%', border: '1px solid var(--border)', padding: '10px 12px', fontSize: 12, fontFamily: 'var(--font-ui)', outline: 'none' }}
                           />
                         </div>
                         <button
                           type="submit"
                           disabled={authLoading}
-                          style={{ background: 'var(--black)', color: '#ffffff', border: 'none', padding: '14px', fontSize: 11, fontFamily: 'Jost, sans-serif', letterSpacing: '0.15em', textTransform: 'uppercase', cursor: 'pointer' }}
+                          style={{ background: 'var(--black)', color: '#ffffff', border: 'none', padding: '14px', fontSize: 11, fontFamily: 'var(--font-ui)', letterSpacing: '0.15em', textTransform: 'uppercase', cursor: 'pointer' }}
                         >
                           {authLoading ? 'Checking…' : 'CONTINUE'}
                         </button>
@@ -474,13 +462,13 @@ export default function CheckoutPage() {
                     ) : (
                       <form onSubmit={handleEmailAuth} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <span style={{ fontSize: 12, fontFamily: 'Jost, sans-serif', color: 'var(--black)' }}>
+                          <span style={{ fontSize: 12, fontFamily: 'var(--font-ui)', color: 'var(--black)' }}>
                             Email: <strong>{email}</strong>
                           </span>
                           <button 
                             type="button" 
                             onClick={() => setEmailChecked(false)} 
-                            style={{ background: 'none', border: 'none', color: 'var(--gray)', textDecoration: 'underline', fontSize: 11, cursor: 'pointer', fontFamily: 'Jost, sans-serif' }}
+                            style={{ background: 'none', border: 'none', color: 'var(--gray)', textDecoration: 'underline', fontSize: 11, cursor: 'pointer', fontFamily: 'var(--font-ui)' }}
                           >
                             Change
                           </button>
@@ -488,7 +476,7 @@ export default function CheckoutPage() {
 
                         {!userExists && (
                           <div>
-                            <label style={{ fontFamily: 'Jost, sans-serif', fontSize: 10, textTransform: 'uppercase', color: 'var(--gray)', letterSpacing: '0.1em', display: 'block', marginBottom: 6 }}>
+                            <label style={{ fontFamily: 'var(--font-ui)', fontSize: 10, textTransform: 'uppercase', color: 'var(--gray)', letterSpacing: '0.1em', display: 'block', marginBottom: 6 }}>
                               Full Name *
                             </label>
                             <input
@@ -496,13 +484,13 @@ export default function CheckoutPage() {
                               required
                               value={fullName}
                               onChange={(e) => setFullName(e.target.value)}
-                              style={{ width: '100%', border: '1px solid var(--border)', padding: '10px 12px', fontSize: 12, fontFamily: 'Jost, sans-serif', outline: 'none' }}
+                              style={{ width: '100%', border: '1px solid var(--border)', padding: '10px 12px', fontSize: 12, fontFamily: 'var(--font-ui)', outline: 'none' }}
                             />
                           </div>
                         )}
 
                         <div>
-                          <label style={{ fontFamily: 'Jost, sans-serif', fontSize: 10, textTransform: 'uppercase', color: 'var(--gray)', letterSpacing: '0.1em', display: 'block', marginBottom: 6 }}>
+                          <label style={{ fontFamily: 'var(--font-ui)', fontSize: 10, textTransform: 'uppercase', color: 'var(--gray)', letterSpacing: '0.1em', display: 'block', marginBottom: 6 }}>
                             Password *
                           </label>
                           <input
@@ -511,14 +499,14 @@ export default function CheckoutPage() {
                             placeholder={userExists ? 'Enter password' : 'Min 8 characters'}
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            style={{ width: '100%', border: '1px solid var(--border)', padding: '10px 12px', fontSize: 12, fontFamily: 'Jost, sans-serif', outline: 'none' }}
+                            style={{ width: '100%', border: '1px solid var(--border)', padding: '10px 12px', fontSize: 12, fontFamily: 'var(--font-ui)', outline: 'none' }}
                           />
                         </div>
 
                         <button
                           type="submit"
                           disabled={authLoading}
-                          style={{ background: 'var(--black)', color: '#ffffff', border: 'none', padding: '14px', fontSize: 11, fontFamily: 'Jost, sans-serif', letterSpacing: '0.15em', textTransform: 'uppercase', cursor: 'pointer' }}
+                          style={{ background: 'var(--black)', color: '#ffffff', border: 'none', padding: '14px', fontSize: 11, fontFamily: 'var(--font-ui)', letterSpacing: '0.15em', textTransform: 'uppercase', cursor: 'pointer' }}
                         >
                           {authLoading ? 'Processing…' : userExists ? 'LOG IN & CONTINUE' : 'CREATE ACCOUNT & CONTINUE'}
                         </button>
@@ -537,7 +525,7 @@ export default function CheckoutPage() {
                     background: activeStep === 2 ? 'var(--black)' : '#faf9f6',
                     color: activeStep === 2 ? '#ffffff' : 'var(--black)',
                     padding: '16px 24px',
-                    fontFamily: 'Jost, sans-serif',
+                    fontFamily: 'var(--font-ui)',
                     fontSize: 12,
                     fontWeight: 400,
                     letterSpacing: '0.15em',
@@ -559,7 +547,7 @@ export default function CheckoutPage() {
                 {/* Content */}
                 {activeStep === 2 && emailCompleted && (
                   <div style={{ padding: '24px 28px', background: '#ffffff' }}>
-                    <p style={{ fontFamily: 'Jost, sans-serif', fontSize: 11, color: 'var(--gray)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 16px 0' }}>
+                    <p style={{ fontFamily: 'var(--font-ui)', fontSize: 11, color: 'var(--gray)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 16px 0' }}>
                       We offer free shipping on all orders with Express Worldwide service.
                     </p>
 
@@ -575,7 +563,7 @@ export default function CheckoutPage() {
                       background: '#faf9f6'
                     }}>
                       <div style={{ width: 12, height: 12, border: '4px solid var(--black)', borderRadius: '50%' }} />
-                      <span style={{ fontFamily: 'Jost, sans-serif', fontSize: 12, color: 'var(--black)', fontWeight: 400 }}>
+                      <span style={{ fontFamily: 'var(--font-ui)', fontSize: 12, color: 'var(--black)', fontWeight: 400 }}>
                         Free
                       </span>
                     </div>
@@ -585,14 +573,14 @@ export default function CheckoutPage() {
                     </h3>
 
                     {/* Regional India Notice */}
-                    <p style={{ fontFamily: 'Jost, sans-serif', fontSize: 12, color: '#a0522d', lineHeight: 1.6, margin: '0 0 24px 0' }}>
+                    <p style={{ fontFamily: 'var(--font-ui)', fontSize: 12, color: '#a0522d', lineHeight: 1.6, margin: '0 0 24px 0' }}>
                       You are shopping from the <strong>Online Boutique India</strong>. To ensure the correct processing of your order, please verify that your shipping address corresponds to the selected country.
                     </p>
 
                     {/* Saved Addresses Picker */}
                     {addresses.length > 0 && (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 24 }}>
-                        <span style={{ fontFamily: 'Jost, sans-serif', fontSize: 10, textTransform: 'uppercase', color: 'var(--gray)', letterSpacing: '0.1em' }}>
+                        <span style={{ fontFamily: 'var(--font-ui)', fontSize: 10, textTransform: 'uppercase', color: 'var(--gray)', letterSpacing: '0.1em' }}>
                           Choose a saved address:
                         </span>
                         {addresses.map(addr => (
@@ -627,7 +615,7 @@ export default function CheckoutPage() {
                               }}
                               style={{ marginTop: 2, accentColor: 'var(--black)' }}
                             />
-                            <div style={{ fontFamily: 'Jost, sans-serif', fontSize: 12 }}>
+                            <div style={{ fontFamily: 'var(--font-ui)', fontSize: 12 }}>
                               <p style={{ margin: '0 0 4px 0', fontWeight: 500 }}>{addr.fullName}</p>
                               <p style={{ margin: 0, color: 'var(--gray)', lineHeight: 1.5 }}>
                                 {addr.line1}{addr.line2 ? `, ${addr.line2}` : ''}<br />
@@ -660,7 +648,7 @@ export default function CheckoutPage() {
                               color: 'var(--black)',
                               textDecoration: 'underline',
                               fontSize: 11,
-                              fontFamily: 'Jost, sans-serif',
+                              fontFamily: 'var(--font-ui)',
                               cursor: 'pointer',
                               padding: 0
                             }}
@@ -677,12 +665,12 @@ export default function CheckoutPage() {
                         
                         {/* Title Radio Selection */}
                         <div>
-                          <span style={{ fontFamily: 'Jost, sans-serif', fontSize: 10, textTransform: 'uppercase', color: 'var(--gray)', letterSpacing: '0.1em', display: 'block', marginBottom: 8 }}>
+                          <span style={{ fontFamily: 'var(--font-ui)', fontSize: 10, textTransform: 'uppercase', color: 'var(--gray)', letterSpacing: '0.1em', display: 'block', marginBottom: 8 }}>
                             Title *
                           </span>
                           <div style={{ display: 'flex', gap: 20 }}>
                             {['Mr.', 'Ms.', 'Miss', 'Mrs.'].map(opt => (
-                              <label key={opt} style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'Jost, sans-serif', fontSize: 12, cursor: 'pointer' }}>
+                              <label key={opt} style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'var(--font-ui)', fontSize: 12, cursor: 'pointer' }}>
                                 <input
                                   type="radio"
                                   name="title"
@@ -700,7 +688,7 @@ export default function CheckoutPage() {
                         {/* First and Last Name */}
                         <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
                           <div style={{ flex: '1 1 45%' }}>
-                            <label style={{ fontFamily: 'Jost, sans-serif', fontSize: 10, textTransform: 'uppercase', color: 'var(--gray)', letterSpacing: '0.1em', display: 'block', marginBottom: 6 }}>
+                            <label style={{ fontFamily: 'var(--font-ui)', fontSize: 10, textTransform: 'uppercase', color: 'var(--gray)', letterSpacing: '0.1em', display: 'block', marginBottom: 6 }}>
                               First Name *
                             </label>
                             <input
@@ -708,11 +696,11 @@ export default function CheckoutPage() {
                               required
                               value={firstName}
                               onChange={(e) => setFirstName(e.target.value)}
-                              style={{ width: '100%', border: '1px solid var(--border)', padding: '10px 12px', fontSize: 12, fontFamily: 'Jost, sans-serif', outline: 'none' }}
+                              style={{ width: '100%', border: '1px solid var(--border)', padding: '10px 12px', fontSize: 12, fontFamily: 'var(--font-ui)', outline: 'none' }}
                             />
                           </div>
                           <div style={{ flex: '1 1 45%' }}>
-                            <label style={{ fontFamily: 'Jost, sans-serif', fontSize: 10, textTransform: 'uppercase', color: 'var(--gray)', letterSpacing: '0.1em', display: 'block', marginBottom: 6 }}>
+                            <label style={{ fontFamily: 'var(--font-ui)', fontSize: 10, textTransform: 'uppercase', color: 'var(--gray)', letterSpacing: '0.1em', display: 'block', marginBottom: 6 }}>
                               Last Name *
                             </label>
                             <input
@@ -720,14 +708,14 @@ export default function CheckoutPage() {
                               required
                               value={lastName}
                               onChange={(e) => setLastName(e.target.value)}
-                              style={{ width: '100%', border: '1px solid var(--border)', padding: '10px 12px', fontSize: 12, fontFamily: 'Jost, sans-serif', outline: 'none' }}
+                              style={{ width: '100%', border: '1px solid var(--border)', padding: '10px 12px', fontSize: 12, fontFamily: 'var(--font-ui)', outline: 'none' }}
                             />
                           </div>
                         </div>
 
                         {/* Phone */}
                         <div>
-                          <label style={{ fontFamily: 'Jost, sans-serif', fontSize: 10, textTransform: 'uppercase', color: 'var(--gray)', letterSpacing: '0.1em', display: 'block', marginBottom: 6 }}>
+                          <label style={{ fontFamily: 'var(--font-ui)', fontSize: 10, textTransform: 'uppercase', color: 'var(--gray)', letterSpacing: '0.1em', display: 'block', marginBottom: 6 }}>
                             Phone *
                           </label>
                           <input
@@ -735,13 +723,13 @@ export default function CheckoutPage() {
                             required
                             value={phone}
                             onChange={(e) => setPhone(e.target.value)}
-                            style={{ width: '100%', border: '1px solid var(--border)', padding: '10px 12px', fontSize: 12, fontFamily: 'Jost, sans-serif', outline: 'none' }}
+                            style={{ width: '100%', border: '1px solid var(--border)', padding: '10px 12px', fontSize: 12, fontFamily: 'var(--font-ui)', outline: 'none' }}
                           />
                         </div>
 
                         {/* Address Lines */}
                         <div>
-                          <label style={{ fontFamily: 'Jost, sans-serif', fontSize: 10, textTransform: 'uppercase', color: 'var(--gray)', letterSpacing: '0.1em', display: 'block', marginBottom: 6 }}>
+                          <label style={{ fontFamily: 'var(--font-ui)', fontSize: 10, textTransform: 'uppercase', color: 'var(--gray)', letterSpacing: '0.1em', display: 'block', marginBottom: 6 }}>
                             Address *
                           </label>
                           <input
@@ -750,20 +738,20 @@ export default function CheckoutPage() {
                             value={line1}
                             onChange={(e) => setLine1(e.target.value)}
                             placeholder="Street address, apartment, suite, unit etc."
-                            style={{ width: '100%', border: '1px solid var(--border)', padding: '10px 12px', fontSize: 12, fontFamily: 'Jost, sans-serif', outline: 'none', marginBottom: 10 }}
+                            style={{ width: '100%', border: '1px solid var(--border)', padding: '10px 12px', fontSize: 12, fontFamily: 'var(--font-ui)', outline: 'none', marginBottom: 10 }}
                           />
                           <input
                             type="text"
                             value={line2}
                             onChange={(e) => setLine2(e.target.value)}
                             placeholder="Apartment, suite, unit etc. (optional)"
-                            style={{ width: '100%', border: '1px solid var(--border)', padding: '10px 12px', fontSize: 12, fontFamily: 'Jost, sans-serif', outline: 'none' }}
+                            style={{ width: '100%', border: '1px solid var(--border)', padding: '10px 12px', fontSize: 12, fontFamily: 'var(--font-ui)', outline: 'none' }}
                           />
                         </div>
 
                         {/* ZIP Code / Pincode */}
                         <div>
-                          <label style={{ fontFamily: 'Jost, sans-serif', fontSize: 10, textTransform: 'uppercase', color: 'var(--gray)', letterSpacing: '0.1em', display: 'block', marginBottom: 6 }}>
+                          <label style={{ fontFamily: 'var(--font-ui)', fontSize: 10, textTransform: 'uppercase', color: 'var(--gray)', letterSpacing: '0.1em', display: 'block', marginBottom: 6 }}>
                             ZIP Code *
                           </label>
                           <input
@@ -772,20 +760,20 @@ export default function CheckoutPage() {
                             maxLength={6}
                             value={zipCode}
                             onChange={(e) => handleZipCodeChange(e.target.value)}
-                            style={{ width: '100%', border: '1px solid var(--border)', padding: '10px 12px', fontSize: 12, fontFamily: 'Jost, sans-serif', outline: 'none' }}
+                            style={{ width: '100%', border: '1px solid var(--border)', padding: '10px 12px', fontSize: 12, fontFamily: 'var(--font-ui)', outline: 'none' }}
                           />
                           {pincodeLoading && (
-                            <p style={{ fontFamily: 'Jost, sans-serif', fontSize: 11, color: 'var(--gray)', margin: '4px 0 0 0' }}>Looking up PIN code details…</p>
+                            <p style={{ fontFamily: 'var(--font-ui)', fontSize: 11, color: 'var(--gray)', margin: '4px 0 0 0' }}>Looking up PIN code details…</p>
                           )}
                           {zipError && (
-                            <p style={{ fontFamily: 'Jost, sans-serif', fontSize: 11, color: '#cc0000', margin: '4px 0 0 0', lineHeight: 1.4 }}>{zipError}</p>
+                            <p style={{ fontFamily: 'var(--font-ui)', fontSize: 11, color: '#cc0000', margin: '4px 0 0 0', lineHeight: 1.4 }}>{zipError}</p>
                           )}
                         </div>
 
                         {/* City & State (Auto-populated or filled) */}
                         <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
                           <div style={{ flex: '1 1 45%' }}>
-                            <label style={{ fontFamily: 'Jost, sans-serif', fontSize: 10, textTransform: 'uppercase', color: 'var(--gray)', letterSpacing: '0.1em', display: 'block', marginBottom: 6 }}>
+                            <label style={{ fontFamily: 'var(--font-ui)', fontSize: 10, textTransform: 'uppercase', color: 'var(--gray)', letterSpacing: '0.1em', display: 'block', marginBottom: 6 }}>
                               City *
                             </label>
                             <input
@@ -793,11 +781,11 @@ export default function CheckoutPage() {
                               required
                               value={city}
                               onChange={(e) => setCity(e.target.value)}
-                              style={{ width: '100%', border: '1px solid var(--border)', padding: '10px 12px', fontSize: 12, fontFamily: 'Jost, sans-serif', outline: 'none', background: city ? '#faf9f6' : '#ffffff' }}
+                              style={{ width: '100%', border: '1px solid var(--border)', padding: '10px 12px', fontSize: 12, fontFamily: 'var(--font-ui)', outline: 'none', background: city ? '#faf9f6' : '#ffffff' }}
                             />
                           </div>
                           <div style={{ flex: '1 1 45%' }}>
-                            <label style={{ fontFamily: 'Jost, sans-serif', fontSize: 10, textTransform: 'uppercase', color: 'var(--gray)', letterSpacing: '0.1em', display: 'block', marginBottom: 6 }}>
+                            <label style={{ fontFamily: 'var(--font-ui)', fontSize: 10, textTransform: 'uppercase', color: 'var(--gray)', letterSpacing: '0.1em', display: 'block', marginBottom: 6 }}>
                               State *
                             </label>
                             <input
@@ -805,7 +793,7 @@ export default function CheckoutPage() {
                               required
                               value={stateName}
                               onChange={(e) => setStateName(e.target.value)}
-                              style={{ width: '100%', border: '1px solid var(--border)', padding: '10px 12px', fontSize: 12, fontFamily: 'Jost, sans-serif', outline: 'none', background: stateName ? '#faf9f6' : '#ffffff' }}
+                              style={{ width: '100%', border: '1px solid var(--border)', padding: '10px 12px', fontSize: 12, fontFamily: 'var(--font-ui)', outline: 'none', background: stateName ? '#faf9f6' : '#ffffff' }}
                             />
                           </div>
                         </div>
@@ -819,7 +807,7 @@ export default function CheckoutPage() {
                             onChange={(e) => setInvoiceSame(e.target.checked)}
                             style={{ accentColor: 'var(--black)' }}
                           />
-                          <label htmlFor="invoice_same" style={{ fontFamily: 'Jost, sans-serif', fontSize: 12, color: 'var(--black)', cursor: 'pointer' }}>
+                          <label htmlFor="invoice_same" style={{ fontFamily: 'var(--font-ui)', fontSize: 12, color: 'var(--black)', cursor: 'pointer' }}>
                             The delivery address is the same as the invoice address
                           </label>
                         </div>
@@ -833,7 +821,7 @@ export default function CheckoutPage() {
                             border: 'none', 
                             padding: '14px', 
                             fontSize: 11, 
-                            fontFamily: 'Jost, sans-serif', 
+                            fontFamily: 'var(--font-ui)', 
                             letterSpacing: '0.15em', 
                             textTransform: 'uppercase', 
                             cursor: 'pointer',
@@ -857,7 +845,7 @@ export default function CheckoutPage() {
                           border: 'none', 
                           padding: '14px', 
                           fontSize: 11, 
-                          fontFamily: 'Jost, sans-serif', 
+                          fontFamily: 'var(--font-ui)', 
                           letterSpacing: '0.15em', 
                           textTransform: 'uppercase', 
                           cursor: 'pointer',
@@ -880,7 +868,7 @@ export default function CheckoutPage() {
                     background: activeStep === 3 ? 'var(--black)' : '#faf9f6',
                     color: activeStep === 3 ? '#ffffff' : 'var(--black)',
                     padding: '16px 24px',
-                    fontFamily: 'Jost, sans-serif',
+                    fontFamily: 'var(--font-ui)',
                     fontSize: 12,
                     fontWeight: 400,
                     letterSpacing: '0.15em',
@@ -909,12 +897,12 @@ export default function CheckoutPage() {
                         onChange={(e) => setTermsAccepted(e.target.checked)}
                         style={{ marginTop: 3, accentColor: 'var(--black)' }}
                       />
-                      <label htmlFor="terms" style={{ fontFamily: 'Jost, sans-serif', fontSize: 12, color: 'var(--black)', cursor: 'pointer', lineHeight: 1.5 }}>
+                      <label htmlFor="terms" style={{ fontFamily: 'var(--font-ui)', fontSize: 12, color: 'var(--black)', cursor: 'pointer', lineHeight: 1.5 }}>
                         *By confirming the order you accept the Biahama <a href="/terms" target="_blank" style={{ textDecoration: 'underline', color: 'var(--black)' }}>Terms and Conditions</a> of sale
                       </label>
                     </div>
 
-                    {/* Single click buttons as requested in mockup Page 5 */}
+                    {/* Single-click Razorpay button, as in the spec (page 5) */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                       {/* Pay Online Button */}
                       <button
@@ -932,33 +920,12 @@ export default function CheckoutPage() {
                           textTransform: 'uppercase',
                           opacity: (paymentLoading || !sdkReady) ? 0.6 : 1,
                           transition: 'opacity 0.2s',
-                          fontFamily: 'Jost, sans-serif',
+                          fontFamily: 'var(--font-ui)',
                         }}
                       >
                         {paymentLoading ? 'Processing…' : !sdkReady ? 'Loading Gateway…' : 'Pay Online (Razorpay)'}
                       </button>
 
-                      {/* Cash on Delivery Button */}
-                      <button
-                        onClick={handlePayCOD}
-                        disabled={paymentLoading}
-                        style={{
-                          width: '100%',
-                          padding: '16px 24px',
-                          background: 'transparent',
-                          color: 'var(--black)',
-                          border: '1px solid var(--border)',
-                          cursor: paymentLoading ? 'not-allowed' : 'pointer',
-                          fontSize: 11,
-                          letterSpacing: '0.15em',
-                          textTransform: 'uppercase',
-                          opacity: paymentLoading ? 0.6 : 1,
-                          transition: 'opacity 0.2s',
-                          fontFamily: 'Jost, sans-serif',
-                        }}
-                      >
-                        Cash on Delivery (COD)
-                      </button>
                     </div>
 
                     <p style={{
@@ -967,9 +934,9 @@ export default function CheckoutPage() {
                       letterSpacing: '0.04em',
                       marginTop: 24,
                       lineHeight: 1.6,
-                      fontFamily: 'Jost, sans-serif'
+                      fontFamily: 'var(--font-ui)'
                     }}>
-                      Payments secured by Razorpay. COD orders may have an additional verification call before shipment.
+                      Payments secured by Razorpay.
                     </p>
 
                   </div>
@@ -1012,7 +979,7 @@ export default function CheckoutPage() {
                             <img src={imgUrl} alt={item.variant?.product?.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                           )}
                         </div>
-                        <div style={{ flex: 1, fontFamily: 'Jost, sans-serif', fontSize: 12 }}>
+                        <div style={{ flex: 1, fontFamily: 'var(--font-ui)', fontSize: 12 }}>
                           <p style={{ margin: '0 0 2px 0', color: 'var(--black)', fontWeight: 400 }}>
                             {item.variant?.product?.name}
                           </p>
@@ -1025,7 +992,7 @@ export default function CheckoutPage() {
                             </p>
                           )}
                         </div>
-                        <span style={{ fontFamily: 'Jost, sans-serif', fontSize: 12, fontWeight: 400, color: 'var(--black)', marginLeft: 'auto' }}>
+                        <span style={{ fontFamily: 'var(--font-ui)', fontSize: 12, fontWeight: 400, color: 'var(--black)', marginLeft: 'auto' }}>
                           {formatPrice(item.variant?.price * item.quantity)}
                         </span>
                       </div>
@@ -1035,26 +1002,38 @@ export default function CheckoutPage() {
 
                 {/* Subtotal */}
                 <div style={{ display: 'flex', justifyBetween: 'space-between', marginBottom: 12, borderTop: '1px solid var(--border)', paddingTop: 16 }}>
-                  <span style={{ fontFamily: 'Jost, sans-serif', fontSize: 12, color: 'var(--gray)' }}>SUBTOTAL</span>
-                  <span style={{ fontFamily: 'Jost, sans-serif', fontSize: 12, color: 'var(--black)', marginLeft: 'auto' }}>{formatPrice(subtotal)}</span>
+                  <span style={{ fontFamily: 'var(--font-ui)', fontSize: 12, color: 'var(--gray)' }}>SUBTOTAL</span>
+                  <span style={{ fontFamily: 'var(--font-ui)', fontSize: 12, color: 'var(--black)', marginLeft: 'auto' }}>{formatPrice(subtotal)}</span>
                 </div>
+
+                {/* Coupon discount line (server-verified number) */}
+                {discount > 0 && (
+                  <div style={{ display: 'flex', marginBottom: 12 }}>
+                    <span style={{ fontFamily: 'var(--font-ui)', fontSize: 12, color: '#27ae60' }}>
+                      Discount{checkoutData?.couponCode ? ` (${checkoutData.couponCode})` : ''}
+                    </span>
+                    <span style={{ fontFamily: 'var(--font-ui)', fontSize: 12, color: '#27ae60', marginLeft: 'auto' }}>
+                      &minus;{formatPrice(discount)}
+                    </span>
+                  </div>
+                )}
 
                 {/* Shipment */}
                 <div style={{ display: 'flex', flexDirection: 'column', borderBottom: '1px solid var(--border)', paddingBottom: 16, marginBottom: 16 }}>
                   <div style={{ display: 'flex', justifyBetween: 'space-between', marginBottom: 4 }}>
-                    <span style={{ fontFamily: 'Jost, sans-serif', fontSize: 12, color: 'var(--gray)' }}>Shipment</span>
-                    <span style={{ fontFamily: 'Jost, sans-serif', fontSize: 12, color: 'var(--black)', marginLeft: 'auto' }}>{shipping === 0 ? 'Free' : formatPrice(shipping)}</span>
+                    <span style={{ fontFamily: 'var(--font-ui)', fontSize: 12, color: 'var(--gray)' }}>Shipment</span>
+                    <span style={{ fontFamily: 'var(--font-ui)', fontSize: 12, color: 'var(--black)', marginLeft: 'auto' }}>{shipping === 0 ? 'Free' : formatPrice(shipping)}</span>
                   </div>
-                  <span style={{ fontFamily: 'Jost, sans-serif', fontSize: 10, color: 'var(--gray)', fontStyle: 'italic', lineHeight: 1.4 }}>
-                    2 to 5 working days after receipt of order confirmation
+                  <span style={{ fontFamily: 'var(--font-ui)', fontSize: 10, color: 'var(--gray)', fontStyle: 'italic', lineHeight: 1.4 }}>
+                    Item will be shipped in 5 to 7 days after receipt of order confirmation
                   </span>
                 </div>
 
                 {/* Total — GST is already inside the prices, so it is
                     shown as information only, never added on top */}
                 <div style={{ display: 'flex', justifyBetween: 'space-between', marginBottom: 8 }}>
-                  <span style={{ fontFamily: 'Jost, sans-serif', fontSize: 13, fontWeight: 400, color: 'var(--black)' }}>TOTAL <span style={{ fontSize: 10, color: 'var(--gray)' }}>Includes {formatPrice(gstIncluded)} GST</span></span>
-                  <span style={{ fontFamily: 'Jost, sans-serif', fontSize: 14, fontWeight: 500, color: 'var(--black)', marginLeft: 'auto' }}>{formatPrice(total)}</span>
+                  <span style={{ fontFamily: 'var(--font-ui)', fontSize: 13, fontWeight: 400, color: 'var(--black)' }}>TOTAL <span style={{ fontSize: 10, color: 'var(--gray)' }}>Includes {formatPrice(gstIncluded)} GST</span></span>
+                  <span style={{ fontFamily: 'var(--font-ui)', fontSize: 14, fontWeight: 500, color: 'var(--black)', marginLeft: 'auto' }}>{formatPrice(total)}</span>
                 </div>
 
               </div>

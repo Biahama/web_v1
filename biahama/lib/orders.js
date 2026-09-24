@@ -15,7 +15,10 @@
 // ============================================================
 
 import { prisma } from './prisma'
-import { computeTotals } from './pricing'
+import { computeTotals, SHIPPING_THRESHOLD, SHIPPING_COST } from './pricing'
+import { validateCouponOrThrow } from './coupons'
+import { sendOrderConfirmationEmail } from './email'
+import { creditPointsForOrder } from './loyalty'
 
 // An error whose message is safe to show the customer,
 // with the right HTTP status code attached for the API route.
@@ -31,9 +34,10 @@ function userError(message, statusCode) {
  * @param {string} userId    - our User table id (same as Supabase id)
  * @param {string} addressId - which saved address to ship to
  * @param {object} payment   - { paymentMethod, paymentId, paymentStatus, codAmount }
+ * @param {string} [couponCode] - optional coupon code to apply (re-checked here)
  * @returns the created Order row
  */
-export async function createOrderFromCart(userId, addressId, payment) {
+export async function createOrderFromCart(userId, addressId, payment, couponCode = null) {
   const { paymentMethod, paymentId, paymentStatus, codAmount } = payment
 
   // The address must belong to THIS user — never ship using
@@ -53,8 +57,30 @@ export async function createOrderFromCart(userId, addressId, payment) {
   })
   if (cartItems.length === 0) throw userError('Cart is empty', 400)
 
-  // One source of truth for pricing (GST is already inside the price).
-  const { shipping, total } = computeTotals(cartItems)
+  // ---------- COUPON + TOTALS ----------
+  // This EXACT same math also runs in payments/create-order and
+  // payments/verify. All three copies must stay identical, or the
+  // amount Razorpay charged won't match the order we create here.
+  // Rule: discount comes off the subtotal FIRST, then shipping is
+  // decided on the reduced amount (free at ₹3,000+), then
+  // total = discounted subtotal + shipping.
+  const { subtotal } = computeTotals(cartItems)
+  let discount = 0
+  let appliedCoupon = null
+  if (couponCode) {
+    // Re-check the code against every rule (active, dates, usage
+    // limit, minimum order) — never trust an earlier check.
+    const result = await validateCouponOrThrow(couponCode, subtotal)
+    // Some coupons are made for ONE specific customer only.
+    if (result.coupon.userSpecific && result.coupon.userSpecific !== userId) {
+      throw userError('This coupon is not for your account', 400)
+    }
+    appliedCoupon = result.coupon
+    discount = result.discount
+  }
+  const discountedSubtotal = subtotal - discount
+  const shipping = discountedSubtotal >= SHIPPING_THRESHOLD ? 0 : SHIPPING_COST
+  const total = discountedSubtotal + shipping
 
   // Snapshot the address into the order, so the order still shows
   // where it was shipped even if the customer later edits the address.
@@ -68,7 +94,7 @@ export async function createOrderFromCart(userId, addressId, payment) {
     state:    address.state,
   }
 
-  return prisma.$transaction(async (tx) => {
+  const createdOrder = await prisma.$transaction(async (tx) => {
     // Check and reduce stock one item at a time, so if something
     // sold out we can tell the customer exactly WHICH product.
     for (const item of cartItems) {
@@ -88,6 +114,10 @@ export async function createOrderFromCart(userId, addressId, payment) {
         status:          'confirmed',
         totalAmount:     total,
         shippingAmount:  shipping,
+        // Keep a record of the discount on the order itself, so the
+        // owner can always see why this order was cheaper.
+        discountAmount:  discount,
+        couponCode:      appliedCoupon ? appliedCoupon.code : null,
         paymentMethod,
         paymentId:       paymentId || null,
         paymentStatus,
@@ -107,9 +137,43 @@ export async function createOrderFromCart(userId, addressId, payment) {
       },
     })
 
+    // COUPON BOOKKEEPING: count this use of the coupon — but ONLY
+    // if it still has uses left. Two customers can try to grab the
+    // last use at the same moment; this database-level guard makes
+    // sure only one of them succeeds (the other order is cancelled
+    // by the transaction rolling back).
+    if (appliedCoupon) {
+      const updated = await tx.coupon.updateMany({
+        where: {
+          code: appliedCoupon.code,
+          OR: [
+            { usageLimit: null }, // no limit — always allowed
+            // still under the limit (the ?? 0 is never used when
+            // usageLimit is null, because the line above matches)
+            { usedCount: { lt: appliedCoupon.usageLimit ?? 0 } },
+          ],
+        },
+        data: { usedCount: { increment: 1 } },
+      })
+      if (updated.count === 0) {
+        throw userError('This coupon has been fully used', 400)
+      }
+    }
+
     // Empty the cart only after the order is safely created.
     await tx.cart.deleteMany({ where: { userId } })
 
     return order
   })
+
+  // ---- AFTER the order is safely saved (never block or undo it): ----
+  // 1. confirmation email  2. loyalty points (online payments only —
+  // COD earns points when the admin marks it delivered).
+  // Both functions handle their own failures via the ErrorLog.
+  sendOrderConfirmationEmail(createdOrder.id)
+  if (createdOrder.paymentStatus === 'paid') {
+    creditPointsForOrder(createdOrder.id)
+  }
+
+  return createdOrder
 }

@@ -28,7 +28,7 @@ export default function CategoryTabs({ activeCategory }) {
             href={href}
             className="relative shrink-0 py-3 text-xs tracking-widest uppercase transition-opacity hover:opacity-100"
             style={{
-              fontFamily: 'Jost, sans-serif',
+              fontFamily: 'var(--font-ui)',
               fontWeight: isActive ? 500 : 300,
               color: isActive ? 'var(--black)' : 'var(--gray)',
               opacity: isActive ? 1 : 0.7,

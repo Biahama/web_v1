@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
-import { Cormorant_Garamond, Jost } from 'next/font/google'
+import { Cormorant_Garamond, DM_Sans } from 'next/font/google'
+import Script from 'next/script'
 import Providers from '@/components/providers'
+import PageViewTracker from '@/components/analytics/PageViewTracker'
 import { getSiteSettings, buildThemeCss, googleFontsUrl } from '@/lib/site-settings'
 import './globals.css'
 
@@ -11,10 +13,10 @@ const cormorant = Cormorant_Garamond({
   style: ['normal', 'italic'],
 })
 
-const jost = Jost({
-  variable: '--font-jost',
+const dmSans = DM_Sans({
+  variable: '--font-dm-sans',
   subsets: ['latin'],
-  weight: ['300', '400', '500'],
+  weight: ['300', '400', '500', '700'],
 })
 
 export const metadata: Metadata = {
@@ -31,7 +33,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const fontsUrl = googleFontsUrl(settings.theme)
 
   return (
-    <html lang="en" className={`${cormorant.variable} ${jost.variable}`}>
+    <html lang="en" className={`${cormorant.variable} ${dmSans.variable}`}>
       <body>
         {/*
           These two tags "paint" the admin's theme choices over the
@@ -42,6 +44,29 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         */}
         {fontsUrl && <link rel="stylesheet" href={fontsUrl} />}
         {themeCss && <style id="theme-overrides" dangerouslySetInnerHTML={{ __html: themeCss }} />}
+        {/* Counts page views for the admin Analytics page. Invisible. */}
+        <PageViewTracker />
+        {/*
+          Microsoft Clarity = FREE heatmaps and session recordings.
+          Watch real (anonymous) visitors browse your shop at
+          clarity.microsoft.com. Only loads if you've set the
+          NEXT_PUBLIC_CLARITY_PROJECT_ID environment variable.
+        */}
+        {process.env.NEXT_PUBLIC_CLARITY_PROJECT_ID && (
+          <Script
+            id="microsoft-clarity"
+            strategy="afterInteractive"
+            dangerouslySetInnerHTML={{
+              __html: `
+                (function(c,l,a,r,i,t,y){
+                  c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+                  t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+                  y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+                })(window, document, "clarity", "script", "${process.env.NEXT_PUBLIC_CLARITY_PROJECT_ID}");
+              `,
+            }}
+          />
+        )}
         <Providers>
           {children}
         </Providers>

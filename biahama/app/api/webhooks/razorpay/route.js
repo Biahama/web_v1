@@ -72,7 +72,9 @@ export const POST = withErrorLogging('api/webhooks/razorpay', async (req) => {
       // browser probably closed before our verify step could run.
       // We stored userId and addressId in the payment "notes" when
       // creating the Razorpay order, exactly for this situation.
-      const { userId, addressId } = payment.notes || {}
+      // couponCode was also stored in the notes, so the backup
+      // order applies the same discount the customer paid for.
+      const { userId, addressId, couponCode } = payment.notes || {}
 
       if (!userId || !addressId) {
         await logError(
@@ -87,7 +89,7 @@ export const POST = withErrorLogging('api/webhooks/razorpay', async (req) => {
             paymentId,
             paymentStatus: 'paid',
             codAmount:     null,
-          })
+          }, couponCode || null)
         } catch (err) {
           // The cart may already be empty, or stock ran out.
           // Log EVERYTHING so the owner can see "money received,

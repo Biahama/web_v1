@@ -32,6 +32,31 @@ const layoutSchema = z.object({
   collectionBannerSide: z.enum(['left', 'right']).optional(),
 })
 
+// Store-wide commerce switches (loyalty points, Cash on Delivery).
+const commerceSchema = z.object({
+  loyaltyPointsPer100: z.number().min(0).max(100).optional(),
+})
+
+// Product page (PDP) knobs.
+const pdpSchema = z.object({
+  addToBagText: z.string().max(40).optional(),
+  showFastCheckout: z.boolean().optional(),
+})
+
+// One collection category: which side the big banner sits on, and
+// an optional custom banner photo ('' = use a product photo).
+const collectionCategorySchema = z.object({
+  bannerSide: z.enum(['left', 'right']).optional(),
+  bannerImage: z.string().max(500).optional(),
+})
+
+const collectionsSchema = z.object({
+  kurtas: collectionCategorySchema.optional(),
+  shirts: collectionCategorySchema.optional(),
+  tunics: collectionCategorySchema.optional(),
+  trousers: collectionCategorySchema.optional(),
+})
+
 const bodySchema = z.object({
   theme: z
     .object({
@@ -46,6 +71,9 @@ const bodySchema = z.object({
     })
     .optional(),
   layout: layoutSchema.optional(),
+  commerce: commerceSchema.optional(),
+  pdp: pdpSchema.optional(),
+  collections: collectionsSchema.optional(),
 })
 
 // ---- GET: return the current settings. ----
@@ -76,22 +104,17 @@ export const PUT = withErrorLogging('api/admin/settings PUT', async (req) => {
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 })
   }
-  const { theme, layout } = parsed.data
-
   // Save each provided piece under its own key in SiteSetting.
   // "upsert" = update the row if it exists, create it otherwise.
-  if (theme !== undefined) {
+  // The editor pages only send the key they manage, so saving the
+  // PDP page can never disturb the theme, layout, etc.
+  for (const key of ['theme', 'layout', 'commerce', 'pdp', 'collections']) {
+    const value = parsed.data[key]
+    if (value === undefined) continue
     await prisma.siteSetting.upsert({
-      where: { key: 'theme' },
-      update: { value: theme },
-      create: { key: 'theme', value: theme },
-    })
-  }
-  if (layout !== undefined) {
-    await prisma.siteSetting.upsert({
-      where: { key: 'layout' },
-      update: { value: layout },
-      create: { key: 'layout', value: layout },
+      where: { key },
+      update: { value },
+      create: { key, value },
     })
   }
 

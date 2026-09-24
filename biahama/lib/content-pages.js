@@ -74,6 +74,32 @@ To start a return, write to us with your order number and we will arrange a pick
 Exchanges for a different size are always free. Made-to-order and altered pieces cannot be returned, but we will always help with sizing before you buy.`,
   },
 
+  terms: {
+    title: 'Terms & Conditions of Sale',
+    body: `Welcome to Biahama. By placing an order on our website, you agree to these terms. Every order is an offer to purchase, which we accept when we confirm dispatch by email. All prices are listed in Indian Rupees and are inclusive of GST; the price shown at checkout is the final price you pay, apart from any shipping fee displayed before you confirm the order.
+
+Payments are processed securely by Razorpay and can be made by UPI, credit or debit card, or net banking. Cash on Delivery is available on eligible orders; a COD order may be confirmed by phone or message before dispatch. We reserve the right to cancel any order in case of pricing errors, suspected fraud, or stock unavailability — if payment was already made, it will be refunded in full.
+
+Orders are dispatched within 2–4 working days and usually delivered within 5–7 working days of dispatch, depending on your location. Delivery timelines are estimates, not guarantees; if a parcel is significantly delayed, write to us and we will chase it or make it right.
+
+If a garment is not right, you may return it within the window described on our Returns page, provided it is unworn, unwashed, and in original condition with tags attached. Refunds are issued to the original payment method; Cash on Delivery orders are refunded by bank transfer.
+
+These terms are governed by the laws of India, and any dispute is subject to the jurisdiction of the courts of India. If you have any question about these terms, email us at hello@biahama.com and a real person will reply.`,
+  },
+
+  privacy: {
+    title: 'Privacy Policy',
+    body: `We collect only what we need to serve you: your name and email address when you create an account, the delivery addresses you save, your order history, and anonymous usage analytics (which pages are viewed and what is added to carts, tied to a random browser id — never to your identity). We do not buy data about you, and we do not sell or rent your data to anyone.
+
+Your information is used for one purpose: fulfilling your orders and helping you when you write to us. We use anonymous analytics to understand which products people like, so we can make better clothes — these numbers cannot identify you personally.
+
+Payments are handled entirely by Razorpay, a licensed Indian payment provider. Your card, UPI, and banking details go directly to Razorpay over an encrypted connection and are never stored on our servers — we never see them.
+
+Order confirmations and updates are emailed to you through Brevo, our email service. We only send transactional emails about your orders unless you have chosen to hear from us otherwise.
+
+You can ask us at any time what data we hold about you, or ask us to delete your account and personal data. Write to hello@biahama.com and we will take care of it promptly.`,
+  },
+
   contact: {
     title: 'Contact',
     body: `We are a small team and we read every message ourselves. For anything at all — sizing help, order questions, wholesale, or just to say hello — reach us at hello@biahama.com.
@@ -81,6 +107,19 @@ Exchanges for a different size are always free. Made-to-order and altered pieces
 You can also message us on WhatsApp at +91 00000 00000. We reply between 10am and 6pm IST, Monday to Saturday, and usually within a few hours.
 
 Biahama, Made in India.`,
+  },
+
+  faq: {
+    title: 'FAQs',
+    body: `How do I choose a size? Our pieces are cut with an easy, relaxed silhouette — take your usual size for that fit, or size up for a roomier drape. The Size Guide page has flat measurements for every size.
+
+When will my order arrive? Orders are dispatched within 2–4 working days and usually arrive within 5–7 working days after that. You will receive a tracking link by email as soon as your parcel leaves us.
+
+Can I return or exchange something? Yes — unworn, unwashed pieces can be returned within 14 days of delivery, and exchanges for a different size are always free.
+
+How should I care for linen? Machine wash cold on a gentle cycle, dry in the shade, and press while slightly damp. Linen softens with every wash.
+
+Still have a question? Write to hello@biahama.com or message us on WhatsApp — we reply between 10am and 6pm IST, Monday to Saturday.`,
   },
 }
 

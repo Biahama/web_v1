@@ -35,7 +35,7 @@ export const EDITABLE_TOKENS = [
 // ---- Fonts: type any Google Font name (fonts.google.com). ----
 export const DEFAULT_FONTS = {
   display: 'Cormorant Garamond', // headings ("--font-display")
-  ui: 'Jost', // everything else ("--font-ui")
+  ui: 'DM Sans', // everything else ("--font-ui")
 }
 
 // ---- Layout & text switches. ----
@@ -53,6 +53,26 @@ export const DEFAULT_LAYOUT = {
   collectionBannerSide: 'right',
 }
 
+// ---- Store / commerce settings (admin: Store settings). ----
+export const DEFAULT_COMMERCE = {
+  loyaltyPointsPer100: 1, // points earned per ₹100 spent (0 = program off)
+}
+
+// ---- Product page (PDP) knobs. ----
+export const DEFAULT_PDP = {
+  addToBagText: 'ADD TO BAG',
+  showFastCheckout: true,
+}
+
+// ---- Per-category collection page settings. ----
+// bannerImage '' means "auto: use a product photo".
+export const DEFAULT_COLLECTIONS = {
+  kurtas:   { bannerSide: 'right', bannerImage: '' },
+  shirts:   { bannerSide: 'right', bannerImage: '' },
+  tunics:   { bannerSide: 'right', bannerImage: '' },
+  trousers: { bannerSide: 'right', bannerImage: '' },
+}
+
 /**
  * Load all settings, merged over defaults. Safe by design:
  * if the database is unreachable, the site quietly uses defaults
@@ -68,12 +88,22 @@ export async function getSiteSettings() {
   }
   const saved = Object.fromEntries(rows.map((r) => [r.key, r.value]))
 
+  // Per-category collections need a deep merge (each category
+  // merges over its own defaults).
+  const collections = {}
+  for (const cat of Object.keys(DEFAULT_COLLECTIONS)) {
+    collections[cat] = { ...DEFAULT_COLLECTIONS[cat], ...(saved.collections?.[cat] ?? {}) }
+  }
+
   return {
     theme: {
       overrides: saved.theme?.overrides ?? {},
       fonts: { ...DEFAULT_FONTS, ...(saved.theme?.fonts ?? {}) },
     },
     layout: { ...DEFAULT_LAYOUT, ...(saved.layout ?? {}) },
+    commerce: { ...DEFAULT_COMMERCE, ...(saved.commerce ?? {}) },
+    pdp: { ...DEFAULT_PDP, ...(saved.pdp ?? {}) },
+    collections,
   }
 }
 

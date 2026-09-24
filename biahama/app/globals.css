@@ -11,7 +11,7 @@
 body {
   background: var(--bg);
   color: var(--black);
-  font-family: var(--font-jost), 'Jost', sans-serif;
+  font-family: var(--font-ui);
   font-weight: 300;
   -webkit-font-smoothing: antialiased;
 }

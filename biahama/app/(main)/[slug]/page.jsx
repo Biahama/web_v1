@@ -81,7 +81,7 @@ export default async function ContentPage({ params }) {
         <p
           key={i}
           style={{
-            fontFamily: 'Jost, sans-serif',
+            fontFamily: 'var(--font-ui)',
             fontSize: '14px',
             lineHeight: 1.9,
             color: '#404040',

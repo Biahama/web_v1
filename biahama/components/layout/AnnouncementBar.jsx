@@ -18,7 +18,7 @@ export default function AnnouncementBar({ text = DEFAULT_TEXT }) {
       style={{
         background: 'var(--black)',
         color: '#ffffff',
-        fontFamily: 'Jost, sans-serif',
+        fontFamily: 'var(--font-ui)',
         fontWeight: 300,
         fontSize: 10,
         letterSpacing: '0.18em',

@@ -46,9 +46,6 @@ export const POST = withErrorLogging('api/admin/upload POST', async (req) => {
     if (!file || typeof file === 'string' || typeof file.arrayBuffer !== 'function') {
       return NextResponse.json({ error: 'No file was attached.' }, { status: 400 })
     }
-    if (!productId || typeof productId !== 'string') {
-      return NextResponse.json({ error: 'Missing productId — which product is this photo for?' }, { status: 400 })
-    }
     if (!file.type || !file.type.startsWith('image/')) {
       return NextResponse.json(
         { error: `That file is not an image (it is "${file.type || 'unknown'}"). Please choose a JPG, PNG or WebP.` },
@@ -62,13 +59,25 @@ export const POST = withErrorLogging('api/admin/upload POST', async (req) => {
       )
     }
 
-    // Make sure the product actually exists.
-    const product = await prisma.product.findUnique({
-      where: { id: productId },
-      include: { images: true },
-    })
-    if (!product) {
-      return NextResponse.json({ error: 'Product not found — save the product first, then add photos.' }, { status: 404 })
+    // Two kinds of upload share this route:
+    // - WITH a productId  -> a product photo (saved to the product)
+    // - WITHOUT productId -> a site image (used for banner images
+    //   etc.) — we just upload it and hand back the URL.
+    const isSiteUpload = !productId
+
+    let product = null
+    if (!isSiteUpload) {
+      if (typeof productId !== 'string') {
+        return NextResponse.json({ error: 'Missing productId — which product is this photo for?' }, { status: 400 })
+      }
+      // Make sure the product actually exists.
+      product = await prisma.product.findUnique({
+        where: { id: productId },
+        include: { images: true },
+      })
+      if (!product) {
+        return NextResponse.json({ error: 'Product not found — save the product first, then add photos.' }, { status: 404 })
+      }
     }
 
     // Turn the file into a "data URI" (the whole image as text) and
@@ -79,7 +88,8 @@ export const POST = withErrorLogging('api/admin/upload POST', async (req) => {
     let uploaded
     try {
       uploaded = await cloudinary.uploader.upload(dataUri, {
-        folder: 'biahama/admin-uploads', // same account/folder style as the seed scripts
+        // Site images and product photos live in separate folders.
+        folder: isSiteUpload ? 'biahama/site' : 'biahama/admin-uploads',
         resource_type: 'image',
       })
     } catch (cloudErr) {
@@ -87,6 +97,12 @@ export const POST = withErrorLogging('api/admin/upload POST', async (req) => {
         { error: `The image host (Cloudinary) rejected the upload: ${cloudErr?.message || 'unknown error'}` },
         { status: 502 }
       )
+    }
+
+    // Site upload: no database row needed — the settings editor
+    // stores the URL itself (e.g. as a collection banner image).
+    if (isSiteUpload) {
+      return NextResponse.json({ url: uploaded.secure_url }, { status: 201 })
     }
 
     // New photo goes at the END of the row (highest sortOrder + 1),

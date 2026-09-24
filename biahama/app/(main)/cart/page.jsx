@@ -20,11 +20,14 @@ export default function CartPage() {
   // Recommended products state
   const [recommendations, setRecommendations] = useState([])
   
-  // Coupon state
+  // Coupon state — the discount number always comes from the server
+  // (/api/coupons/validate), never computed in the browser, so the
+  // cart shows exactly what the payment server will charge.
   const [couponInput, setCouponInput] = useState('')
-  const [appliedCoupon, setAppliedCoupon] = useState(null)
+  const [appliedCoupon, setAppliedCoupon] = useState(null) // { code, discount }
   const [couponError, setCouponError] = useState('')
   const [couponSuccess, setCouponSuccess] = useState('')
+  const [couponChecking, setCouponChecking] = useState(false)
 
   // Accordion states
   const [helpOpen, setHelpOpen] = useState(false)
@@ -50,36 +53,78 @@ export default function CartPage() {
     }))
   }
 
-  function handleApplyCoupon() {
-    setCouponError('')
-    setCouponSuccess('')
-    
-    const code = couponInput.trim().toUpperCase()
-    if (!code) return
+  // Ask the SERVER whether a code is valid and what it saves.
+  // Returns true if the coupon applied successfully.
+  async function applyCoupon(code, { silent = false } = {}) {
+    if (!code) return false
+    setCouponChecking(true)
+    if (!silent) { setCouponError(''); setCouponSuccess('') }
 
-    if (code === 'WELCOME10') {
-      setAppliedCoupon({ code, type: 'percent', value: 10 })
-      setCouponSuccess('Coupon applied successfully! 10% discount added.')
-    } else {
-      setCouponError('Invalid coupon code. Try WELCOME10.')
-      setAppliedCoupon(null)
+    try {
+      const res = await fetch('/api/coupons/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code }),
+      })
+      const data = await res.json()
+
+      if (!res.ok) {
+        // The API's messages are written for customers — show them as-is.
+        setCouponError(data.error || 'Could not check the coupon. Please try again.')
+        setCouponSuccess('')
+        setAppliedCoupon(null)
+        sessionStorage.removeItem('biahama_coupon')
+        return false
+      }
+
+      setAppliedCoupon({ code: data.code, discount: data.discount })
+      setCouponSuccess(data.message)
+      setCouponError('')
+      // Remember the code for the checkout page.
+      sessionStorage.setItem('biahama_coupon', data.code)
+      return true
+    } catch {
+      setCouponError('Could not check the coupon. Please try again.')
+      return false
+    } finally {
+      setCouponChecking(false)
     }
   }
+
+  function handleApplyCoupon() {
+    applyCoupon(couponInput.trim().toUpperCase())
+  }
+
+  function handleRemoveCoupon() {
+    setAppliedCoupon(null)
+    setCouponSuccess('')
+    setCouponError('')
+    setCouponInput('')
+    sessionStorage.removeItem('biahama_coupon')
+  }
+
+  // On page load (and whenever the cart changes) re-check any saved
+  // coupon, because the discount can change with the cart contents
+  // (e.g. a percent coupon on a bigger cart saves more).
+  useEffect(() => {
+    if (items.length === 0) return
+    const saved = sessionStorage.getItem('biahama_coupon')
+    if (saved) applyCoupon(saved, { silent: true })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [items])
 
   function handleProceed() {
     router.push('/checkout')
   }
 
-  // Calculations — shared pricing rules from lib/pricing
+  // Calculations — shared pricing rules from lib/pricing.
+  // Same order as the payment server: discount off the subtotal
+  // FIRST, then shipping decided on the reduced amount.
   const { subtotal } = computeTotals(items)
 
-  // Apply coupon discount if any
-  let discount = 0
-  if (appliedCoupon) {
-    if (appliedCoupon.type === 'percent') {
-      discount = Math.round(subtotal * (appliedCoupon.value / 100))
-    }
-  }
+  // The discount is the server's number (never computed here).
+  // Math.min just guards the display while a re-check is in flight.
+  const discount = appliedCoupon ? Math.min(appliedCoupon.discount, subtotal) : 0
 
   const discountedSubtotal = subtotal - discount
   const shipping = discountedSubtotal >= SHIPPING_THRESHOLD || items.length === 0 ? 0 : SHIPPING_COST
@@ -108,13 +153,13 @@ export default function CartPage() {
 
       {items.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '80px 0' }}>
-          <p style={{ fontFamily: 'Jost, sans-serif', fontWeight: 300, fontSize: 14, color: 'var(--gray)', marginBottom: 28 }}>
+          <p style={{ fontFamily: 'var(--font-ui)', fontWeight: 300, fontSize: 14, color: 'var(--gray)', marginBottom: 28 }}>
             Your cart is empty.
           </p>
           <Link
             href="/shop"
             style={{
-              fontFamily: 'Jost, sans-serif',
+              fontFamily: 'var(--font-ui)',
               fontWeight: 400,
               fontSize: 11,
               letterSpacing: '0.18em',
@@ -189,7 +234,7 @@ export default function CartPage() {
                             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                           />
                         ) : (
-                          <div style={{ display: 'flex', width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center', color: 'var(--gray)', fontSize: 10, fontFamily: 'Jost, sans-serif' }}>
+                          <div style={{ display: 'flex', width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center', color: 'var(--gray)', fontSize: 10, fontFamily: 'var(--font-ui)' }}>
                             Linen
                           </div>
                         )}
@@ -200,7 +245,7 @@ export default function CartPage() {
                         <div>
                           {/* SKU */}
                           <p style={{
-                            fontFamily: 'Jost, sans-serif',
+                            fontFamily: 'var(--font-ui)',
                             fontSize: 10,
                             fontWeight: 400,
                             color: 'var(--gray)',
@@ -213,7 +258,7 @@ export default function CartPage() {
 
                           {/* Product Name */}
                           <h3 style={{
-                            fontFamily: 'Jost, sans-serif',
+                            fontFamily: 'var(--font-ui)',
                             fontSize: 14,
                             fontWeight: 400,
                             color: 'var(--black)',
@@ -224,7 +269,7 @@ export default function CartPage() {
 
                           {/* Options */}
                           <p style={{
-                            fontFamily: 'Jost, sans-serif',
+                            fontFamily: 'var(--font-ui)',
                             fontSize: 12,
                             fontWeight: 300,
                             color: 'var(--gray)',
@@ -240,7 +285,7 @@ export default function CartPage() {
                               background: 'none',
                               border: 'none',
                               color: 'var(--black)',
-                              fontFamily: 'Jost, sans-serif',
+                              fontFamily: 'var(--font-ui)',
                               fontSize: 11,
                               fontWeight: 300,
                               cursor: 'pointer',
@@ -296,7 +341,7 @@ export default function CartPage() {
                               width: 24,
                               textAlign: 'center',
                               fontSize: 11,
-                              fontFamily: 'Jost, sans-serif',
+                              fontFamily: 'var(--font-ui)',
                               color: 'var(--black)',
                             }}>
                               {quantity}
@@ -324,7 +369,7 @@ export default function CartPage() {
                           {/* Price & Delete Button */}
                           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                             <span style={{
-                              fontFamily: 'Jost, sans-serif',
+                              fontFamily: 'var(--font-ui)',
                               fontSize: 13,
                               fontWeight: 400,
                               color: 'var(--black)',
@@ -364,7 +409,7 @@ export default function CartPage() {
                         border: '1px solid var(--border)',
                         fontSize: 12,
                         color: 'var(--black)',
-                        fontFamily: 'Jost, sans-serif',
+                        fontFamily: 'var(--font-ui)',
                         lineHeight: 1.6,
                         animation: 'fadeIn 0.2s ease-out'
                       }}>
@@ -389,7 +434,7 @@ export default function CartPage() {
               top: '88px',
             }}>
               <h2 style={{
-                fontFamily: 'Jost, sans-serif',
+                fontFamily: 'var(--font-ui)',
                 fontSize: 11,
                 fontWeight: 400,
                 letterSpacing: '0.15em',
@@ -405,17 +450,29 @@ export default function CartPage() {
 
               {/* Subtotal */}
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
-                <span style={{ fontFamily: 'Jost, sans-serif', fontSize: 12, color: 'var(--gray)' }}>Subtotal</span>
-                <span style={{ fontFamily: 'Jost, sans-serif', fontSize: 13, color: 'var(--black)' }}>{formatPrice(subtotal)}</span>
+                <span style={{ fontFamily: 'var(--font-ui)', fontSize: 12, color: 'var(--gray)' }}>Subtotal</span>
+                <span style={{ fontFamily: 'var(--font-ui)', fontSize: 13, color: 'var(--black)' }}>{formatPrice(subtotal)}</span>
               </div>
+
+              {/* Coupon discount line (only when a coupon is applied) */}
+              {appliedCoupon && discount > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
+                  <span style={{ fontFamily: 'var(--font-ui)', fontSize: 12, color: '#27ae60' }}>
+                    Discount ({appliedCoupon.code})
+                  </span>
+                  <span style={{ fontFamily: 'var(--font-ui)', fontSize: 13, color: '#27ae60' }}>
+                    &minus;{formatPrice(discount)}
+                  </span>
+                </div>
+              )}
 
               {/* Shipping times and costs */}
               <div style={{ display: 'flex', flexDirection: 'column', borderBottom: '1px solid var(--border)', paddingBottom: 16, marginBottom: 16 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                  <span style={{ fontFamily: 'Jost, sans-serif', fontSize: 12, color: 'var(--gray)' }}>Shipping Times and Costs</span>
-                  <span style={{ fontFamily: 'Jost, sans-serif', fontSize: 13, color: 'var(--black)' }}>{shipping === 0 ? 'Free' : formatPrice(shipping)}</span>
+                  <span style={{ fontFamily: 'var(--font-ui)', fontSize: 12, color: 'var(--gray)' }}>Shipping Times and Costs</span>
+                  <span style={{ fontFamily: 'var(--font-ui)', fontSize: 13, color: 'var(--black)' }}>{shipping === 0 ? 'Free' : formatPrice(shipping)}</span>
                 </div>
-                <span style={{ fontFamily: 'Jost, sans-serif', fontSize: 10, color: 'var(--gray)', lineHeight: 1.4, fontStyle: 'italic' }}>
+                <span style={{ fontFamily: 'var(--font-ui)', fontSize: 10, color: 'var(--gray)', lineHeight: 1.4, fontStyle: 'italic' }}>
                   Item will be shipped in 5 to 7 days after receipt of order confirmation.
                 </span>
               </div>
@@ -423,7 +480,7 @@ export default function CartPage() {
               {/* Discount Code Section */}
               <div style={{ marginBottom: 20 }}>
                 <label style={{
-                  fontFamily: 'Jost, sans-serif',
+                  fontFamily: 'var(--font-ui)',
                   fontSize: 10,
                   fontWeight: 400,
                   color: 'var(--gray)',
@@ -445,7 +502,7 @@ export default function CartPage() {
                       border: '1px solid var(--border)',
                       padding: '8px 12px',
                       fontSize: 11,
-                      fontFamily: 'Jost, sans-serif',
+                      fontFamily: 'var(--font-ui)',
                       background: '#ffffff',
                       outline: 'none',
                       color: 'var(--black)',
@@ -453,34 +510,54 @@ export default function CartPage() {
                   />
                   <button
                     onClick={handleApplyCoupon}
+                    disabled={couponChecking}
                     style={{
                       background: '#ffffff',
                       border: '1px solid var(--black)',
                       padding: '8px 16px',
                       fontSize: 11,
-                      fontFamily: 'Jost, sans-serif',
+                      fontFamily: 'var(--font-ui)',
                       letterSpacing: '0.08em',
                       color: 'var(--black)',
-                      cursor: 'pointer',
+                      cursor: couponChecking ? 'wait' : 'pointer',
+                      opacity: couponChecking ? 0.6 : 1,
                     }}
                     className="hover:bg-zinc-100 transition-colors"
                   >
-                    APPLY
+                    {couponChecking ? 'CHECKING…' : 'APPLY'}
                   </button>
                 </div>
                 {couponError && (
-                  <p style={{ fontFamily: 'Jost, sans-serif', fontSize: 11, color: '#cc0000', margin: '6px 0 0 0' }}>{couponError}</p>
+                  <p style={{ fontFamily: 'var(--font-ui)', fontSize: 11, color: '#cc0000', margin: '6px 0 0 0' }}>{couponError}</p>
                 )}
                 {couponSuccess && (
-                  <p style={{ fontFamily: 'Jost, sans-serif', fontSize: 11, color: '#27ae60', margin: '6px 0 0 0' }}>{couponSuccess}</p>
+                  <p style={{ fontFamily: 'var(--font-ui)', fontSize: 11, color: '#27ae60', margin: '6px 0 0 0' }}>
+                    {couponSuccess}
+                    {' '}
+                    <button
+                      onClick={handleRemoveCoupon}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        padding: 0,
+                        color: 'var(--gray)',
+                        textDecoration: 'underline',
+                        fontSize: 11,
+                        fontFamily: 'var(--font-ui)',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      Remove
+                    </button>
+                  </p>
                 )}
               </div>
 
               {/* Total — GST is already inside the prices, so it is
                   shown as information only, never added on top */}
               <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid var(--border)', paddingTop: 16, marginBottom: 24 }}>
-                <span style={{ fontFamily: 'Jost, sans-serif', fontSize: 13, fontWeight: 400, color: 'var(--black)' }}>Total <span style={{ fontSize: 10, color: 'var(--gray)' }}>Includes {formatPrice(gstIncluded)} GST</span></span>
-                <span style={{ fontFamily: 'Jost, sans-serif', fontSize: 14, fontWeight: 500, color: 'var(--black)' }}>{formatPrice(total)}</span>
+                <span style={{ fontFamily: 'var(--font-ui)', fontSize: 13, fontWeight: 400, color: 'var(--black)' }}>Total <span style={{ fontSize: 10, color: 'var(--gray)' }}>Includes {formatPrice(gstIncluded)} GST</span></span>
+                <span style={{ fontFamily: 'var(--font-ui)', fontSize: 14, fontWeight: 500, color: 'var(--black)' }}>{formatPrice(total)}</span>
               </div>
 
               {/* Proceed Button */}
@@ -493,7 +570,7 @@ export default function CartPage() {
                   border: 'none',
                   padding: '16px',
                   fontSize: 11,
-                  fontFamily: 'Jost, sans-serif',
+                  fontFamily: 'var(--font-ui)',
                   letterSpacing: '0.15em',
                   textTransform: 'uppercase',
                   cursor: 'pointer',
@@ -513,7 +590,7 @@ export default function CartPage() {
                     <line x1="2" y1="12" x2="22" y2="12" />
                     <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
                   </svg>
-                  <p style={{ margin: 0, fontSize: 11, color: 'var(--black)', fontFamily: 'Jost, sans-serif', lineHeight: 1.5 }}>
+                  <p style={{ margin: 0, fontSize: 11, color: 'var(--black)', fontFamily: 'var(--font-ui)', lineHeight: 1.5 }}>
                     We offer free shipping on all orders with Express Worldwide service.
                   </p>
                 </div>
@@ -523,7 +600,7 @@ export default function CartPage() {
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--black)" strokeWidth="1.5" style={{ flexShrink: 0, marginTop: 1 }}>
                     <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
                   </svg>
-                  <p style={{ margin: 0, fontSize: 11, color: 'var(--black)', fontFamily: 'Jost, sans-serif', lineHeight: 1.5 }}>
+                  <p style={{ margin: 0, fontSize: 11, color: 'var(--black)', fontFamily: 'var(--font-ui)', lineHeight: 1.5 }}>
                     We Guarantee 10 days to return or exchange starting from the delivery date of the order.
                   </p>
                 </div>
@@ -540,7 +617,7 @@ export default function CartPage() {
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
-                      fontFamily: 'Jost, sans-serif',
+                      fontFamily: 'var(--font-ui)',
                       fontSize: 10,
                       fontWeight: 400,
                       letterSpacing: '0.08em',
@@ -559,7 +636,7 @@ export default function CartPage() {
                       marginTop: 12,
                       fontSize: 11,
                       color: 'var(--gray)',
-                      fontFamily: 'Jost, sans-serif',
+                      fontFamily: 'var(--font-ui)',
                       lineHeight: 1.6,
                       animation: 'fadeIn 0.2s ease-out'
                     }}>
