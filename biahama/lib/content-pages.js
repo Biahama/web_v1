@@ -104,7 +104,7 @@ You can ask us at any time what data we hold about you, or ask us to delete your
     title: 'Contact',
     body: `We are a small team and we read every message ourselves. For anything at all — sizing help, order questions, wholesale, or just to say hello — reach us at hello@biahama.com.
 
-You can also message us on WhatsApp at +91 00000 00000. We reply between 10am and 6pm IST, Monday to Saturday, and usually within a few hours.
+You can also message us on WhatsApp at +91 95853 33004. We reply between 10am and 6pm IST, Monday to Saturday, and usually within a few hours.
 
 Biahama, Made in India.`,
   },

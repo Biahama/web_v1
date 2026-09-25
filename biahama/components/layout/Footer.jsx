@@ -5,8 +5,8 @@ import { usePathname } from 'next/navigation'
 
 // ---- Contact details shown in the "Let's talk" column. ----
 const EMAIL = 'hello@biahama.com'
-const PHONE = '+91 98765 43210'
-const WHATSAPP = 'https://wa.me/919876543210'
+const PHONE = '+91 95853 33004'
+const WHATSAPP = 'https://wa.me/919585333004'
 
 const columns = [
   {
