@@ -116,7 +116,7 @@ export default function Footer() {
           className="flex flex-col md:flex-row items-center justify-between gap-4"
           style={{ fontFamily: 'var(--font-ui)', fontSize: '16px', fontWeight: '400', letterSpacing: '0.5px', color: '#6f6f6f' }}
         >
-          <span>© {new Date().getFullYear()} Biahama. All rights reserved.</span>
+          <span>© {new Date().getFullYear()} Biahama, a brand of PIINNACLE TRADING AND COMPANY. All rights reserved.</span>
           <span>Made with intention · India</span>
         </div>
       </footer>
@@ -186,7 +186,7 @@ export default function Footer() {
           className="mt-20 pt-8 flex flex-col md:flex-row items-center justify-between gap-4"
           style={{ borderTop: '1px solid #d8d5cf', fontFamily: 'var(--font-ui)', fontSize: '15px', fontWeight: '300', letterSpacing: '0.4px', color: '#262626' }}
         >
-          <span>© {new Date().getFullYear()} Biahama. All rights reserved.</span>
+          <span>© {new Date().getFullYear()} Biahama, a brand of PIINNACLE TRADING AND COMPANY. All rights reserved.</span>
           <span className="flex items-center gap-3">
             <Link href="/privacy" className="hover:underline">Privacy Policy</Link>
             <span aria-hidden>•</span>

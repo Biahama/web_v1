@@ -76,7 +76,7 @@ Exchanges for a different size are always free. Made-to-order and altered pieces
 
   terms: {
     title: 'Terms & Conditions of Sale',
-    body: `Welcome to Biahama. By placing an order on our website, you agree to these terms. Every order is an offer to purchase, which we accept when we confirm dispatch by email. All prices are listed in Indian Rupees and are inclusive of GST; the price shown at checkout is the final price you pay, apart from any shipping fee displayed before you confirm the order.
+    body: `Welcome to Biahama. Biahama is a brand of PIINNACLE TRADING AND COMPANY (GSTIN 33CEQPG6044A1ZU), 514/3/2 Pethamapalayam Road, Karumandisellipalayam, Perundurai, Erode District, Tamil Nadu 638052, India, which operates this website. By placing an order on our website, you agree to these terms. Every order is an offer to purchase, which we accept when we confirm dispatch by email. All prices are listed in Indian Rupees and are inclusive of GST; the price shown at checkout is the final price you pay, apart from any shipping fee displayed before you confirm the order.
 
 Payments are processed securely by Razorpay and can be made by UPI, credit or debit card, or net banking. We reserve the right to cancel any order in case of pricing errors, suspected fraud, or stock unavailability — if payment was already made, it will be refunded in full.
 
@@ -106,7 +106,11 @@ You can ask us at any time what data we hold about you, or ask us to delete your
 
 You can also message us on WhatsApp at +91 95853 33004. We reply between 10am and 6pm IST, Monday to Saturday, and usually within a few hours.
 
-Biahama, Made in India.`,
+Biahama is a brand of PIINNACLE TRADING AND COMPANY.
+
+Registered address: PIINNACLE TRADING AND COMPANY, 514/3/2 Pethamapalayam Road, Karumandisellipalayam, Perundurai, Erode District, Tamil Nadu 638052, India.
+
+GSTIN: 33CEQPG6044A1ZU`,
   },
 
   faq: {
