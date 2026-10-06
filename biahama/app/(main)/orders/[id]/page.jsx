@@ -93,7 +93,7 @@ export default function OrderPage() {
         </h1>
 
         <p style={{ fontSize: 13, color: 'var(--gray)', letterSpacing: '0.03em', lineHeight: 1.6 }}>
-          {order.paymentMethod === 'cod'
+          {order.paymentStatus === 'refund_pending' ? 'Your payment arrived after stock became unavailable. A full refund is being arranged. Please contact hello@biahama.com if you need help.' : order.paymentStatus === 'refunded' ? 'Your full refund has been processed by the payment provider.' : order.status === 'cancelled' ? 'This order has been cancelled. Please contact us with any questions about your payment.' : order.paymentMethod === 'cod'
             ? 'Your order has been placed. Payment will be collected on delivery.'
             : "Your payment was successful. We’ll start preparing your order right away."}
         </p>
@@ -145,7 +145,7 @@ export default function OrderPage() {
         </p>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-          {order.items.map((item, i) => (
+          {order.items.map(item => (
             <div key={item.id} style={{
               display: 'flex',
               justifyContent: 'space-between',
@@ -177,9 +177,10 @@ export default function OrderPage() {
         marginBottom: 40,
       }}>
         {[
-          { label: 'Subtotal', value: order.totalAmount - order.shippingAmount - Math.round((order.totalAmount - order.shippingAmount) * (5/105)) },
+          { label: 'Subtotal (includes GST)', value: order.totalAmount - order.shippingAmount + (order.discountAmount || 0) },
+          ...(order.discountAmount ? [{ label: 'Discount', value: -order.discountAmount }] : []),
           { label: 'Shipping', value: order.shippingAmount, zero: 'Free' },
-          { label: 'GST (5%)', value: Math.round((order.totalAmount - order.shippingAmount) * (5/105)) },
+          { label: 'Included GST (5%)', value: Math.round((order.totalAmount - order.shippingAmount) * (5/105)) },
         ].map(row => (
           <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
             <span style={{ fontSize: 12, color: 'var(--gray)', letterSpacing: '0.04em' }}>{row.label}</span>
@@ -222,7 +223,7 @@ export default function OrderPage() {
         }}>
           Continue Shopping
         </Link>
-        <Link href="/account/orders" style={{
+        <Link href="/account#orders" style={{
           padding: '14px 28px',
           background: 'transparent',
           color: 'var(--black)',

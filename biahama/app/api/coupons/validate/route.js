@@ -47,7 +47,7 @@ export const POST = withErrorLogging('api/coupons/validate', async (req) => {
 
   try {
     // Shared rules: active, dates, usage limit, minimum order value.
-    const { coupon, discount } = await validateCouponOrThrow(parsed.data.code, subtotal)
+    const { coupon, discount } = await validateCouponOrThrow(parsed.data.code, subtotal, user.id)
 
     // Some coupons are made for ONE specific customer only.
     if (coupon.userSpecific && coupon.userSpecific !== user.id) {

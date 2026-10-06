@@ -132,10 +132,10 @@ async function main() {
 }
 
 main()
-  .catch(e => {
+  .catch(() => {
     console.error(e)
     process.exit(1)
   })
   .finally(async () => {
-    try { await prisma.$disconnect() } catch (e) {}
+    try { await prisma.$disconnect() } catch {}
   })

@@ -20,8 +20,11 @@ const dmSans = DM_Sans({
 })
 
 export const metadata: Metadata = {
-  title: 'Biahama — Luxury Linen',
+  metadataBase: new URL('https://www.biahama.com'),
+  title: { default: 'Biahama — Luxury Linen', template: '%s | Biahama' },
   description: 'Luxury linen clothing crafted in India.',
+  openGraph: { title: 'Biahama — Luxury Linen', description: 'Luxury linen clothing crafted in India.', siteName: 'Biahama', locale: 'en_IN', type: 'website', images: [{ url: 'https://res.cloudinary.com/dc30t7io2/image/upload/w_1200,h_630,c_fill,q_auto,f_auto/v1781048357/biahama/biahama_homepage_hero_v2.jpg', width: 1200, height: 630, alt: 'Biahama linen collection' }] },
+  twitter: { card: 'summary_large_image' },
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {

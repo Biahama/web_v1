@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { useEffect } from 'react'
+import { useDialog } from './useDialog'
 import { useCart } from '@/lib/cart'
 
 function formatPrice(paise) {
@@ -11,19 +11,8 @@ function formatPrice(paise) {
 
 export default function CartDrawer({ open, onClose }) {
   const { items, remove, updateQty } = useCart()
+  const dialogRef = useDialog(open, onClose)
   const subtotal = items.reduce((s, i) => s + i.variant.price * i.quantity, 0)
-
-  useEffect(() => {
-    function onKey(e) { if (e.key === 'Escape') onClose() }
-    document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
-  }, [onClose])
-
-  // Lock body scroll when open
-  useEffect(() => {
-    document.body.style.overflow = open ? 'hidden' : ''
-    return () => { document.body.style.overflow = '' }
-  }, [open])
 
   return (
     <>
@@ -33,7 +22,7 @@ export default function CartDrawer({ open, onClose }) {
         style={{
           position: 'fixed',
           inset: 0,
-          zIndex: 40,
+          zIndex: 199,
           background: 'rgba(0,0,0,0.2)',
           opacity: open ? 1 : 0,
           pointerEvents: open ? 'auto' : 'none',
@@ -42,13 +31,13 @@ export default function CartDrawer({ open, onClose }) {
       />
 
       {/* Drawer */}
-      <div
+      <div ref={dialogRef} role="dialog" aria-label="Shopping bag" aria-modal={open ? true : undefined} aria-hidden={!open} inert={!open}
         style={{
           position: 'fixed',
           top: 0,
           right: 0,
           bottom: 0,
-          zIndex: 50,
+          zIndex: 200,
           width: 420,
           maxWidth: '100vw',
           background: 'var(--bg)',
@@ -167,9 +156,9 @@ export default function CartDrawer({ open, onClose }) {
                     overflow: 'hidden',
                     position: 'relative',
                   }}>
-                    {variant.images?.[0]?.url ? (
+                    {(variant.images?.[0]?.url || variant.product?.images?.[0]?.url) ? (
                       <Image
-                        src={variant.images[0].url}
+                        src={variant.images?.[0]?.url || variant.product?.images?.[0]?.url}
                         alt={variant.product?.name || ''}
                         fill
                         style={{ objectFit: 'cover' }}
@@ -205,6 +194,7 @@ export default function CartDrawer({ open, onClose }) {
                       {/* Qty stepper */}
                       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                         <button
+                          aria-label={`Decrease quantity of ${variant.product?.name}`}
                           onClick={() => updateQty(variantId, quantity - 1)}
                           style={{
                             width: 24,
@@ -232,6 +222,7 @@ export default function CartDrawer({ open, onClose }) {
                           {quantity}
                         </span>
                         <button
+                          aria-label={`Increase quantity of ${variant.product?.name}`}
                           onClick={() => updateQty(variantId, quantity + 1)}
                           style={{
                             width: 24,

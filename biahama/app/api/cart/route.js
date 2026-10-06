@@ -25,8 +25,8 @@ export const GET = withErrorLogging('api/cart GET', async () => {
     include: {
       variant: {
         include: {
-          product: { select: { name: true, slug: true, description: true, fabric: true, care: true } },
-          images:  { where: { isPrimary: true }, take: 1 },
+          product: { select: { name: true, slug: true, description: true, fabric: true, care: true, images: { orderBy: { sortOrder: 'asc' }, take: 1 } } },
+          images:  { orderBy: { sortOrder: 'asc' }, take: 1 },
         },
       },
     },
@@ -51,8 +51,8 @@ export const POST = withErrorLogging('api/cart POST', async (req) => {
   const { variantId, quantity } = parsed.data
 
   // Make sure the product variant really exists before adding it.
-  const variant = await prisma.productVariant.findUnique({ where: { id: variantId } })
-  if (!variant) {
+  const variant = await prisma.productVariant.findUnique({ where: { id: variantId }, include: { product: true } })
+  if (!variant || !variant.product.isActive) {
     return NextResponse.json(
       { error: 'This product variant does not exist. It may have been removed from the store.' },
       { status: 404 }
@@ -71,13 +71,15 @@ export const POST = withErrorLogging('api/cart POST', async (req) => {
   // otherwise the cart insert would fail with a database error.
   await ensureUser(user)
 
-  const existing = await prisma.cart.findFirst({
-    where: { userId: user.id, variantId },
+  const item = await prisma.$transaction(async tx => {
+    // Serialize cart writes for this user/variant across concurrent requests.
+    await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtext(${user.id + ':' + variantId}))::text`
+    const existing = await tx.cart.findMany({ where: { userId: user.id, variantId }, orderBy: { createdAt: 'asc' } })
+    if (existing.length > 1) await tx.cart.deleteMany({ where: { id: { in: existing.slice(1).map(i => i.id) } } })
+    return existing[0]
+      ? tx.cart.update({ where: { id: existing[0].id }, data: { quantity } })
+      : tx.cart.create({ data: { userId: user.id, variantId, quantity } })
   })
-
-  const item = existing
-    ? await prisma.cart.update({ where: { id: existing.id }, data: { quantity } })
-    : await prisma.cart.create({ data: { userId: user.id, variantId, quantity } })
 
   return NextResponse.json(item)
 })

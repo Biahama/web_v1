@@ -98,7 +98,7 @@ export default async function AccountPage() {
 
       {/* Orders */}
       <div style={{ marginBottom: 56 }}>
-        <h2 style={sectionTitle}>My Orders</h2>
+        <h2 id="orders" style={sectionTitle}>My Orders</h2>
         {orders.length === 0 ? (
           <p style={{ fontFamily: 'var(--font-ui)', fontSize: 14, color: '#6f6f6f' }}>
             No orders yet. <Link href="/shop" style={{ color: '#262626', textDecoration: 'underline' }}>Explore the collection</Link>.

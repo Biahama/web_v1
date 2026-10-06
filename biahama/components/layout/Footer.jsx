@@ -20,7 +20,8 @@ const columns = [
     heading: 'Customer Care',
     items: [
       { label: 'Size Guide', href: '/sizing' },
-      { label: 'Shipping & Returns', href: '/shipping' },
+      { label: 'Shipping', href: '/shipping' },
+      { label: 'Returns & Exchanges', href: '/returns' },
       { label: 'FAQs', href: '/faq' },
       { label: 'WhatsApp', href: WHATSAPP },
     ],

@@ -1,0 +1,80 @@
+BIAHAMA LAUNCH READINESS — FIXED SOURCE AND REMAINING ROLLOUT
+Date: October 5, 2026
+Website: https://www.biahama.com
+Verdict: Source checks pass. HOLD the sales launch until the production rollout
+and provider configuration below are completed and verified.
+
+CHANGES COMPLETED IN THIS WORKTREE
+- Updated Next.js, Prisma and vulnerable runtime dependencies. Production npm
+  audit now reports zero vulnerabilities. Removed unused dependency packages.
+- Online payments now use a saved checkout with frozen prices, sizes, quantities,
+  address, coupon and shipping. Server verifies captured payment amount/currency
+  and ownership before creating an order. Retries create one order and preserve
+  fulfillment status. Changed cart rows survive payment confirmation.
+- Inventory and coupon usage are reserved atomically. Expired unpaid attempts
+  release reservations once; authorized payments retain them. Late captures
+  either fulfill available stock or create a visible cancellation/refund task.
+- Confirmation/shipping emails, loyalty credits and refunds use durable tasks
+  with leases and retries. Refund retries reconcile provider state first.
+- Added authenticated maintenance endpoint and Admin → Store operations for
+  payment reconciliation, task retries and missing-configuration visibility.
+- Repaired guest/authenticated cart synchronization, quantity limits, image
+  fallback, error reporting and login-return destinations.
+- Added forgot/reset-password pages; repaired order/account and collection links.
+  Removed fake products; empty Shirts collection now shows an honest empty state.
+  Product-list + button opens size selection instead of silently choosing a size.
+- Repaired mobile navigation and cart/checkout columns. Dialogs support Escape,
+  keyboard focus trapping/restoration and background scroll locking. Product
+  details and accordions use real product content and accessible closed states.
+- Unified shipping and return copy, improved product images and added metadata,
+  canonical URLs, product structured data, sitemap, robots and private-page
+  noindex rules. Product edits/photos invalidate storefront caches.
+- Added safe error handling, security headers, environment template, launch
+  checker and idempotent database rollout SQL.
+
+VERIFICATION
+- npm run build: PASS (production build and TypeScript checks).
+- npm run lint: PASS, no errors or warnings.
+- TEST_DATABASE_URL=<isolated localhost biahama_test> npm test: 20 PASS,
+  zero failures and zero skipped tests. Covers last-item and last-coupon races,
+  failed multi-item rollback, payment mismatch/ownership, immutable checkout,
+  duplicate capture, expiry, provider timeout, late capture and refund retries.
+- npm audit --omit=dev: zero reported vulnerabilities.
+- Full npm audit still lists five high-severity development-tool findings in
+  the Next ESLint plugin's glob/braces dependency chain. No compatible upstream
+  patch was available; npm's proposed force fix downgrades the Next lint config.
+  These packages are not in the production dependency audit. Recheck upstream
+  before subsequent development-tool upgrades.
+- Rollout SQL applied twice to disposable PostgreSQL databases: preserves an
+  existing customer, adds missing schema and remains repeatable. Row security
+  blocks a simulated anonymous role's reads/writes; server owner retains access.
+- Browser: 390px mobile and 1280px desktop navigation/cart fit without horizontal
+  overflow; selected-size add, quantity totals, search, login drawer and password
+  forms checked. Search dialog keyboard focus wraps correctly.
+- No real purchase, email to a customer, shipment or refund was performed.
+- Final browser preview uses only a public catalog copy in a disposable local
+  database. Production schema/records were not changed.
+
+PRODUCTION ACTIONS STILL REQUIRED
+1. Approve and apply prisma/rollouts/20261005_checkout.sql. The connected store
+   database is missing wardrobe/loyalty/analytics tables, Shiprocket order fields
+   and the new checkout/task tables. Row security is currently disabled on the
+   original store tables. Automatic approval review rejected the broad schema/
+   access-control mutation; explicit production approval remains pending.
+2. Connect the hosting account/team for www.biahama.com. The signed-in Vercel
+   account could not access this project's deployment; this checkout was not
+   deployed and the live site's source revision was not established.
+3. Configure live Razorpay credentials/webhook, a strong CRON_SECRET and Brevo
+   API key. These were missing from the available local configuration; the live
+   hosting environment could not be inspected. Set automatic payment capture,
+   sender verification, password-reset redirect URLs and the recovery schedule.
+4. Confirm the brand's shipping/returns, garment fabric/certification/packaging
+   claims, GST treatment and fulfillment contact details before launch. Existing
+   policy defaults were retained: India-only, Rs 99 below Rs 3,000, free shipping
+   at Rs 3,000, dispatch 2–4 working days, delivery 5–7 working days after dispatch,
+   and 14-day returns. Business/tax claims were not independently certified.
+5. Complete an owner-controlled provider test payment/refund and a deployed
+   authenticated checkout after the above steps. Legacy in-flight payments need
+   manual reconciliation because their original checkout snapshot does not exist.
+
+Exact rollout instructions: LAUNCH_ROLLOUT.txt

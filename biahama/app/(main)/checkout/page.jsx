@@ -1,14 +1,14 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/components/providers/AuthProvider'
-import { createClient } from '@/utils/supabase/client'
 import { useCart } from '@/lib/cart'
 import Script from 'next/script'
 import Link from 'next/link'
 // Pricing rules live in ONE shared file so the cart, checkout and
 // payment server can never disagree about the total.
+import { STORE_POLICY } from '@/lib/store-policy'
 import { computeTotals, SHIPPING_THRESHOLD, SHIPPING_COST, GST_RATE } from '@/lib/pricing'
 
 function formatPrice(paise) {
@@ -17,24 +17,17 @@ function formatPrice(paise) {
 
 export default function CheckoutPage() {
   const router = useRouter()
-  const { items, clear } = useCart()
+  const { items, refresh, loading: cartLoading } = useCart()
   const { session, user, loading } = useAuth()
-  const supabase = createClient()
   const status = loading ? 'loading' : session ? 'authenticated' : 'unauthenticated'
 
   // Checkout layout states
-  const [activeStep, setActiveStep] = useState(1) // 1: Email, 2: Shipping, 3: Payment
-  const [emailCompleted, setEmailCompleted] = useState(false)
+  const [activeStep, setActiveStep] = useState(2) // 1: Email, 2: Shipping, 3: Payment
+  const emailCompleted = Boolean(session)
+  const checkoutKey = useRef(null)
   const [shippingCompleted, setShippingCompleted] = useState(false)
 
-  // Step 1: Email states
-  const [email, setEmail] = useState('')
-  const [emailChecked, setEmailChecked] = useState(false)
-  const [userExists, setUserExists] = useState(false)
-  const [password, setPassword] = useState('')
-  const [fullName, setFullName] = useState('')
-  const [authError, setAuthError] = useState('')
-  const [authLoading, setAuthLoading] = useState(false)
+  const email = user?.email || ''
 
   // Step 2: Shipping states
   const [addresses, setAddresses] = useState([])
@@ -65,19 +58,14 @@ export default function CheckoutPage() {
 
   // Redirect if cart is empty
   useEffect(() => {
-    if (status !== 'loading' && items.length === 0) {
+    if (status !== 'loading' && !cartLoading && items.length === 0 && !checkoutData) {
       router.replace('/cart')
     }
-  }, [items, status])
+  }, [items, status, cartLoading, router, checkoutData])
 
   // Sync auth state
   useEffect(() => {
     if (status === 'authenticated' && session?.user) {
-      setEmailCompleted(true)
-      setEmail(session.user.email)
-      if (activeStep === 1) {
-        setActiveStep(2)
-      }
       // Fetch user's saved addresses
       fetch('/api/addresses')
         .then(r => r.json())
@@ -99,81 +87,9 @@ export default function CheckoutPage() {
             setStateName(def.state)
           }
         })
-        .catch(() => {})
+        .catch(() => setPaymentError("Could not load saved addresses. You can enter your address below."))
     }
   }, [session, status])
-
-  // Step 1: Email check & submit
-  async function handleEmailContinue(e) {
-    e.preventDefault()
-    if (!email) return
-    setAuthError('')
-    setAuthLoading(true)
-
-    try {
-      const res = await fetch('/api/auth/check-email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
-      })
-      const data = await res.json()
-      setUserExists(data.exists)
-      setEmailChecked(true)
-    } catch {
-      setAuthError('Something went wrong. Please try again.')
-    } finally {
-      setAuthLoading(false)
-    }
-  }
-
-  async function handleEmailAuth(e) {
-    e.preventDefault()
-    setAuthError('')
-    setAuthLoading(true)
-
-    if (userExists) {
-      // Login inline
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
-
-      if (error) {
-        setAuthError('Invalid password. Please try again.')
-        setAuthLoading(false)
-      } else {
-        // Authenticated! session state handles activeStep transition
-        setAuthLoading(false)
-      }
-    } else {
-      // Register inline
-      if (password.length < 8) {
-        setAuthError('Password must be at least 8 characters.')
-        setAuthLoading(false)
-        return
-      }
-      if (!fullName) {
-        setAuthError('Full name is required.')
-        setAuthLoading(false)
-        return
-      }
-
-      const { error: signUpError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: { first_name: fullName }
-        }
-      })
-
-      if (signUpError) {
-        setAuthError(signUpError.message || 'Failed to register.')
-        setAuthLoading(false)
-      } else {
-        setAuthLoading(false)
-      }
-    }
-  }
 
   // ZIP Code postal lookup
   async function handleZipCodeChange(value) {
@@ -194,7 +110,7 @@ export default function CheckoutPage() {
           setZipError('Enter a valid ZIP code in the following sample format: 999999')
         }
       } catch {
-        // Silent catch
+        setZipError('Could not look up this PIN code. Please enter your city and state.')
       } finally {
         setPincodeLoading(false)
       }
@@ -205,7 +121,8 @@ export default function CheckoutPage() {
   async function handleShippingContinue(e) {
     e.preventDefault()
     setPaymentError('')
-    
+
+    if (checkoutData) { checkoutKey.current = null; setCheckoutData(null) }
     let targetAddressId = selectedAddressId
 
     if (showNewAddressForm) {
@@ -275,18 +192,21 @@ export default function CheckoutPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           addressId: targetAddressId,
+          checkoutKey: checkoutKey.current ||= crypto.randomUUID(),
           ...(savedCouponCode ? { couponCode: savedCouponCode } : {}),
         }),
       })
 
       const orderData = await orderRes.json()
       if (!orderRes.ok) {
+        if (orderRes.status === 409) checkoutKey.current = null
         setPaymentError(orderData.error || 'Could not initiate payment order.')
         return
       }
 
       // orderData carries the server-verified discount and couponCode,
       // which the summary panel and the verify step both use.
+      if (orderData.completedOrderId) { await refresh(); router.push(`/orders/${orderData.completedOrderId}`); return }
       setCheckoutData({ ...orderData, addressId: targetAddressId })
       setShippingCompleted(true)
       setActiveStep(3)
@@ -329,6 +249,7 @@ export default function CheckoutPage() {
             method:  'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
+              checkoutId: checkoutData.checkoutId,
               razorpay_order_id:   response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature:  response.razorpay_signature,
@@ -349,7 +270,7 @@ export default function CheckoutPage() {
 
           // Order placed — the coupon is used up, so forget it.
           sessionStorage.removeItem('biahama_coupon')
-          await clear()
+          await refresh()
           router.push(`/orders/${data.orderId}`)
         } catch {
           setPaymentError('Payment verification failed. Please contact support.')
@@ -366,14 +287,16 @@ export default function CheckoutPage() {
   // payment server: the coupon discount (the SERVER's number, from
   // the create-order response) comes off the subtotal FIRST, then
   // shipping is decided on the reduced amount.
-  const { subtotal } = computeTotals(items)
+  const summaryItems = checkoutData?.items || items
+  const { subtotal } = computeTotals(summaryItems)
   const discount = Math.min(checkoutData?.discount || 0, subtotal)
   const discountedSubtotal = subtotal - discount
-  const shipping = discountedSubtotal >= SHIPPING_THRESHOLD || items.length === 0 ? 0 : SHIPPING_COST
+  const shipping = checkoutData?.shipping ?? (discountedSubtotal >= SHIPPING_THRESHOLD || items.length === 0 ? 0 : SHIPPING_COST)
   // GST is already INSIDE the prices — shown for information only.
   const gstIncluded = Math.round(discountedSubtotal - discountedSubtotal / (1 + GST_RATE))
-  const total = discountedSubtotal + shipping
+  const total = checkoutData?.amount ?? discountedSubtotal + shipping
 
+  if (loading || cartLoading) return <p className="purchase-page" role="status">Loading your checkout…</p>
   return (
     <>
       <Script
@@ -381,145 +304,30 @@ export default function CheckoutPage() {
         onReady={() => setSdkReady(true)}
       />
 
-      <div style={{ background: '#ffffff', minHeight: '100vh', padding: '40px 48px 100px 48px' }}>
+      <div className="purchase-page" style={{ background: '#ffffff', minHeight: '100vh' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-          
+
           {/* Header Spacer */}
           <div style={{ height: 16 }} />
 
           {/* Main Content Layout */}
-          <div 
-            className="flex flex-col lg:flex-row gap-16" 
+          <div
+            className="purchase-columns"
             style={{ display: 'flex', flexWrap: 'wrap', width: '100%' }}
           >
-            
+
             {/* Left Column — Accordion Checkout Steps */}
-            <div style={{ flex: '1 1 58%', minWidth: '320px', display: 'flex', flexDirection: 'column', gap: 16 }}>
-              
-              {/* ================= STEP 1: EMAIL ADDRESS ================= */}
-              <div style={{ border: '1px solid var(--border)' }}>
-                {/* Banner Header */}
-                <div 
-                  onClick={() => emailCompleted && setActiveStep(1)}
-                  style={{
-                    background: activeStep === 1 ? 'var(--black)' : '#faf9f6',
-                    color: activeStep === 1 ? '#ffffff' : 'var(--black)',
-                    padding: '16px 24px',
-                    fontFamily: 'var(--font-ui)',
-                    fontSize: 12,
-                    fontWeight: 400,
-                    letterSpacing: '0.15em',
-                    textTransform: 'uppercase',
-                    cursor: emailCompleted ? 'pointer' : 'default',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center'
-                  }}
-                >
-                  <span>1. E-mail address</span>
-                  {emailCompleted && activeStep !== 1 && (
-                    <span style={{ fontSize: 11, textTransform: 'none', letterSpacing: 'normal', color: 'var(--gray)' }}>
-                      {email} &nbsp;&middot;&nbsp; Connected
-                    </span>
-                  )}
-                </div>
+            <div style={{ flex: '1 1 58%', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 16 }}>
 
-                {/* Content */}
-                {activeStep === 1 && (
-                  <div style={{ padding: '24px 28px', background: '#ffffff' }}>
-                    <p style={{ fontFamily: 'var(--font-ui)', fontSize: 13, color: 'var(--gray)', lineHeight: 1.6, margin: '0 0 24px 0' }}>
-                      Enter your e-mail address to proceed to checkout. If you are already registered, you will be asked to enter your password.
-                    </p>
-
-                    {authError && (
-                      <div style={{ padding: '12px 16px', background: '#fff0f0', border: '1px solid #ffcccc', color: '#cc0000', fontSize: 12, marginBottom: 20 }}>
-                        {authError}
-                      </div>
-                    )}
-
-                    {!emailChecked ? (
-                      <form onSubmit={handleEmailContinue} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                        <div>
-                          <label style={{ fontFamily: 'var(--font-ui)', fontSize: 10, textTransform: 'uppercase', color: 'var(--gray)', letterSpacing: '0.1em', display: 'block', marginBottom: 6 }}>
-                            E-mail address *
-                          </label>
-                          <input
-                            type="email"
-                            required
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            style={{ width: '100%', border: '1px solid var(--border)', padding: '10px 12px', fontSize: 12, fontFamily: 'var(--font-ui)', outline: 'none' }}
-                          />
-                        </div>
-                        <button
-                          type="submit"
-                          disabled={authLoading}
-                          style={{ background: 'var(--black)', color: '#ffffff', border: 'none', padding: '14px', fontSize: 11, fontFamily: 'var(--font-ui)', letterSpacing: '0.15em', textTransform: 'uppercase', cursor: 'pointer' }}
-                        >
-                          {authLoading ? 'Checking…' : 'CONTINUE'}
-                        </button>
-                      </form>
-                    ) : (
-                      <form onSubmit={handleEmailAuth} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <span style={{ fontSize: 12, fontFamily: 'var(--font-ui)', color: 'var(--black)' }}>
-                            Email: <strong>{email}</strong>
-                          </span>
-                          <button 
-                            type="button" 
-                            onClick={() => setEmailChecked(false)} 
-                            style={{ background: 'none', border: 'none', color: 'var(--gray)', textDecoration: 'underline', fontSize: 11, cursor: 'pointer', fontFamily: 'var(--font-ui)' }}
-                          >
-                            Change
-                          </button>
-                        </div>
-
-                        {!userExists && (
-                          <div>
-                            <label style={{ fontFamily: 'var(--font-ui)', fontSize: 10, textTransform: 'uppercase', color: 'var(--gray)', letterSpacing: '0.1em', display: 'block', marginBottom: 6 }}>
-                              Full Name *
-                            </label>
-                            <input
-                              type="text"
-                              required
-                              value={fullName}
-                              onChange={(e) => setFullName(e.target.value)}
-                              style={{ width: '100%', border: '1px solid var(--border)', padding: '10px 12px', fontSize: 12, fontFamily: 'var(--font-ui)', outline: 'none' }}
-                            />
-                          </div>
-                        )}
-
-                        <div>
-                          <label style={{ fontFamily: 'var(--font-ui)', fontSize: 10, textTransform: 'uppercase', color: 'var(--gray)', letterSpacing: '0.1em', display: 'block', marginBottom: 6 }}>
-                            Password *
-                          </label>
-                          <input
-                            type="password"
-                            required
-                            placeholder={userExists ? 'Enter password' : 'Min 8 characters'}
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            style={{ width: '100%', border: '1px solid var(--border)', padding: '10px 12px', fontSize: 12, fontFamily: 'var(--font-ui)', outline: 'none' }}
-                          />
-                        </div>
-
-                        <button
-                          type="submit"
-                          disabled={authLoading}
-                          style={{ background: 'var(--black)', color: '#ffffff', border: 'none', padding: '14px', fontSize: 11, fontFamily: 'var(--font-ui)', letterSpacing: '0.15em', textTransform: 'uppercase', cursor: 'pointer' }}
-                        >
-                          {authLoading ? 'Processing…' : userExists ? 'LOG IN & CONTINUE' : 'CREATE ACCOUNT & CONTINUE'}
-                        </button>
-                      </form>
-                    )}
-                  </div>
-                )}
-              </div>
+              <section className="checkout-account" aria-label="Your account">
+                <p>1. Your account</p>
+                <p>{email}</p>
+              </section>
 
               {/* ================= STEP 2: SHIPPING AND INFORMATION ================= */}
               <div style={{ border: '1px solid var(--border)' }}>
                 {/* Banner Header */}
-                <div 
+                <div
                   onClick={() => emailCompleted && shippingCompleted && setActiveStep(2)}
                   style={{
                     background: activeStep === 2 ? 'var(--black)' : '#faf9f6',
@@ -539,7 +347,7 @@ export default function CheckoutPage() {
                   <span>2. Shipping and Information</span>
                   {shippingCompleted && activeStep !== 2 && (
                     <span style={{ fontSize: 11, textTransform: 'none', letterSpacing: 'normal', color: 'var(--gray)' }}>
-                      Address Saved &middot; Ready
+                      {checkoutData?.shippingAddress?.fullName} &middot; {checkoutData?.shippingAddress?.city} {checkoutData?.shippingAddress?.pincode}
                     </span>
                   )}
                 </div>
@@ -548,17 +356,17 @@ export default function CheckoutPage() {
                 {activeStep === 2 && emailCompleted && (
                   <div style={{ padding: '24px 28px', background: '#ffffff' }}>
                     <p style={{ fontFamily: 'var(--font-ui)', fontSize: 11, color: 'var(--gray)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 16px 0' }}>
-                      We offer free shipping on all orders with Express Worldwide service.
+                      {STORE_POLICY.shipping}
                     </p>
 
                     {/* Shipping Option Card */}
-                    <div style={{ 
-                      border: '1px solid var(--black)', 
-                      padding: '12px 18px', 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      gap: 12, 
-                      width: 'fit-content', 
+                    <div style={{
+                      border: '1px solid var(--black)',
+                      padding: '12px 18px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 12,
+                      width: 'fit-content',
                       marginBottom: 32,
                       background: '#faf9f6'
                     }}>
@@ -662,7 +470,7 @@ export default function CheckoutPage() {
                     {/* Shipping address form */}
                     {(showNewAddressForm || addresses.length === 0) && (
                       <form onSubmit={handleShippingContinue} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                        
+
                         {/* Title Radio Selection */}
                         <div>
                           <span style={{ fontFamily: 'var(--font-ui)', fontSize: 10, textTransform: 'uppercase', color: 'var(--gray)', letterSpacing: '0.1em', display: 'block', marginBottom: 8 }}>
@@ -815,15 +623,15 @@ export default function CheckoutPage() {
                         <button
                           type="submit"
                           disabled={addressSaving}
-                          style={{ 
-                            background: 'var(--black)', 
-                            color: '#ffffff', 
-                            border: 'none', 
-                            padding: '14px', 
-                            fontSize: 11, 
-                            fontFamily: 'var(--font-ui)', 
-                            letterSpacing: '0.15em', 
-                            textTransform: 'uppercase', 
+                          style={{
+                            background: 'var(--black)',
+                            color: '#ffffff',
+                            border: 'none',
+                            padding: '14px',
+                            fontSize: 11,
+                            fontFamily: 'var(--font-ui)',
+                            letterSpacing: '0.15em',
+                            textTransform: 'uppercase',
                             cursor: 'pointer',
                             marginTop: 12
                           }}
@@ -838,16 +646,16 @@ export default function CheckoutPage() {
                       <button
                         onClick={handleShippingContinue}
                         disabled={addressSaving}
-                        style={{ 
+                        style={{
                           width: '100%',
-                          background: 'var(--black)', 
-                          color: '#ffffff', 
-                          border: 'none', 
-                          padding: '14px', 
-                          fontSize: 11, 
-                          fontFamily: 'var(--font-ui)', 
-                          letterSpacing: '0.15em', 
-                          textTransform: 'uppercase', 
+                          background: 'var(--black)',
+                          color: '#ffffff',
+                          border: 'none',
+                          padding: '14px',
+                          fontSize: 11,
+                          fontFamily: 'var(--font-ui)',
+                          letterSpacing: '0.15em',
+                          textTransform: 'uppercase',
                           cursor: 'pointer',
                           marginTop: 24
                         }}
@@ -863,7 +671,7 @@ export default function CheckoutPage() {
               {/* ================= STEP 3: PAYMENT ================= */}
               <div style={{ border: '1px solid var(--border)' }}>
                 {/* Banner Header */}
-                <div 
+                <div
                   style={{
                     background: activeStep === 3 ? 'var(--black)' : '#faf9f6',
                     color: activeStep === 3 ? '#ffffff' : 'var(--black)',
@@ -881,7 +689,7 @@ export default function CheckoutPage() {
                 {/* Content */}
                 {activeStep === 3 && shippingCompleted && emailCompleted && (
                   <div style={{ padding: '24px 28px', background: '#ffffff' }}>
-                    
+
                     {paymentError && (
                       <div style={{ padding: '12px 16px', background: '#fff0f0', border: '1px solid #ffcccc', color: '#cc0000', fontSize: 12, marginBottom: 20 }}>
                         {paymentError}
@@ -898,7 +706,7 @@ export default function CheckoutPage() {
                         style={{ marginTop: 3, accentColor: 'var(--black)' }}
                       />
                       <label htmlFor="terms" style={{ fontFamily: 'var(--font-ui)', fontSize: 12, color: 'var(--black)', cursor: 'pointer', lineHeight: 1.5 }}>
-                        *By confirming the order you accept the Biahama <a href="/terms" target="_blank" style={{ textDecoration: 'underline', color: 'var(--black)' }}>Terms and Conditions</a> of sale
+                        *By confirming the order you accept the Biahama <Link href="/terms" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'underline', color: 'var(--black)' }}>Terms and Conditions</Link> of sale
                       </label>
                     </div>
 
@@ -936,7 +744,7 @@ export default function CheckoutPage() {
                       lineHeight: 1.6,
                       fontFamily: 'var(--font-ui)'
                     }}>
-                      Payments secured by Razorpay.
+                      Payments secured by Razorpay. Your items are reserved for 30 minutes.
                     </p>
 
                   </div>
@@ -946,7 +754,7 @@ export default function CheckoutPage() {
             </div>
 
             {/* Right Column — Sticky Order Summary */}
-            <div style={{ flex: '1 1 32%', minWidth: '300px' }}>
+            <div style={{ flex: '1 1 32%', minWidth: 0 }}>
               <div style={{
                 background: '#faf9f6',
                 padding: '32px 28px',
@@ -964,13 +772,13 @@ export default function CheckoutPage() {
                   borderBottom: '1px solid var(--border)',
                   paddingBottom: 12,
                 }}>
-                  Your cart ({items.length} {items.length === 1 ? 'item' : 'items'})
+                  Your checkout ({summaryItems.length} {summaryItems.length === 1 ? 'item' : 'items'})
                 </h2>
 
                 {/* Itemized List */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 24 }}>
-                  {items.map(item => {
-                    const imgUrl = item.variant?.images?.[0]?.url || item.variant?.product?.image || null
+                  {summaryItems.map(item => {
+                    const imgUrl = item.variant?.images?.[0]?.url || item.variant?.product?.images?.[0]?.url || null
                     return (
                       <div key={item.variantId} style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
                         <div style={{ width: 50, height: 63, background: 'var(--light)', flexShrink: 0, overflow: 'hidden' }}>
@@ -1025,7 +833,7 @@ export default function CheckoutPage() {
                     <span style={{ fontFamily: 'var(--font-ui)', fontSize: 12, color: 'var(--black)', marginLeft: 'auto' }}>{shipping === 0 ? 'Free' : formatPrice(shipping)}</span>
                   </div>
                   <span style={{ fontFamily: 'var(--font-ui)', fontSize: 10, color: 'var(--gray)', fontStyle: 'italic', lineHeight: 1.4 }}>
-                    Item will be shipped in 5 to 7 days after receipt of order confirmation
+                    Orders dispatch in 2–4 working days; delivery usually takes another 5–7 working days.
                   </span>
                 </div>
 

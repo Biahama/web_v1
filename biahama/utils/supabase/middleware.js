@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
+import { safeReturnPath } from '@/lib/auth-redirect'
 
 export async function updateSession(request) {
   let supabaseResponse = NextResponse.next({
@@ -18,7 +19,7 @@ export async function updateSession(request) {
           return request.cookies.getAll()
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
           supabaseResponse = NextResponse.next({
             request,
           })
@@ -44,8 +45,12 @@ export async function updateSession(request) {
   if (isProtectedRoute && !user) {
     const url = request.nextUrl.clone()
     url.pathname = '/'
+    url.search = ''
     url.searchParams.set('login', 'true')
-    return NextResponse.redirect(url)
+    url.searchParams.set('next', pathname + request.nextUrl.search)
+    const response = NextResponse.redirect(url)
+    supabaseResponse.cookies.getAll().forEach(cookie => response.cookies.set(cookie))
+    return response
   }
 
   // Redirect logged-in users away from auth pages
@@ -54,8 +59,9 @@ export async function updateSession(request) {
 
   if (isAuthRoute && user) {
     const url = request.nextUrl.clone()
-    url.pathname = '/account'
-    return NextResponse.redirect(url)
+    const response = NextResponse.redirect(new URL(safeReturnPath(url.searchParams.get('next'), '/account'), url.origin))
+    supabaseResponse.cookies.getAll().forEach(cookie => response.cookies.set(cookie))
+    return response
   }
 
   return supabaseResponse

@@ -14,7 +14,7 @@ export default function AnnouncementBar({ text = DEFAULT_TEXT }) {
 
   return (
     <div
-      className="w-full text-center"
+      className="announcement-bar w-full text-center"
       style={{
         background: 'var(--black)',
         color: '#ffffff',
@@ -23,10 +23,10 @@ export default function AnnouncementBar({ text = DEFAULT_TEXT }) {
         fontSize: 10,
         letterSpacing: '0.18em',
         textTransform: 'uppercase',
-        padding: '8px 48px',
+        padding: '10px 16px',
       }}
     >
-      {text}
+      {text.replace('above ₹3,000', 'at ₹3,000 and above')}
     </div>
   )
 }

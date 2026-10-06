@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { STORE_POLICY } from '@/lib/store-policy'
 import { useCart } from '@/lib/cart'
 import ProductCard from '@/components/ui/ProductCard'
 // Pricing rules live in ONE shared file so the cart, checkout and
@@ -14,12 +15,12 @@ function formatPrice(paise) {
 }
 
 export default function CartPage() {
-  const { items, remove, updateQty } = useCart()
+  const { items, remove, updateQty, loading: cartLoading } = useCart()
   const router = useRouter()
 
   // Recommended products state
   const [recommendations, setRecommendations] = useState([])
-  
+
   // Coupon state — the discount number always comes from the server
   // (/api/coupons/validate), never computed in the browser, so the
   // cart shows exactly what the payment server will charge.
@@ -109,8 +110,7 @@ export default function CartPage() {
   useEffect(() => {
     if (items.length === 0) return
     const saved = sessionStorage.getItem('biahama_coupon')
-    if (saved) applyCoupon(saved, { silent: true })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (saved) Promise.resolve().then(() => applyCoupon(saved, { silent: true }))
   }, [items])
 
   function handleProceed() {
@@ -133,8 +133,9 @@ export default function CartPage() {
   const gstIncluded = Math.round(discountedSubtotal - discountedSubtotal / (1 + GST_RATE))
   const total = discountedSubtotal + shipping
 
+  if (cartLoading) return <p className="purchase-page" role="status">Loading your bag…</p>
   return (
-    <div style={{ background: '#ffffff', minHeight: '100vh', padding: '40px 48px 100px 48px' }}>
+    <div className="purchase-page" style={{ background: '#ffffff', minHeight: '100vh' }}>
       {/* Title */}
       <h1
         style={{
@@ -176,12 +177,12 @@ export default function CartPage() {
           </Link>
         </div>
       ) : (
-        <div 
-          className="flex flex-col lg:flex-row gap-16" 
+        <div
+          className="purchase-columns"
           style={{ display: 'flex', flexWrap: 'wrap', width: '100%' }}
         >
           {/* Left Column — Cart items */}
-          <div style={{ flex: '1 1 60%', minWidth: '320px' }}>
+          <div style={{ flex: '1 1 60%', minWidth: 0 }}>
             <h2
               style={{
                 fontFamily: 'Cormorant Garamond, serif',
@@ -202,7 +203,7 @@ export default function CartPage() {
                 const productDesc = variant.product?.description || "A premium linen apparel designed for natural breathability and everyday luxury."
                 const productFabric = variant.product?.fabric || "100% Organic Premium Linen"
                 const productCare = variant.product?.care || "Dry clean or gentle hand wash in cold water. Iron inside out."
-                const imageSource = variant.images?.[0]?.url || variant.product?.image || null
+                const imageSource = variant.images?.[0]?.url || variant.product?.images?.[0]?.url || variant.product?.image || null
 
                 return (
                   <div
@@ -216,14 +217,14 @@ export default function CartPage() {
                   >
                     <div style={{ display: 'flex', gap: 24 }}>
                       {/* Product Thumbnail Image */}
-                      <div 
-                        style={{ 
-                          width: 100, 
-                          height: 125, 
-                          background: 'var(--light)', 
-                          position: 'relative', 
-                          overflow: 'hidden', 
-                          flexShrink: 0 
+                      <div
+                        style={{
+                          width: 100,
+                          height: 125,
+                          background: 'var(--light)',
+                          position: 'relative',
+                          overflow: 'hidden',
+                          flexShrink: 0
                         }}
                       >
                         {imageSource ? (
@@ -298,16 +299,16 @@ export default function CartPage() {
                             }}
                           >
                             Product details &nbsp;
-                            <svg 
-                              width="8" 
-                              height="8" 
-                              viewBox="0 0 24 24" 
-                              fill="none" 
-                              stroke="currentColor" 
-                              strokeWidth="2" 
-                              style={{ 
-                                transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)', 
-                                transition: 'transform 0.2s ease-in-out' 
+                            <svg
+                              width="8"
+                              height="8"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              style={{
+                                transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
+                                transition: 'transform 0.2s ease-in-out'
                               }}
                             >
                               <path d="M9 5l7 7-7 7" />
@@ -320,6 +321,7 @@ export default function CartPage() {
                           {/* Numeric Quantity Selector */}
                           <div style={{ display: 'flex', alignItems: 'center', border: '1px solid var(--border)', background: '#ffffff' }}>
                             <button
+                              aria-label={`Decrease quantity of ${variant.product?.name}`}
                               onClick={() => updateQty(variantId, quantity - 1)}
                               style={{
                                 width: 28,
@@ -347,6 +349,8 @@ export default function CartPage() {
                               {quantity}
                             </span>
                             <button
+                              aria-label={`Increase quantity of ${variant.product?.name}`}
+                              disabled={quantity >= 10}
                               onClick={() => updateQty(variantId, quantity + 1)}
                               style={{
                                 width: 28,
@@ -425,7 +429,7 @@ export default function CartPage() {
           </div>
 
           {/* Right Column — Summary panel */}
-          <div style={{ flex: '1 1 30%', minWidth: '300px' }}>
+          <div style={{ flex: '1 1 30%', minWidth: 0 }}>
             <div style={{
               background: '#faf9f6',
               padding: '32px 28px',
@@ -473,7 +477,7 @@ export default function CartPage() {
                   <span style={{ fontFamily: 'var(--font-ui)', fontSize: 13, color: 'var(--black)' }}>{shipping === 0 ? 'Free' : formatPrice(shipping)}</span>
                 </div>
                 <span style={{ fontFamily: 'var(--font-ui)', fontSize: 10, color: 'var(--gray)', lineHeight: 1.4, fontStyle: 'italic' }}>
-                  Item will be shipped in 5 to 7 days after receipt of order confirmation.
+                  Orders dispatch in 2–4 working days; delivery usually takes another 5–7 working days.
                 </span>
               </div>
 
@@ -591,7 +595,7 @@ export default function CartPage() {
                     <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
                   </svg>
                   <p style={{ margin: 0, fontSize: 11, color: 'var(--black)', fontFamily: 'var(--font-ui)', lineHeight: 1.5 }}>
-                    We offer free shipping on all orders with Express Worldwide service.
+                    {STORE_POLICY.shipping}
                   </p>
                 </div>
 
@@ -601,7 +605,7 @@ export default function CartPage() {
                     <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
                   </svg>
                   <p style={{ margin: 0, fontSize: 11, color: 'var(--black)', fontFamily: 'var(--font-ui)', lineHeight: 1.5 }}>
-                    We Guarantee 10 days to return or exchange starting from the delivery date of the order.
+                    {STORE_POLICY.returns}
                   </p>
                 </div>
 
@@ -686,7 +690,7 @@ export default function CartPage() {
           >
             You may also be interested in
           </h2>
-          <div 
+          <div
             style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',

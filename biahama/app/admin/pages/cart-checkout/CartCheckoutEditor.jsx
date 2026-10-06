@@ -12,13 +12,6 @@
 import { useEffect, useState } from 'react'
 
 // ---- Small shared styles (same look as the theme editor) ----
-const labelStyle = {
-  display: 'block',
-  fontSize: 13,
-  fontWeight: 500,
-  color: '#1A202C',
-  marginBottom: 6,
-}
 const helpStyle = { fontSize: 12, color: '#6f6f6f', marginTop: 4 }
 
 export default function CartCheckoutEditor({ defaultCommerce }) {

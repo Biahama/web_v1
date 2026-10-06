@@ -1,398 +1,92 @@
-'use client'
-
+ 'use client'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useAuth } from '@/components/providers/AuthProvider'
-import { useState, useRef, useEffect } from 'react'
-import { usePathname, useRouter } from 'next/navigation'
-import { motion, AnimatePresence } from 'framer-motion'
+import { Suspense, useState, useEffect, useCallback } from 'react'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import CartDrawer from '@/components/ui/CartDrawer'
 import LoginDrawer from '@/components/auth/LoginDrawer'
+import SearchOverlay from '@/components/ui/SearchOverlay'
+import { useDialog } from '@/components/ui/useDialog'
+import { safeReturnPath } from '@/lib/auth-redirect'
 import { useCart } from '@/lib/cart'
 
-const DROPDOWN_CATEGORIES = [
-  { name: 'Kurta', slug: 'kurtas', img: 'https://res.cloudinary.com/dc30t7io2/image/upload/q_auto,f_auto,w_800,h_1200,c_fill/v1781050257/biahama/collection_hover_kurta.png' },
-  { name: 'Shirts', slug: 'shirts', img: 'https://res.cloudinary.com/dc30t7io2/image/upload/q_auto,f_auto,w_800,h_1200,c_fill/v1781050258/biahama/collection_hover_shirt.png' },
-  { name: 'Tunics', slug: 'tunics', img: 'https://res.cloudinary.com/dc30t7io2/image/upload/q_auto,f_auto,w_800,h_1200,c_fill/v1781050259/biahama/collection_hover_tunic.png' },
-  { name: 'Pant', slug: 'trousers', img: 'https://res.cloudinary.com/dc30t7io2/image/upload/q_auto,f_auto,w_800,h_1200,c_fill/v1781050260/biahama/collection_hover_pant.png' },
+const CATEGORIES = [
+  { name: 'Kurta', slug: 'kurtas', img: 'https://res.cloudinary.com/dc30t7io2/image/upload/q_auto,f_auto,w_400,h_600,c_fill/v1781050257/biahama/collection_hover_kurta.png' },
+  { name: 'Shirts', slug: 'shirts', img: 'https://res.cloudinary.com/dc30t7io2/image/upload/q_auto,f_auto,w_400,h_600,c_fill/v1781050258/biahama/collection_hover_shirt.png' },
+  { name: 'Tunics', slug: 'tunics', img: 'https://res.cloudinary.com/dc30t7io2/image/upload/q_auto,f_auto,w_400,h_600,c_fill/v1781050259/biahama/collection_hover_tunic.png' },
+  { name: 'Pant', slug: 'trousers', img: 'https://res.cloudinary.com/dc30t7io2/image/upload/q_auto,f_auto,w_400,h_600,c_fill/v1781050260/biahama/collection_hover_pant.png' },
 ]
-
 export default function Navbar() {
   const { session } = useAuth()
+  const { count } = useCart()
   const pathname = usePathname()
   const router = useRouter()
-  const searchInputRef = useRef(null)
-  const [searchActive, setSearchActive] = useState(false)
-  const [searchQuery, setSearchQuery] = useState('')
-  const [cartOpen, setCartOpen] = useState(false)
-  const [loginOpen, setLoginOpen] = useState(false)
+  const [panel, setPanel] = useState(null)
+  const [returnTo, setReturnTo] = useState('/')
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
-  const { count } = useCart()
-
-  const collectionRef = useRef(null)
-  const [leftOffset, setLeftOffset] = useState(0)
-
-  const isHome = pathname === '/'
-
+  const menuRef = useDialog(panel === 'menu', () => setPanel(null))
+  const openLogin = useCallback(path => { setReturnTo(path); setPanel('login') }, [])
   useEffect(() => {
-    // Open login drawer if redirected from protected route
-    if (window.location.search.includes('login=true')) {
-      setLoginOpen(true)
-      // Clean up URL without triggering a page reload
-      const newUrl = window.location.pathname
-      window.history.replaceState({}, '', newUrl)
-    }
-
-    if (!isHome) {
-      setScrolled(true)
-      return
-    }
-
-    const handleScroll = () => setScrolled(window.scrollY > window.innerHeight * 0.9)
-    handleScroll()
+    const handleScroll = () => setScrolled(window.scrollY > window.innerHeight * .9)
+    queueMicrotask(handleScroll)
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
-  }, [isHome])
+  }, [pathname])
+  const solid = pathname !== '/' || scrolled || dropdownOpen || panel === 'menu'
+  const color = solid ? 'var(--black)' : '#ffffff'
+  const login = () => { setReturnTo(pathname); setPanel('login') }
+  if (pathname === '/checkout') return <nav className="site-nav checkout-nav"><Link className="brand" href="/">BIAHAMA</Link><Link className="checkout-bag" href="/cart">Back to bag</Link></nav>
+  return <>
+    <Suspense fallback={null}><LoginFromQuery onLogin={openLogin} /></Suspense>
+    <nav className={`site-nav ${solid ? 'solid' : 'over-hero'}`} style={{ color }} aria-label="Main navigation">
+      <button className="mobile-menu nav-icon" aria-label="Open menu" aria-expanded={panel === 'menu'} onClick={() => setPanel('menu')}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 6h18M3 12h18M3 18h18" /></svg></button>
+      <div className="desktop-links">
+        <Link href="/">Home</Link>
+        <div className="collection-menu" onMouseEnter={() => setDropdownOpen(true)} onMouseLeave={() => setDropdownOpen(false)} onKeyDown={e => { if (e.key === 'Escape') setDropdownOpen(false) }}>
+          <Link href="/shop" onFocus={() => setDropdownOpen(true)} onClick={() => setDropdownOpen(false)}>Collection</Link>
+          {dropdownOpen && <div className="collection-dropdown" onBlur={e => { if (!e.currentTarget.contains(e.relatedTarget)) setDropdownOpen(false) }}>
+            {CATEGORIES.map(cat => <Link key={cat.slug} href={`/shop?cat=${cat.slug}`} onClick={() => setDropdownOpen(false)}><Image width={400} height={600} sizes="25vw" src={cat.img} alt="" /><span>{cat.name}</span></Link>)}
+          </div>}
+        </div>
+        <Link href="/contact">Contact us</Link>
+      </div>
+      <Link className="brand" href="/">BIAHAMA</Link>
+      <div className="nav-actions">
+        <button className="nav-icon" aria-label="Search" onClick={() => setPanel('search')}><SearchIcon /><span className="nav-label">Search</span></button>
+        <button className="nav-icon wardrobe-nav" aria-label="My wardrobe" onClick={() => session ? router.push('/account/wardrobe') : login()}><WardrobeIcon themeColor={color} /><span className="nav-label">My wardrobe</span></button>
+        <button className="nav-icon" aria-label={`Cart, ${count} items`} onClick={() => setPanel('cart')}><CartIcon /><span className="cart-count">{count}</span></button>
+        <button className="nav-icon profile-nav" aria-label={session ? 'Account' : 'Log in'} onClick={() => session ? router.push('/account') : login()}><ProfileIcon /></button>
+      </div>
+    </nav>
+    {panel === 'menu' && <div className="mobile-menu-overlay" ref={menuRef} role="dialog" aria-modal="true" aria-label="Navigation menu">
+      <button className="nav-icon menu-close" onClick={() => setPanel(null)} aria-label="Close menu">×</button>
+      <Link href="/" onClick={() => setPanel(null)}>Home</Link>
+      {CATEGORIES.map(cat => <Link key={cat.slug} href={`/shop?cat=${cat.slug}`} onClick={() => setPanel(null)}>{cat.name}</Link>)}
+      <Link href="/contact" onClick={() => setPanel(null)}>Contact us</Link>
+      <button onClick={() => { if (session) { setPanel(null); router.push('/account') } else login() }}>{session ? 'My account' : 'Log in / Register'}</button>
+      <button onClick={() => { if (session) { setPanel(null); router.push('/account/wardrobe') } else login() }}>My wardrobe</button>
+    </div>}
+    {panel === 'search' && <SearchOverlay open onClose={() => setPanel(null)} />}
+    <CartDrawer open={panel === 'cart'} onClose={() => setPanel(null)} />
+    <LoginDrawer open={panel === 'login'} returnTo={returnTo} onClose={() => setPanel(null)} />
+  </>
+}
 
+function LoginFromQuery({ onLogin }) {
+  const search = useSearchParams().toString()
+  const pathname = usePathname()
+  const router = useRouter()
   useEffect(() => {
-    function updateOffset() {
-      if (collectionRef.current) {
-        const rect = collectionRef.current.getBoundingClientRect()
-        setLeftOffset(rect.left)
-      }
-    }
-    updateOffset()
-    window.addEventListener('resize', updateOffset)
-    return () => window.removeEventListener('resize', updateOffset)
-  }, [])
-
-  const showSolidNavbar = scrolled || dropdownOpen
-  const themeColor = showSolidNavbar ? '#1A202C' : '#ffffff'
-  
-  const handleSearchSubmit = (e) => {
-    e.preventDefault()
-    if (searchQuery.trim()) {
-      router.push(`/shop?q=${encodeURIComponent(searchQuery.trim())}`)
-      setSearchActive(false)
-    }
-  }
-
-  const isCheckout = pathname === '/checkout'
-
-  if (isCheckout) {
-    return (
-      <nav
-        className="fixed top-0 left-0 right-0 z-40 flex items-center justify-center"
-        style={{
-          height: '56px',
-          background: '#ffffff',
-          borderBottom: '1px solid #e5e5e5',
-        }}
-      >
-        <Link
-          href="/"
-          className="select-none"
-          style={{
-            fontFamily: 'var(--font-display)',
-            fontWeight: '500',
-            fontSize: 24,
-            color: 'var(--black)',
-            letterSpacing: '4px',
-            marginLeft: '0.3em',
-          }}
-        >
-          BIAHAMA
-        </Link>
-      </nav>
-    )
-  }
-
-  return (
-    <>
-      <nav
-        className="fixed top-0 left-0 right-0 z-40 flex items-center justify-between"
-        style={{
-          height: '56px',
-          paddingLeft: 'var(--space-5)',
-          paddingRight: 'var(--space-5)',
-          background: showSolidNavbar ? '#ffffff' : 'transparent',
-          borderBottom: showSolidNavbar ? '1px solid #e5e5e5' : 'none',
-          transition: 'background 0.4s ease, border-bottom 0.4s ease, color 0.4s ease',
-        }}
-      >
-        {/* Left Section — Home, Collection, Contact Us */}
-        <div className="flex-1 flex items-center gap-6 z-50 h-full">
-          <Link
-            href="/"
-            className="tracking-widest uppercase hover:opacity-60 transition-opacity flex items-center h-full"
-            style={{ fontFamily: 'var(--font-ui)', fontSize: '10px', fontWeight: '400', letterSpacing: '0.14em', color: themeColor }}
-          >
-            Home
-          </Link>
-          <div
-            ref={collectionRef}
-            className="relative flex items-center h-full"
-            onMouseEnter={() => setDropdownOpen(true)}
-            onMouseLeave={() => setDropdownOpen(false)}
-          >
-            <Link
-              href="/shop"
-              className="tracking-widest uppercase hover:opacity-60 transition-opacity flex items-center h-full"
-              style={{ fontFamily: 'var(--font-ui)', fontSize: '10px', fontWeight: '400', letterSpacing: '0.14em', color: themeColor }}
-            >
-              Collection
-            </Link>
-
-            {/* Floating hover dropdown */}
-            <AnimatePresence>
-              {dropdownOpen && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-                  className="fixed"
-                  style={{
-                    top: '56px',
-                    left: leftOffset > 0 ? leftOffset - 16 : 0,
-                    right: 0,
-                    background: 'var(--border)',
-                    boxShadow: '0 10px 30px rgba(0, 0, 0, 0.05)',
-                    paddingTop: 0,
-                    paddingLeft: 0,
-                    paddingRight: 0,
-                    paddingBottom: 'var(--space-2)',
-                    overflow: 'hidden',
-                    zIndex: 100,
-                  }}
-                  onMouseEnter={() => setDropdownOpen(true)}
-                  onMouseLeave={() => setDropdownOpen(false)}
-                >
-                  {/* Horizontal Line spanning the full screen width */}
-                  <div style={{ width: '100%', height: '1px', background: 'var(--black)', opacity: 0.15 }} />
-
-                  {/* Content Container aligned with uniform padding */}
-                  <div className="flex gap-4 w-full" style={{ paddingLeft: 'var(--space-2)', paddingRight: 'var(--space-2)', paddingTop: 'var(--space-2)', margin: 0 }}>
-                    {DROPDOWN_CATEGORIES.map(cat => (
-                      <Link
-                        key={cat.slug}
-                        href={`/shop?cat=${cat.slug}`}
-                        onClick={(e) => {
-                          e.preventDefault()
-                          setDropdownOpen(false)
-                          router.push(`/shop?cat=${cat.slug}`)
-                        }}
-                        className="group relative block overflow-hidden"
-                        style={{ flex: 1, aspectRatio: '2/3', border: 'none' }}
-                      >
-                        {/* Thumbnail Image */}
-                        <div className="w-full h-full relative overflow-hidden bg-zinc-100">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={cat.img}
-                            alt={cat.name}
-                            className="object-cover w-full h-full transition-transform duration-700 group-hover:scale-103"
-                          />
-                          {/* Subtle dark overlay for text legibility */}
-                          <div className="absolute inset-0 bg-black/5 group-hover:bg-black/15 transition-colors duration-500" />
-                        </div>
-                        {/* Caption Overlay */}
-                        <div className="absolute bottom-4 left-4 right-4 flex justify-between items-center z-10">
-                          <span
-                            className="text-lg tracking-wide"
-                            style={{
-                              fontFamily: 'var(--font-display)',
-                              fontStyle: 'italic',
-                              color: 'var(--bg)',
-                              fontWeight: 'var(--text-heading-weight)',
-                            }}
-                          >
-                            {cat.name}
-                          </span>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-          <Link
-            href="/#footer"
-            className="tracking-widest uppercase hover:opacity-60 transition-opacity flex items-center h-full"
-            style={{ fontFamily: 'var(--font-ui)', fontSize: '10px', fontWeight: '400', letterSpacing: '0.14em', color: themeColor }}
-          >
-            Contact Us
-          </Link>
-        </div>
-
-        {/* Center Section — Brand Name */}
-        <Link
-          href="/"
-          className="absolute left-1/2 -translate-x-1/2 select-none z-50 h-full flex items-center"
-          style={{ fontFamily: 'var(--font-display)', fontWeight: '500', fontSize: '24px', color: themeColor, letterSpacing: '4px' }}
-        >
-          BIAHAMA
-        </Link>
-
-        {/* Right Section — Icons */}
-        <div className="flex-1 flex items-center justify-end gap-6 z-50 h-full">
-          {/* Search */}
-          <form
-            onSubmit={handleSearchSubmit}
-            className="flex items-center h-full"
-          >
-            <AnimatePresence>
-              {searchActive && (
-                <motion.div
-                  initial={{ width: 0, opacity: 0 }}
-                  animate={{ width: 140, opacity: 1 }}
-                  exit={{ width: 0, opacity: 0 }}
-                  transition={{ duration: 0.2, ease: 'easeOut' }}
-                  style={{ overflow: 'hidden', marginRight: 'var(--space-1)' }}
-                >
-                  <input
-                    ref={searchInputRef}
-                    type="text"
-                    placeholder="Search..."
-                    value={searchQuery}
-                    onChange={e => setSearchQuery(e.target.value)}
-                    onKeyDown={e => {
-                      if (e.key === 'Escape') {
-                        setSearchActive(false)
-                      }
-                    }}
-                    onBlur={() => {
-                      setTimeout(() => {
-                        if (searchQuery.trim() === '') setSearchActive(false)
-                      }, 200)
-                    }}
-                    style={{
-                      background: 'transparent',
-                      border: 'none',
-                      borderBottom: `1px solid ${themeColor}`,
-                      outline: 'none',
-                      fontSize: '11px',
-                      fontFamily: 'var(--font-ui)',
-                      color: themeColor,
-                      width: '100%',
-                      paddingBottom: '2px',
-                      letterSpacing: '0.05em',
-                    }}
-                  />
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            <button
-              type="button"
-              onClick={() => {
-                if (searchActive) {
-                  if (searchQuery.trim()) {
-                    router.push(`/shop?q=${encodeURIComponent(searchQuery.trim())}`)
-                    setSearchActive(false)
-                  } else {
-                    setSearchActive(false)
-                  }
-                } else {
-                  setSearchActive(true)
-                  setTimeout(() => searchInputRef.current?.focus(), 50)
-                }
-              }}
-              className="flex items-center gap-2 hover:opacity-60 transition-opacity h-full"
-              style={{ color: themeColor, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
-            >
-              <SearchIcon />
-              {!searchActive && (
-                <span className="tracking-widest uppercase hidden lg:block" style={{ fontFamily: 'var(--font-ui)', fontSize: '10px', fontWeight: '400', letterSpacing: '0.14em' }}>
-                  Search
-                </span>
-              )}
-            </button>
-          </form>
-
-          {/* Wardrobe */}
-          {session ? (
-            <Link
-              href="/account/wardrobe"
-              className="flex items-center gap-2 hover:opacity-60 transition-opacity h-full"
-              style={{ color: themeColor }}
-            >
-              <WardrobeIcon themeColor={themeColor} />
-              <span className="tracking-widest uppercase hidden lg:block" style={{ fontFamily: 'var(--font-ui)', fontSize: '10px', fontWeight: '400', letterSpacing: '0.14em' }}>
-                My Wardrobe
-              </span>
-            </Link>
-          ) : (
-            <button
-              onClick={() => setLoginOpen(true)}
-              className="flex items-center gap-2 hover:opacity-60 transition-opacity h-full"
-              style={{ color: themeColor, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
-            >
-              <WardrobeIcon themeColor={themeColor} />
-              <span className="tracking-widest uppercase hidden lg:block" style={{ fontFamily: 'var(--font-ui)', fontSize: '10px', fontWeight: '400', letterSpacing: '0.14em' }}>
-                My Wardrobe
-              </span>
-            </button>
-          )}
-
-          {/* Cart */}
-          <button
-            onClick={() => setCartOpen(true)}
-            aria-label="Cart"
-            className="hover:opacity-60 transition-opacity flex items-center h-full"
-            style={{ color: themeColor }}
-          >
-            <div className="relative flex items-center">
-              <CartIcon />
-              <span
-                className="absolute flex items-center justify-center rounded-full"
-                style={{
-                  width: 13,
-                  height: 13,
-                  top: -5,
-                  right: -7,
-                  background: showSolidNavbar ? 'var(--black)' : '#ffffff',
-                  color: showSolidNavbar ? '#ffffff' : 'var(--black)',
-                  fontSize: 8,
-                  fontFamily: 'var(--font-ui)',
-                }}
-              >
-                {count}
-              </span>
-            </div>
-          </button>
-
-          {/* Profile */}
-          {session ? (
-            <Link
-              href="/account"
-              className="hover:opacity-60 transition-opacity flex items-center h-full"
-              style={{ color: themeColor }}
-              aria-label="Account"
-            >
-              <ProfileIcon />
-            </Link>
-          ) : (
-            <button
-              onClick={() => {
-                console.log('drawer open')
-                setLoginOpen(true)
-              }}
-              className="hover:opacity-60 transition-opacity flex items-center h-full"
-              style={{ color: themeColor, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
-              aria-label="Log In"
-            >
-              <ProfileIcon />
-            </button>
-          )}
-        </div>
-      </nav>
-
-      <CartDrawer open={cartOpen} onClose={() => setCartOpen(false)} />
-      <LoginDrawer open={loginOpen} onClose={() => setLoginOpen(false)} />
-    </>
-  )
+    const params = new URLSearchParams(search)
+    if (params.get('login') !== 'true') return
+    onLogin(safeReturnPath(params.get('next')))
+    params.delete('login')
+    params.delete('next')
+    router.replace(pathname + (params.size ? '?' + params.toString() : ''), { scroll: false })
+  }, [search, pathname, router, onLogin])
+  return null
 }
 
 function SearchIcon() {
@@ -405,10 +99,10 @@ function SearchIcon() {
 }
 
 function WardrobeIcon({ themeColor }) {
-  const isInverted = themeColor === 'var(--bg)'
+  const isInverted = themeColor === '#ffffff'
   return (
-    <img
-      src="/cloth-hanger.png"
+    <Image
+      width={22} height={22} src="/cloth-hanger.png"
       alt="Wardrobe"
       style={{
         width: 'var(--icon-wardrobe)',

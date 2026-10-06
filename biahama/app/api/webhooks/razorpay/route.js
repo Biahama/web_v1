@@ -1,119 +1,32 @@
-// ============================================================
-// RAZORPAY WEBHOOK — Razorpay's server calls this directly
-// ============================================================
-// This is our safety net. Even if the customer's browser dies
-// right after paying, Razorpay still tells US the payment
-// happened, and we create the order here so no money is ever
-// received without an order.
-//
-// Setup required: RAZORPAY_WEBHOOK_SECRET must be set in the
-// environment, matching the secret entered in the Razorpay
-// dashboard when the webhook was created.
-// ============================================================
+import { after, NextResponse } from 'next/server'
+import crypto from 'node:crypto'
+import { checkouts } from '@/lib/checkouts'
+import { processOrderTasks } from '@/lib/order-tasks'
+import { logError } from '@/lib/logger'
 
-import { NextResponse } from 'next/server'
-import crypto from 'crypto'
+export const maxDuration = 60
 
-import { prisma } from '@/lib/prisma'
-import { createOrderFromCart } from '@/lib/orders'
-import { withErrorLogging, logError } from '@/lib/logger'
-
-// Compare two strings in "constant time" — a plain === comparison
-// leaks timing information an attacker could use to forge signatures.
-function safeEqual(a, b) {
-  const bufA = Buffer.from(String(a))
-  const bufB = Buffer.from(String(b))
-  if (bufA.length !== bufB.length) return false
-  return crypto.timingSafeEqual(bufA, bufB)
-}
-
-export const POST = withErrorLogging('api/webhooks/razorpay', async (req) => {
+export async function POST(req) {
+  const secret = process.env.RAZORPAY_WEBHOOK_SECRET
+  if (!secret) return NextResponse.json({ error: 'Payment notifications are unavailable' }, { status: 503 })
   const body = await req.text()
   const signature = req.headers.get('x-razorpay-signature') || ''
-
-  // The webhook secret is DIFFERENT from the API key secret.
-  // If we "helpfully" fell back to the key secret, every real
-  // webhook would be silently rejected — so we fail loudly instead.
-  const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET
-  if (!webhookSecret) {
-    await logError('api/webhooks/razorpay', 'RAZORPAY_WEBHOOK_SECRET is not configured', {})
-    return NextResponse.json({ error: 'RAZORPAY_WEBHOOK_SECRET is not configured' }, { status: 500 })
-  }
-
-  // Prove this call really came from Razorpay, not an impostor.
-  const expectedSignature = crypto
-    .createHmac('sha256', webhookSecret)
-    .update(body)
-    .digest('hex')
-
-  if (!safeEqual(expectedSignature, signature)) {
-    await logError('api/webhooks/razorpay', 'Rejected webhook: signature did not match', {
-      receivedSignature: signature,
-    })
+  const expected = crypto.createHmac('sha256', secret).update(body).digest('hex')
+  if (!/^[a-f0-9]{64}$/.test(signature) || !crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) {
     return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
   }
-
-  const event = JSON.parse(body)
-
-  if (event.event === 'payment.captured') {
-    const payment   = event.payload.payment.entity
-    const paymentId = payment.id
-
-    const existingOrder = await prisma.order.findUnique({ where: { paymentId } })
-
-    if (existingOrder) {
-      // Normal case: the order already exists — just mark it paid.
-      await prisma.order.update({
-        where: { paymentId },
-        data:  { paymentStatus: 'paid', status: 'confirmed' },
-      })
-    } else {
-      // Backup case: the customer PAID but no order exists — their
-      // browser probably closed before our verify step could run.
-      // We stored userId and addressId in the payment "notes" when
-      // creating the Razorpay order, exactly for this situation.
-      // couponCode was also stored in the notes, so the backup
-      // order applies the same discount the customer paid for.
-      const { userId, addressId, couponCode } = payment.notes || {}
-
-      if (!userId || !addressId) {
-        await logError(
-          'api/webhooks/razorpay',
-          'MONEY RECEIVED BUT NO ORDER: payment has no userId/addressId in notes — create the order manually',
-          { event }
-        )
-      } else {
-        try {
-          await createOrderFromCart(userId, addressId, {
-            paymentMethod: 'razorpay',
-            paymentId,
-            paymentStatus: 'paid',
-            codAmount:     null,
-          }, couponCode || null)
-        } catch (err) {
-          // The cart may already be empty, or stock ran out.
-          // Log EVERYTHING so the owner can see "money received,
-          // no order" in the ErrorLog table and act on it.
-          await logError(
-            'api/webhooks/razorpay',
-            new Error(`MONEY RECEIVED BUT NO ORDER CREATED: ${err.message}`),
-            { userId, addressId, paymentId, event }
-          )
-        }
-      }
-    }
+  let event
+  try { event = JSON.parse(body) } catch { return NextResponse.json({ error: 'Invalid event' }, { status: 400 }) }
+  if (event.event !== 'payment.captured') return NextResponse.json({ ok: true })
+  const payment = event.payload?.payment?.entity
+  if (!payment?.id || !payment.order_id) return NextResponse.json({ error: 'Invalid payment event' }, { status: 400 })
+  try {
+    const order = await checkouts.complete(payment)
+    after(() => processOrderTasks(order.id, Date.now() + 30000))
+    return NextResponse.json({ ok: true })
+  } catch (error) {
+    await logError('razorpay webhook recovery', error, { paymentId: payment.id, paymentOrderId: payment.order_id })
+    // Provider retries instead of discarding a captured payment on failure.
+    return NextResponse.json({ error: 'Payment confirmation will be retried' }, { status: 503 })
   }
-
-  if (event.event === 'payment.failed') {
-    const paymentId = event.payload.payment.entity.id
-
-    await prisma.order.updateMany({
-      where: { paymentId },
-      data:  { paymentStatus: 'failed', status: 'cancelled' },
-    })
-  }
-
-  // Always answer 200 so Razorpay does not endlessly retry —
-  // any problem above has already been logged for the owner.
-  return NextResponse.json({ ok: true })
-})
+}

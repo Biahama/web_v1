@@ -18,8 +18,9 @@ import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { requireAdmin } from '@/lib/admin-auth'
 import { withErrorLogging, logError } from '@/lib/logger'
-import { sendOrderShippedEmail } from '@/lib/email'
-import { creditPointsForOrder } from '@/lib/loyalty'
+import { updateOrderStatus } from '@/lib/order-status-service'
+import { processOrderTasks } from '@/lib/order-tasks'
+import { after } from 'next/server'
 import { createShiprocketOrder, assignAwb, trackByShipmentId } from '@/lib/shiprocket'
 
 const bodySchema = z.object({
@@ -47,6 +48,8 @@ export const POST = withErrorLogging('api/admin/orders/[id]/shiprocket POST', as
     if (!order) {
       return NextResponse.json({ error: 'Order not found' }, { status: 404 })
     }
+
+    if (order.status === 'cancelled' || (order.paymentMethod !== 'cod' && order.paymentStatus !== 'paid')) return NextResponse.json({ error: 'Only a paid, active order can be fulfilled' }, { status: 409 })
 
     // --------------------------------------------------------
     // 'create' — send the order to Shiprocket (once).
@@ -96,22 +99,14 @@ export const POST = withErrorLogging('api/admin/orders/[id]/shiprocket POST', as
       const { awbCode, courierName } = await assignAwb(order.srShipmentId)
 
       // A courier is booked -> the order is on its way.
-      await prisma.order.update({
-        where: { id },
-        data: {
-          awbNumber: awbCode,
-          shippingPartner: courierName,
-          status: 'shipped',
-          shippingStatus: 'in_transit',
-        },
-      })
+      await updateOrderStatus(prisma, id, { awbNumber: awbCode, shippingPartner: courierName, status: 'shipped' })
 
       // Tell the customer (includes the tracking number).
       // Never throws — email failures are logged, not fatal.
-      await sendOrderShippedEmail(id)
+      after(() => processOrderTasks(id))
 
       return NextResponse.json({
-        message: `Courier booked: ${courierName || 'assigned'} — tracking number ${awbCode}. The customer has been emailed.`,
+        message: `Courier booked: ${courierName || 'assigned'} — tracking number ${awbCode}. The shipment email has been queued.`,
         awbNumber: awbCode,
         shippingPartner: courierName,
       })
@@ -126,18 +121,8 @@ export const POST = withErrorLogging('api/admin/orders/[id]/shiprocket POST', as
       // If Shiprocket says it's delivered, update our order too.
       let orderUpdated = false
       if (currentStatus.toLowerCase().includes('delivered') && order.status !== 'delivered') {
-        const changes = { status: 'delivered', shippingStatus: 'delivered' }
-        // Cash on Delivery: the money was collected at the door,
-        // so the order is now PAID.
-        if (order.paymentMethod === 'cod') changes.paymentStatus = 'paid'
-        await prisma.order.update({ where: { id }, data: changes })
-
-        // COD points are credited only once the money is in hand.
-        // (Online payments got their points when the payment cleared.)
-        // Safe to call twice — the ledger refuses duplicates.
-        if (order.paymentMethod === 'cod') {
-          await creditPointsForOrder(id)
-        }
+        await updateOrderStatus(prisma, id, { status: 'delivered' })
+        after(() => processOrderTasks(id))
         orderUpdated = true
       }
 

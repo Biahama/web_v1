@@ -20,3 +20,57 @@ h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-cormorant), 'Cormorant Garamond', serif;
   font-weight: 300;
 }
+
+:focus-visible { outline: 2px solid currentColor !important; outline-offset: 4px; }
+button, a, input, select, textarea { touch-action: manipulation; }
+button { cursor: pointer; }
+button:disabled { cursor: not-allowed; }
+.site-nav { position: fixed; inset: 0 0 auto; z-index: 60; height: 56px; display: flex; align-items: center; padding: 0 32px; justify-content: space-between; font-family: var(--font-ui); }
+.site-nav.solid, .checkout-nav { background: var(--bg); border-bottom: 1px solid var(--border); color: var(--black); }
+.brand { position: absolute; left: 50%; transform: translateX(-50%); font-family: var(--font-display); font-size: 24px; font-weight: 500; letter-spacing: 4px; white-space: nowrap; }
+.desktop-links, .nav-actions { display: flex; align-items: center; gap: 24px; height: 100%; }
+.desktop-links > a, .collection-menu > a, .nav-label { font-size: 10px; font-weight: 400; letter-spacing: .14em; text-transform: uppercase; }
+.nav-icon { min-width: 44px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 0; background: transparent; color: inherit; position: relative; }
+.cart-count { position: absolute; right: 0; top: 4px; font-size: 9px; line-height: 14px; width: 14px; height: 14px; border-radius: 50%; background: var(--black); color: var(--bg); }
+.collection-menu { height: 100%; display: flex; align-items: center; }
+.collection-dropdown { position: absolute; top: 56px; left: 0; right: 0; background: var(--bg); padding: 16px 32px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; color: var(--black); border-bottom: 1px solid var(--border); }
+.collection-dropdown img { width: 100%; height: 260px; object-fit: cover; }
+.collection-dropdown span { display: block; padding-top: 8px; font-family: var(--font-display); font-size: 22px; }
+.mobile-menu { display: none; }
+.announcement-bar { margin-top: 56px; line-height: 1.6; }
+.purchase-page { padding: 40px 48px 100px; }
+.purchase-columns { display: flex; flex-wrap: wrap; width: 100%; gap: 64px; }
+.checkout-account { border: 1px solid var(--border); padding: 20px 24px; font-size: 14px; }
+.cart-error { padding: 16px 24px; background: #fff0f0; color: #9a2222; font-size: 14px; }
+.collection-empty { text-align: center; padding: 80px 16px; font-size: 16px; line-height: 2; }
+.collection-empty a { display: inline-block; margin-top: 20px; border-bottom: 1px solid currentColor; }
+.mobile-menu-overlay { position: fixed; inset: 0; z-index: 100; background: var(--bg); padding: 80px 28px 32px; display: flex; flex-direction: column; gap: 20px; overflow-y: auto; font-family: var(--font-display); font-size: 28px; }
+.mobile-menu-overlay button { background: transparent; border: none; text-align: left; }
+.menu-close { position: absolute; right: 16px; top: 12px; font-size: 28px; }
+.checkout-bag { margin-left: auto; font-size: 12px; }
+@media (max-width: 1199px) { .nav-label { display: none; } .nav-actions { gap: 8px; } }
+@media (max-width: 767px) {
+  .site-nav { padding: 0 12px; }
+  .mobile-menu { display: inline-flex; }
+  .desktop-links, .wardrobe-nav, .profile-nav { display: none; }
+  .nav-actions { margin-left: auto; gap: 0; }
+  .brand { font-size: 20px; letter-spacing: 3px; }
+  .announcement-bar { font-size: 9px !important; letter-spacing: .08em !important; }
+  .purchase-page { padding: 32px 20px 64px; }
+  .purchase-columns { flex-direction: column; gap: 40px; }
+  .purchase-columns > div { width: 100%; flex: auto !important; }
+  .checkout-bag { font-size: 10px; max-width: 65px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+}
+
+.password-page { min-height: 100svh; padding: 64px 24px; display: flex; align-items: center; justify-content: center; background: var(--bg); }
+.password-card { width: 100%; max-width: 440px; padding: 40px 32px; border: 1px solid var(--border); background: #fff; font-family: var(--font-ui); }
+.password-brand { display: block; text-align: center; letter-spacing: 4px; margin-bottom: 32px; }
+.password-card h1 { font-family: var(--font-display); font-size: 32px; font-weight: 300; font-style: italic; margin-bottom: 16px; }
+.password-card p { font-size: 14px; line-height: 1.7; margin-bottom: 24px; }
+.password-card label { display: block; font-size: 13px; margin-bottom: 8px; }
+.password-card input { width: 100%; min-height: 48px; padding: 12px; border: 1px solid var(--border); margin-bottom: 20px; font-size: 16px; }
+.password-card button { width: 100%; padding: 16px; background: var(--black); color: white; margin: 8px 0 24px; cursor: pointer; }
+.password-card > a:last-child { font-size: 13px; text-decoration: underline; }

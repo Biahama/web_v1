@@ -1,11 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/utils/supabase/client'
 import Link from 'next/link'
+import { useDialog } from '@/components/ui/useDialog'
+import { safeReturnPath } from '@/lib/auth-redirect'
 
-export default function LoginDrawer({ open, onClose }) {
+export default function LoginDrawer({ open, onClose, returnTo = "/account" }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -14,17 +16,8 @@ export default function LoginDrawer({ open, onClose }) {
   const router = useRouter()
   const supabase = createClient()
 
-  // Prevent background scrolling when drawer is open
-  useEffect(() => {
-    if (open) {
-      document.body.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = 'unset'
-    }
-    return () => {
-      document.body.style.overflow = 'unset'
-    }
-  }, [open])
+  const dialogRef = useDialog(open, onClose)
+  const next = safeReturnPath(returnTo, '/account')
 
   // Log in with Google — sends the person to Google, then back
   // to our /auth/callback page which signs them in.
@@ -32,7 +25,7 @@ export default function LoginDrawer({ open, onClose }) {
     setError('')
     const { error: oauthError } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
+      options: { redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}` },
     })
     if (oauthError) setError(oauthError.message)
   }
@@ -53,6 +46,7 @@ export default function LoginDrawer({ open, onClose }) {
     } else {
       setLoading(false)
       onClose()
+      router.push(next)
       router.refresh()
     }
   }
@@ -74,7 +68,7 @@ export default function LoginDrawer({ open, onClose }) {
       />
 
       {/* Drawer */}
-      <div style={{
+      <div ref={dialogRef} role="dialog" aria-modal={open ? true : undefined} aria-label="Log in" aria-hidden={!open} inert={!open} style={{
         position: 'fixed',
         top: 0,
         right: 0,
@@ -128,7 +122,7 @@ export default function LoginDrawer({ open, onClose }) {
         </div>
 
         {error && (
-          <div style={{ padding: '12px 16px', background: '#fff0f0', border: '1px solid #ffcccc', color: '#cc0000', fontSize: 12, marginBottom: 20, fontFamily: 'var(--font-ui)' }}>
+          <div role="alert" style={{ padding: '12px 16px', background: '#fff0f0', border: '1px solid #ffcccc', color: '#cc0000', fontSize: 12, marginBottom: 20, fontFamily: 'var(--font-ui)' }}>
             {error}
           </div>
         )}
@@ -136,10 +130,11 @@ export default function LoginDrawer({ open, onClose }) {
         {/* Login Form */}
         <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div>
-            <label style={{ display: 'block', fontSize: 14, fontWeight: 400, letterSpacing: 1, color: '#262626', marginBottom: 8, fontFamily: 'var(--font-ui)' }}>
+            <label htmlFor="login-email" style={{ display: 'block', fontSize: 14, fontWeight: 400, letterSpacing: 1, color: '#262626', marginBottom: 8, fontFamily: 'var(--font-ui)' }}>
               Enter e-mail *
             </label>
             <input 
+              id="login-email" name="email" autoComplete="email"
               type="email"
               required
               value={email}
@@ -160,11 +155,12 @@ export default function LoginDrawer({ open, onClose }) {
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: 14, fontWeight: 400, letterSpacing: 1, color: '#262626', marginBottom: 8, fontFamily: 'var(--font-ui)' }}>
+            <label htmlFor="login-password" style={{ display: 'block', fontSize: 14, fontWeight: 400, letterSpacing: 1, color: '#262626', marginBottom: 8, fontFamily: 'var(--font-ui)' }}>
               Password *
             </label>
             <div style={{ position: 'relative' }}>
               <input 
+                id="login-password" name="password" autoComplete="current-password"
                 type={showPassword ? "text" : "password"}
                 required
                 value={password}
@@ -184,6 +180,7 @@ export default function LoginDrawer({ open, onClose }) {
               />
               <button
                 type="button"
+                aria-label={showPassword ? "Hide password" : "Show password"}
                 onClick={() => setShowPassword(!showPassword)}
                 style={{
                   position: 'absolute',
@@ -316,7 +313,7 @@ export default function LoginDrawer({ open, onClose }) {
           <button
             onClick={() => {
               onClose();
-              router.push('/register');
+              router.push(`/register?next=${encodeURIComponent(next)}`);
             }}
             style={{
               width: '100%',

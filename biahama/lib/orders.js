@@ -17,8 +17,6 @@
 import { prisma } from './prisma'
 import { computeTotals, SHIPPING_THRESHOLD, SHIPPING_COST } from './pricing'
 import { validateCouponOrThrow } from './coupons'
-import { sendOrderConfirmationEmail } from './email'
-import { creditPointsForOrder } from './loyalty'
 
 // An error whose message is safe to show the customer,
 // with the right HTTP status code attached for the API route.
@@ -70,7 +68,7 @@ export async function createOrderFromCart(userId, addressId, payment, couponCode
   if (couponCode) {
     // Re-check the code against every rule (active, dates, usage
     // limit, minimum order) — never trust an earlier check.
-    const result = await validateCouponOrThrow(couponCode, subtotal)
+    const result = await validateCouponOrThrow(couponCode, subtotal, userId)
     // Some coupons are made for ONE specific customer only.
     if (result.coupon.userSpecific && result.coupon.userSpecific !== userId) {
       throw userError('This coupon is not for your account', 400)
@@ -98,14 +96,11 @@ export async function createOrderFromCart(userId, addressId, payment, couponCode
     // Check and reduce stock one item at a time, so if something
     // sold out we can tell the customer exactly WHICH product.
     for (const item of cartItems) {
-      const variant = await tx.productVariant.findUnique({ where: { id: item.variantId } })
-      if (!variant || variant.stockQty < item.quantity) {
-        throw userError(`Insufficient stock for ${item.variant.product.name}`, 400)
-      }
-      await tx.productVariant.update({
-        where: { id: item.variantId },
-        data:  { stockQty: { decrement: item.quantity } },
+      const updated = await tx.productVariant.updateMany({
+        where: { id: item.variantId, stockQty: { gte: item.quantity }, product: { isActive: true } },
+        data: { stockQty: { decrement: item.quantity } },
       })
+      if (!updated.count) throw userError(`Insufficient stock for ${item.variant.product.name}`, 400)
     }
 
     const order = await tx.order.create({
@@ -163,17 +158,9 @@ export async function createOrderFromCart(userId, addressId, payment, couponCode
     // Empty the cart only after the order is safely created.
     await tx.cart.deleteMany({ where: { userId } })
 
+    await tx.orderTask.createMany({ data: [{ orderId: order.id, kind: 'confirmation' }, ...(order.paymentStatus === 'paid' ? [{ orderId: order.id, kind: 'loyalty' }] : [])], skipDuplicates: true })
     return order
   })
-
-  // ---- AFTER the order is safely saved (never block or undo it): ----
-  // 1. confirmation email  2. loyalty points (online payments only —
-  // COD earns points when the admin marks it delivered).
-  // Both functions handle their own failures via the ErrorLog.
-  sendOrderConfirmationEmail(createdOrder.id)
-  if (createdOrder.paymentStatus === 'paid') {
-    creditPointsForOrder(createdOrder.id)
-  }
 
   return createdOrder
 }

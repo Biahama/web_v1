@@ -18,6 +18,7 @@ import { prisma } from '@/lib/prisma'
 import { requireAdmin } from '@/lib/admin-auth'
 import { withErrorLogging } from '@/lib/logger'
 import { makeUniqueSlug, makeUniqueSku } from '@/lib/admin-products'
+import { revalidateCatalog } from '@/lib/revalidate-catalog'
 
 // ------------------------------------------------------------
 // What a valid "create product" request must look like.
@@ -144,6 +145,7 @@ export const POST = withErrorLogging('api/admin/products POST', async (req) => {
       },
     })
 
+    revalidateCatalog(product.slug)
     return NextResponse.json({ product }, { status: 201 })
   } catch (err) {
     // P2002 = the database refused a duplicate (e.g. a SKU the admin

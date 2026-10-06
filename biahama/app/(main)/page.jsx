@@ -3,7 +3,8 @@ import Image from 'next/image'
 import { getSiteSettings } from '@/lib/site-settings'
 
 export const metadata = {
-  title: 'Biahama — Luxury Linen',
+  title: { absolute: 'Biahama — Luxury Linen' },
+  alternates: { canonical: '/' },
   description: 'Luxury linen clothing handcrafted in India.',
 }
 
@@ -25,11 +26,11 @@ export default async function HomePage() {
       {/* Background Campaign Image */}
       <div className="absolute inset-0 w-full h-full">
         <Image
-          src="https://res.cloudinary.com/dc30t7io2/image/upload/w_2880,c_scale,q_auto:best,f_auto/v1781048357/biahama/biahama_homepage_hero_v2.jpg"
+          src="https://res.cloudinary.com/dc30t7io2/image/upload/w_1920,c_scale,q_auto,f_auto/v1781048357/biahama/biahama_homepage_hero_v2.jpg"
           alt="Biahama campaign hero"
           fill
           priority
-          unoptimized
+          sizes="100vw"
           className="object-cover pointer-events-none"
           style={{ objectPosition: `${heroFocalX}% ${heroFocalY}%` }}
         />

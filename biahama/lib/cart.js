@@ -1,162 +1,115 @@
 'use client'
-
-import { createContext, useContext, useState, useEffect } from 'react'
+import { createContext, useContext, useState, useEffect, useRef } from 'react'
 import { useAuth } from '@/components/providers/AuthProvider'
 import { trackEvent } from '@/lib/analytics-client'
 
-const CartContext = createContext({ items: [], count: 0, add: () => {}, remove: () => {}, updateQty: () => {}, clear: () => {} })
-
+const CartContext = createContext({ items: [], count: 0, loading: true, error: '', add: async () => false, remove: async () => false, updateQty: async () => false, refresh: async () => {}, clear: async () => false })
 const LS_KEY = 'biahama_cart'
-
 function readLocalCart() {
-  try { return JSON.parse(localStorage.getItem(LS_KEY) || '[]') } catch { return [] }
-}
-
-function writeLocalCart(items) {
-  localStorage.setItem(LS_KEY, JSON.stringify(items))
-}
-
-// Send a cart change to the server. If it fails, say so clearly in
-// the browser console instead of silently ignoring it — otherwise the
-// cart on screen and the cart in the database quietly drift apart.
-async function syncToServer(action, doFetch) {
   try {
-    const res = await doFetch()
-    if (!res.ok) {
-      console.error(`[cart] Could not ${action}: server responded with status ${res.status}`)
-    }
-  } catch (err) {
-    console.error(`[cart] Could not ${action}: ${err.message}`)
-  }
+    const items = JSON.parse(localStorage.getItem(LS_KEY) || '[]')
+    return Array.isArray(items) ? items.filter(i => typeof i.variantId === 'string' && i.variant && Number.isInteger(i.quantity) && i.quantity > 0 && i.quantity <= 10) : []
+  } catch { return [] }
 }
+async function request(url, options) {
+  const response = await fetch(url, options)
+  const body = await response.json()
+  if (!response.ok) throw new Error(body.error || 'Could not update your bag. Please try again.')
+  return body
+}
+const post = (variantId, quantity) => request('/api/cart', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ variantId, quantity }) })
 
 export function CartProvider({ children }) {
-  const { session, loading } = useAuth()
-  const status = loading ? 'loading' : session ? 'authenticated' : 'unauthenticated'
-  const [items, setItems] = useState([])
+  const { session, loading: authLoading } = useAuth()
+  const owner = session?.user?.id || 'guest'
+  const [cart, setCart] = useState({ owner: null, items: [], loaded: false })
+  const [error, setError] = useState('')
+  const current = useRef(cart)
+  const queue = useRef(Promise.resolve())
+  const activeOwner = useRef(owner)
+  useEffect(() => { activeOwner.current = owner }, [owner])
 
+  function commit(items, forOwner) {
+    if (activeOwner.current !== forOwner) return
+    const next = { owner: forOwner, items, loaded: true }
+    current.current = next
+    setCart(next)
+  }
+  async function refresh() {
+    const items = owner === 'guest' ? readLocalCart() : (await request('/api/cart')).map(i => ({ variantId: i.variantId, quantity: i.quantity, variant: i.variant }))
+    commit(items, owner)
+  }
   useEffect(() => {
-    if (status === 'loading') return
-
-    if (session) {
-      // Fetch DB cart and merge any guest cart
-      fetch('/api/cart')
-        .then(r => r.json())
-        .then(dbItems => {
-          const dbCart = dbItems.map(i => ({
-            variantId: i.variantId,
-            quantity:  i.quantity,
-            variant:   i.variant,
-          }))
-
-          const guestCart = readLocalCart()
-
-          // Merge: for items in guest cart not in DB cart, add them
-          const merged = [...dbCart]
-          for (const g of guestCart) {
-            if (!merged.find(i => i.variantId === g.variantId)) {
-              merged.push(g)
-              syncToServer('merge guest cart item', () =>
-                fetch('/api/cart', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ variantId: g.variantId, quantity: g.quantity }),
-                })
-              )
-            }
+    if (authLoading) return
+    let cancelled = false
+    async function load() {
+      let fallback = []
+      try {
+        await Promise.resolve()
+        let items
+        if (owner === 'guest') items = readLocalCart()
+        else {
+          const rows = await request('/api/cart')
+          items = rows.map(i => ({ variantId: i.variantId, quantity: i.quantity, variant: i.variant }))
+          fallback = items
+          for (const guest of readLocalCart()) {
+            if (items.some(i => i.variantId === guest.variantId)) continue
+            await post(guest.variantId, guest.quantity)
           }
-
-          if (guestCart.length > 0) localStorage.removeItem(LS_KEY)
-          setItems(merged)
-        })
-        .catch(() => setItems(readLocalCart()))
-    } else {
-      setItems(readLocalCart())
+          // Keep the guest bag if any merge failed so the customer can retry.
+          if (cancelled || activeOwner.current !== owner) return
+          localStorage.removeItem(LS_KEY)
+          const merged = await request('/api/cart')
+          items = merged.map(i => ({ variantId: i.variantId, quantity: i.quantity, variant: i.variant }))
+        }
+        if (!cancelled) { commit(items, owner); setError('') }
+      } catch (err) {
+        if (!cancelled) { setError(err.message); commit(owner === 'guest' ? readLocalCart() : fallback, owner) }
+      }
     }
-  }, [session, status])
+    load()
+    const syncStorage = event => { if (owner === 'guest' && event.key === LS_KEY) commit(readLocalCart(), owner) }
+    window.addEventListener('storage', syncStorage)
+    return () => { cancelled = true; window.removeEventListener('storage', syncStorage) }
+    // Login identity, rather than token refresh, controls bag initialization.
+  }, [owner, authLoading])
 
+  function mutate(change, sync) {
+    const forOwner = owner
+    const operation = queue.current.catch(() => {}).then(async () => {
+      if (activeOwner.current !== forOwner || !current.current.loaded || current.current.owner !== forOwner) return false
+      try {
+        const items = current.current.items
+        const next = change(items)
+        if (forOwner === 'guest') localStorage.setItem(LS_KEY, JSON.stringify(next))
+        else await sync(next)
+        commit(next, forOwner)
+        setError('')
+        return true
+      } catch (err) { setError(err.message); return false }
+    })
+    queue.current = operation
+    return operation
+  }
   async function add(variant, quantity = 1) {
-    // Compute the new quantity INSIDE the state updater, where "prev"
-    // is always the latest cart. The old code read the outer "items"
-    // variable, which on rapid clicks could be a stale snapshot and
-    // sent the wrong quantity to the server.
-    let newQty = quantity
-    setItems(prev => {
-      const existing = prev.find(i => i.variantId === variant.id)
-      newQty = (existing?.quantity || 0) + quantity
-      const next = existing
-        ? prev.map(i => i.variantId === variant.id ? { ...i, quantity: newQty } : i)
-        : [...prev, { variantId: variant.id, variant, quantity }]
-
-      if (!session) writeLocalCart(next)
-      return next
-    })
-
-    // Count this for the admin Analytics page (variant id is fine for counting).
-    trackEvent('add_to_cart', { productId: variant.id })
-
-    if (session) {
-      await syncToServer('add item to cart', () =>
-        fetch('/api/cart', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ variantId: variant.id, quantity: newQty }),
-        })
-      )
-    }
+    const result = await mutate(items => {
+      const prior = items.find(i => i.variantId === variant.id)
+      const nextQty = (prior?.quantity || 0) + quantity
+      if (!Number.isInteger(nextQty) || nextQty < 1 || nextQty > 10) throw new Error('You can add up to 10 of each item.')
+      if (variant.stockQty != null && nextQty > variant.stockQty) throw new Error('This quantity is no longer available.')
+      return prior ? items.map(i => i.variantId === variant.id ? { ...i, quantity: nextQty } : i) : [...items, { variantId: variant.id, variant, quantity }]
+    }, next => post(variant.id, next.find(i => i.variantId === variant.id).quantity))
+    if (result) trackEvent('add_to_cart', { productId: variant.productId || variant.id })
+    return result
   }
-
-  async function remove(variantId) {
-    setItems(prev => {
-      const next = prev.filter(i => i.variantId !== variantId)
-      if (!session) writeLocalCart(next)
-      return next
-    })
-    if (session) {
-      await syncToServer('remove item from cart', () =>
-        fetch(`/api/cart?variantId=${variantId}`, { method: 'DELETE' })
-      )
-    }
-  }
-
-  async function updateQty(variantId, quantity) {
-    if (quantity < 1) return remove(variantId)
-
-    setItems(prev => {
-      const next = prev.map(i => i.variantId === variantId ? { ...i, quantity } : i)
-      if (!session) writeLocalCart(next)
-      return next
-    })
-
-    if (session) {
-      await syncToServer('update item quantity', () =>
-        fetch('/api/cart', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ variantId, quantity }),
-        })
-      )
-    }
-  }
-
-  async function clear() {
-    setItems([])
-    if (!session) {
-      localStorage.removeItem(LS_KEY)
-    } else {
-      await syncToServer('clear cart', () => fetch('/api/cart', { method: 'DELETE' }))
-    }
-  }
-
-  const count = items.reduce((s, i) => s + i.quantity, 0)
-
-  return (
-    <CartContext.Provider value={{ items, count, add, remove, updateQty, clear }}>
-      {children}
-    </CartContext.Provider>
-  )
+  const remove = variantId => mutate(items => items.filter(i => i.variantId !== variantId), () => request(`/api/cart?variantId=${encodeURIComponent(variantId)}`, { method: 'DELETE' }))
+  const updateQty = (variantId, quantity) => quantity < 1 ? remove(variantId) : mutate(items => {
+    if (!Number.isInteger(quantity) || quantity > 10) throw new Error('You can add up to 10 of each item.')
+    return items.map(i => i.variantId === variantId ? { ...i, quantity } : i)
+  }, () => post(variantId, quantity))
+  const clear = () => mutate(() => [], () => request('/api/cart', { method: 'DELETE' }))
+  const ready = !authLoading && cart.owner === owner && cart.loaded
+  const items = ready ? cart.items : []
+  return <CartContext.Provider value={{ items, count: items.reduce((sum, i) => sum + i.quantity, 0), loading: !ready, error, add, remove, updateQty, refresh, clear }}>{children}</CartContext.Provider>
 }
-
-export function useCart() {
-  return useContext(CartContext)
-}
+export const useCart = () => useContext(CartContext)

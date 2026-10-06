@@ -7,10 +7,12 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useAuth } from '@/components/providers/AuthProvider'
 import ProductCard from '@/components/ui/ProductCard'
 
 export default function WardrobePage() {
+  const router = useRouter()
   const { session, loading: authLoading } = useAuth()
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
@@ -19,7 +21,7 @@ export default function WardrobePage() {
     if (authLoading) return
     if (!session) {
       // Not logged in — open the login drawer on the homepage.
-      window.location.href = '/?login=true'
+      router.replace('/?login=true&next=/account/wardrobe')
       return
     }
     fetch('/api/wardrobe')
@@ -27,7 +29,7 @@ export default function WardrobePage() {
       .then((data) => setItems(Array.isArray(data) ? data : []))
       .catch((err) => console.error('[wardrobe page] Could not load:', err))
       .finally(() => setLoading(false))
-  }, [session, authLoading])
+  }, [session, authLoading, router])
 
   // Shape each saved product the way ProductCard expects
   // (same shape the shop page produces).

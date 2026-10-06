@@ -12,7 +12,7 @@
 // A "percent" coupon's value is just the percent number.
 // ============================================================
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 
 // ---------- small shared styles (same look as the products admin) ----------
 const inputStyle = {
@@ -93,22 +93,22 @@ export default function AdminCouponsPage() {
   function showOk(text)    { setBanner({ kind: 'ok', text }) }
 
   // Load the coupon list.
-  async function loadCoupons() {
+  const loadCoupons = useCallback(async () => {
     try {
       const res  = await fetch('/api/admin/coupons')
       const data = await res.json().catch(() => ({}))
       if (!res.ok) {
-        showError(data.error || 'Could not load coupons.')
+        setBanner({ kind: 'error', text: data.error || 'Could not load coupons.' })
         return
       }
       setCoupons(data.coupons)
     } catch (err) {
-      showError(`Could not reach the server: ${err.message}`)
+      setBanner({ kind: 'error', text: `Could not reach the server: ${err.message}` })
     } finally {
       setLoading(false)
     }
-  }
-  useEffect(() => { loadCoupons() }, [])
+  }, [])
+  useEffect(() => { Promise.resolve().then(() => loadCoupons()) }, [loadCoupons])
 
   function setField(field, value) {
     setForm((f) => ({ ...f, [field]: value }))
@@ -207,7 +207,7 @@ export default function AdminCouponsPage() {
       setForm(null)
       await loadCoupons()
     } catch (err) {
-      showError(`Could not reach the server: ${err.message}`)
+      setBanner({ kind: 'error', text: `Could not reach the server: ${err.message}` })
     } finally {
       setSaving(false)
     }
@@ -232,7 +232,7 @@ export default function AdminCouponsPage() {
         : `${coupon.code} is now ON.`)
       await loadCoupons()
     } catch (err) {
-      showError(`Could not reach the server: ${err.message}`)
+      setBanner({ kind: 'error', text: `Could not reach the server: ${err.message}` })
     }
   }
 
@@ -251,7 +251,7 @@ export default function AdminCouponsPage() {
       showOk(data.message)
       await loadCoupons()
     } catch (err) {
-      showError(`Could not reach the server: ${err.message}`)
+      setBanner({ kind: 'error', text: `Could not reach the server: ${err.message}` })
     }
   }
 

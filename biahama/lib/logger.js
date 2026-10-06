@@ -56,12 +56,10 @@ export function withErrorLogging(source, handler) {
     } catch (error) {
       const req = args[0]
       await logError(source, error, { url: req?.url ?? null })
+      const status = Number.isInteger(error.statusCode) && error.statusCode >= 400 && error.statusCode < 500 ? error.statusCode : 500
       return NextResponse.json(
-        {
-          error: `Something went wrong in "${source}". The error has been recorded with a timestamp in the ErrorLog table.`,
-          detail: error?.message ?? String(error),
-        },
-        { status: 500 }
+        { error: status < 500 ? error.message : 'Something went wrong. Please try again or contact hello@biahama.com.' },
+        { status }
       )
     }
   }

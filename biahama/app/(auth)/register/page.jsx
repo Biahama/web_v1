@@ -7,6 +7,8 @@
 // Also offers "Continue with Google" — no password needed.
 // ============================================================
 
+import Link from 'next/link'
+import { safeReturnPath } from '@/lib/auth-redirect'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/utils/supabase/client'
@@ -54,6 +56,7 @@ export default function RegisterPage() {
     setError('')
     setLoading(true)
 
+    const next = safeReturnPath(new URLSearchParams(window.location.search).get('next'))
     try {
       const { data, error: signUpError } = await supabase.auth.signUp({
         email,
@@ -63,7 +66,7 @@ export default function RegisterPage() {
           // After clicking the email link, land back on OUR site —
           // /auth/callback signs them in and sends them home.
           // (Fixes the old bug where the link went to localhost.)
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(safeReturnPath(new URLSearchParams(window.location.search).get("next")))}`,
         },
       })
       if (signUpError) throw signUpError
@@ -72,7 +75,7 @@ export default function RegisterPage() {
         // Email confirmation is on — tell them to check their inbox.
         setConfirmationSent(true)
       } else {
-        router.push('/')
+        router.push(next)
         router.refresh()
       }
     } catch (err) {
@@ -86,7 +89,7 @@ export default function RegisterPage() {
     setError('')
     const { error: oauthError } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
+      options: { redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(safeReturnPath(new URLSearchParams(window.location.search).get("next")))}` },
     })
     if (oauthError) setError(oauthError.message)
     // On success the browser navigates to Google — nothing else to do here.
@@ -305,9 +308,9 @@ export default function RegisterPage() {
               }}
             >
               Already have an account?{' '}
-              <a href="/?login=true" style={{ color: '#262626', textDecoration: 'underline' }}>
+              <Link href="/?login=true" style={{ color: '#262626', textDecoration: 'underline' }}>
                 Log in
-              </a>
+              </Link>
             </p>
           </>
         )}

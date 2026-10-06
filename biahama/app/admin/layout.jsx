@@ -18,6 +18,7 @@ import { getAdminUser } from '@/lib/admin-auth'
 
 // Always check the login fresh on every visit — never cache it.
 export const dynamic = 'force-dynamic'
+export const metadata = { robots: { index: false, follow: false } }
 
 // The sidebar tree. 'children' links are indented under their parent.
 const NAV_TREE = [
@@ -45,6 +46,7 @@ const NAV_TREE = [
     links: [
       { href: '/admin/products', label: 'Products' },
       { href: '/admin/orders', label: 'Orders' },
+      { href: '/admin/operations', label: 'Operations & recovery' },
       { href: '/admin/coupons', label: 'Coupons' },
       { href: '/admin/analytics', label: 'Analytics' },
     ],

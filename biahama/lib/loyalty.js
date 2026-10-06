@@ -19,10 +19,10 @@ import { getSiteSettings } from './site-settings'
  * Never throws (logs failures instead): loyalty must never
  * break an order.
  */
-export async function creditPointsForOrder(orderId) {
+export async function creditPointsForOrder(orderId, { retryable = false } = {}) {
   try {
     const order = await prisma.order.findUnique({ where: { id: orderId } })
-    if (!order) return
+    if (!order || order.paymentStatus !== 'paid' || order.status === 'cancelled') return
 
     const settings = await getSiteSettings()
     const per100 = Number(settings.commerce.loyaltyPointsPer100) || 0
@@ -32,18 +32,17 @@ export async function creditPointsForOrder(orderId) {
     const points = Math.floor(order.totalAmount / 10000) * per100
     if (points <= 0) return
 
-    await prisma.loyaltyTransaction.create({
-      data: {
-        userId: order.userId,
-        orderId: order.id,
-        points,
-        reason: `Order — ₹${(order.totalAmount / 100).toLocaleString('en-IN')}`,
-      },
+    await prisma.$transaction(async tx => {
+      await tx.$queryRaw`SELECT id FROM "Order" WHERE id = ${orderId} FOR UPDATE`
+      const current = await tx.order.findUnique({ where: { id: orderId } })
+      if (current.status === 'cancelled' || current.paymentStatus !== 'paid') return
+      await tx.loyaltyTransaction.create({ data: { userId: order.userId, orderId: order.id, points, reason: `Order — ₹${(order.totalAmount / 100).toLocaleString('en-IN')}` } })
     })
   } catch (error) {
     // Unique-constraint error = points already credited. That's fine.
     if (error?.code === 'P2002') return
     await logError('loyalty — credit points', error, { orderId })
+    if (retryable) throw error
   }
 }
 

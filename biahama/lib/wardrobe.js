@@ -1,91 +1,49 @@
 'use client'
-
-// ============================================================
-// WARDROBE (saved items) — shared state for the hanger buttons.
-// Works like the cart provider: loads once after login, and all
-// product cards read/update the same list so they stay in sync.
-// ============================================================
-
-import { createContext, useContext, useState, useEffect } from 'react'
+import { createContext, useContext, useState, useEffect, useRef } from 'react'
 import { useAuth } from '@/components/providers/AuthProvider'
 import { trackEvent } from '@/lib/analytics-client'
 
-const WardrobeContext = createContext({
-  savedIds: new Set(),
-  isSaved: () => false,
-  toggle: async () => 'login-required',
-})
-
+const WardrobeContext = createContext({ savedIds: new Set(), isSaved: () => false, toggle: async () => 'login-required', error: '' })
 export function WardrobeProvider({ children }) {
   const { session, loading } = useAuth()
-  const [savedIds, setSavedIds] = useState(new Set())
-
-  // Load the saved list once the login state is known.
+  const owner = session?.user?.id || null
+  const [saved, setSaved] = useState({ owner: null, ids: new Set() })
+  const [error, setError] = useState('')
+  const activeOwner = useRef(owner)
+  const pending = useRef(new Set())
+  useEffect(() => { activeOwner.current = owner }, [owner])
   useEffect(() => {
-    if (loading) return
-    if (!session) {
-      setSavedIds(new Set())
-      return
-    }
-    fetch('/api/wardrobe')
-      .then((r) => r.json())
-      .then((items) => setSavedIds(new Set(items.map((i) => i.productId))))
-      .catch((err) => console.error('[wardrobe] Could not load saved items:', err))
-  }, [session, loading])
-
-  function isSaved(productId) {
-    return savedIds.has(productId)
-  }
-
-  /**
-   * Save/unsave a product. Returns:
-   *  'login-required' — not logged in (the caller sends them to login)
-   *  true  — now saved
-   *  false — now removed
-   */
+    if (loading || !owner) return
+    let cancelled = false
+    fetch('/api/wardrobe').then(async response => {
+      if (!response.ok) throw new Error('Could not load saved items')
+      return response.json()
+    }).then(items => {
+      if (!cancelled) { setSaved({ owner, ids: new Set(items.map(item => item.productId)) }); setError('') }
+    }).catch(() => { if (!cancelled) setError('Could not load your wardrobe. Please refresh and try again.') })
+    return () => { cancelled = true }
+  }, [owner, loading])
+  const savedIds = owner && saved.owner === owner ? saved.ids : new Set()
   async function toggle(productId) {
-    if (!session) return 'login-required'
-
-    const currentlySaved = savedIds.has(productId)
-
-    // Update the UI instantly, then tell the server.
-    setSavedIds((prev) => {
-      const next = new Set(prev)
-      currentlySaved ? next.delete(productId) : next.add(productId)
-      return next
-    })
-
+    if (!owner) return 'login-required'
+    if (pending.current.has(productId)) return savedIds.has(productId)
+    pending.current.add(productId)
+    const existed = savedIds.has(productId)
     try {
-      const res = currentlySaved
-        ? await fetch(`/api/wardrobe?productId=${productId}`, { method: 'DELETE' })
-        : await fetch('/api/wardrobe', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ productId }),
-          })
-      if (!res.ok) throw new Error(`server said ${res.status}`)
-      // Count saves (not removes) for the admin Analytics page.
-      if (!currentlySaved) trackEvent('wardrobe_save', { productId })
-    } catch (err) {
-      // Server failed — put the UI back the way it was.
-      console.error('[wardrobe] Could not update saved items:', err)
-      setSavedIds((prev) => {
-        const next = new Set(prev)
-        currentlySaved ? next.add(productId) : next.delete(productId)
-        return next
-      })
-    }
-
-    return !currentlySaved
+      const response = await fetch(existed ? `/api/wardrobe?productId=${encodeURIComponent(productId)}` : '/api/wardrobe', existed ? { method: 'DELETE' } : { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ productId }) })
+      if (!response.ok) throw new Error('Could not update your wardrobe. Please try again.')
+      if (activeOwner.current === owner) {
+        setSaved(previous => {
+          const ids = new Set(previous.owner === owner ? previous.ids : [])
+          if (existed) ids.delete(productId); else ids.add(productId)
+          return { owner, ids }
+        })
+        setError('')
+      }
+      if (!existed) trackEvent('wardrobe_save', { productId })
+      return !existed
+    } catch (err) { if (activeOwner.current === owner) setError(err.message); return existed } finally { pending.current.delete(productId) }
   }
-
-  return (
-    <WardrobeContext.Provider value={{ savedIds, isSaved, toggle }}>
-      {children}
-    </WardrobeContext.Provider>
-  )
+  return <WardrobeContext.Provider value={{ savedIds, isSaved: id => savedIds.has(id), toggle, error }}>{children}</WardrobeContext.Provider>
 }
-
-export function useWardrobe() {
-  return useContext(WardrobeContext)
-}
+export const useWardrobe = () => useContext(WardrobeContext)

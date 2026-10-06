@@ -1,135 +1,31 @@
-// ============================================================
-// STEP 1 OF ONLINE PAYMENT: create a Razorpay order
-// ============================================================
-// The browser calls this before opening the Razorpay popup.
-// We recompute the cart total ON THE SERVER (never trust the
-// browser's numbers) and tell Razorpay how much to charge.
-// ============================================================
-
 import { NextResponse } from 'next/server'
 import { createClient } from '@/utils/supabase/server'
 import { z } from 'zod'
-
-import { prisma } from '@/lib/prisma'
-import { getRazorpay } from '@/lib/razorpay'
-import { computeTotals, SHIPPING_THRESHOLD, SHIPPING_COST } from '@/lib/pricing'
-import { validateCouponOrThrow } from '@/lib/coupons'
+import { checkouts } from '@/lib/checkouts'
 import { ensureUser } from '@/lib/ensure-user'
 import { withErrorLogging } from '@/lib/logger'
+import { getRazorpay } from '@/lib/razorpay'
+import { missingEnvironment, PAYMENT_ENV } from '@/lib/readiness'
 
-// An error whose message is safe to show the customer.
-function userError(message, statusCode) {
-  const err = new Error(message)
-  err.statusCode = statusCode
-  return err
-}
-
-// What a valid request body must look like.
-const bodySchema = z.object({
-  addressId:  z.string().min(1, 'Address is required'),
-  couponCode: z.string().optional(), // optional discount code
-})
-
-export const POST = withErrorLogging('api/payments/create-order', async (req) => {
+const schema = z.object({ addressId: z.string().min(1), couponCode: z.string().max(100).optional(), checkoutKey: z.string().uuid() })
+export const maxDuration = 60
+export const POST = withErrorLogging('payments/create-order', async req => {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-  // Validate the request body — reject bad input with a clear message
-  // instead of crashing later.
-  const parsed = bodySchema.safeParse(await req.json().catch(() => null))
-  if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 })
-  }
-  const { addressId, couponCode } = parsed.data
-
-  // Make sure this user exists in OUR User table
-  // (prevents "foreign key" database errors for new customers).
+  if (!user) return NextResponse.json({ error: 'Please log in to continue' }, { status: 401 })
+  const body = schema.safeParse(await req.json().catch(() => null))
+  if (!body.success) return NextResponse.json({ error: body.error.issues[0].message }, { status: 400 })
+  if (missingEnvironment(process.env, PAYMENT_ENV).length) return NextResponse.json({ error: 'Online payments are temporarily unavailable. Please contact hello@biahama.com.' }, { status: 503 })
+  getRazorpay() // fail before reserving anything if credentials are missing
   await ensureUser(user)
-
-  // The address must belong to this user.
-  const address = await prisma.address.findFirst({
-    where: { id: addressId, userId: user.id },
-  })
-  if (!address) return NextResponse.json({ error: 'Address not found' }, { status: 404 })
-
-  const cartItems = await prisma.cart.findMany({
-    where: { userId: user.id },
-    include: { variant: true },
-  })
-  if (cartItems.length === 0) return NextResponse.json({ error: 'Cart is empty' }, { status: 400 })
-
-  // ---------- COUPON + TOTALS ----------
-  // This EXACT same math also runs in lib/orders.js and
-  // payments/verify. All three copies must stay identical, or the
-  // amount Razorpay charges won't match the order we create later.
-  // Rule: discount comes off the subtotal FIRST, then shipping is
-  // decided on the reduced amount (free at ₹3,000+), then
-  // total = discounted subtotal + shipping.
-  let discount, appliedCoupon, total
-  try {
-    const { subtotal } = computeTotals(cartItems)
-    discount = 0
-    appliedCoupon = null
-    if (couponCode) {
-      // Check the code against every rule (active, dates, usage
-      // limit, minimum order).
-      const result = await validateCouponOrThrow(couponCode, subtotal)
-      // Some coupons are made for ONE specific customer only.
-      if (result.coupon.userSpecific && result.coupon.userSpecific !== user.id) {
-        throw userError('This coupon is not for your account', 400)
-      }
-      appliedCoupon = result.coupon
-      discount = result.discount
-    }
-    const discountedSubtotal = subtotal - discount
-    const shipping = discountedSubtotal >= SHIPPING_THRESHOLD ? 0 : SHIPPING_COST
-    total = discountedSubtotal + shipping
-  } catch (err) {
-    // Coupon problems carry a customer-safe message and status code.
-    if (err.statusCode) {
-      return NextResponse.json({ error: err.message }, { status: err.statusCode })
-    }
-    throw err
-  }
-
-  // We store userId, addressId and the coupon code in the Razorpay
-  // "notes" so the webhook can still create the order (with the SAME
-  // discount) if the customer pays but closes the browser before we
-  // hear back.
-  const rzpOrder = await getRazorpay().orders.create({
-    amount:   total,
-    currency: 'INR',
-    notes: {
-      userId:     user.id,
-      addressId:  address.id,
-      couponCode: appliedCoupon ? appliedCoupon.code : '',
-    },
-  })
-
-  // Name/email come from the logged-in Supabase user.
-  // (The old code referenced a "session" object that no longer
-  // exists, which crashed every online payment.)
-  const meta = user.user_metadata ?? {}
-  const displayName =
-    [meta.first_name, meta.last_name].filter(Boolean).join(' ') ||
-    meta.full_name ||
-    meta.name ||
-    address.fullName
-
+  const checkout = await checkouts.begin(user.id, body.data.addressId, body.data.couponCode, body.data.checkoutKey)
   return NextResponse.json({
-    orderId:  rzpOrder.id,
-    amount:   total,
-    currency: 'INR',
-    // Server-verified coupon numbers, so the checkout page always
-    // displays exactly what will be charged.
-    discount,
-    couponCode: appliedCoupon ? appliedCoupon.code : null,
-    keyId:    process.env.RAZORPAY_KEY_ID,
-    prefill: {
-      name:    displayName,
-      email:   user.email,
-      contact: address.phone,
-    },
+    checkoutId: checkout.id, orderId: checkout.razorpayOrderId, completedOrderId: checkout.orderId,
+    items: checkout.items.map(item => ({ variantId: item.variantId, quantity: item.quantity, variant: { price: item.priceAtPurchase, size: item.variantDetails.size, color: item.variantDetails.color, sku: item.variantDetails.sku, images: item.imageUrl ? [{ url: item.imageUrl }] : [], product: { name: item.productName } } })),
+    shippingAddress: checkout.shippingAddress,
+    amount: checkout.totalAmount, currency: 'INR', discount: checkout.discountAmount,
+    shipping: checkout.shippingAmount, couponCode: checkout.couponCode,
+    expiresAt: checkout.expiresAt, keyId: process.env.RAZORPAY_KEY_ID,
+    prefill: { name: checkout.shippingAddress.fullName, email: user.email, contact: checkout.shippingAddress.phone },
   })
 })

@@ -8,9 +8,11 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/utils/supabase/server'
 import { logError } from '@/lib/logger'
+import { safeReturnPath } from '@/lib/auth-redirect'
 
 export async function GET(req) {
   const url = new URL(req.url)
+  const next = safeReturnPath(url.searchParams.get('next'))
   const code = url.searchParams.get('code')
 
   if (code) {
@@ -19,15 +21,15 @@ export async function GET(req) {
       const { error } = await supabase.auth.exchangeCodeForSession(code)
       if (error) throw error
       // Success — logged in. Go home.
-      return NextResponse.redirect(new URL('/', url.origin))
+      return NextResponse.redirect(new URL(next, url.origin))
     } catch (error) {
       await logError('auth/callback', error, { hadCode: true })
       // The code was invalid or expired — open the login drawer
       // so they can simply log in with their password instead.
-      return NextResponse.redirect(new URL('/?login=true', url.origin))
+      return NextResponse.redirect(new URL(next === '/reset-password' ? '/forgot-password?error=expired' : `/?login=true&next=${encodeURIComponent(next)}`, url.origin))
     }
   }
 
   // No code in the URL — just go home.
-  return NextResponse.redirect(new URL('/', url.origin))
+  return NextResponse.redirect(new URL(next, url.origin))
 }

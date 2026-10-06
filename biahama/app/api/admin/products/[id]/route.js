@@ -22,6 +22,7 @@ import { prisma } from '@/lib/prisma'
 import { requireAdmin } from '@/lib/admin-auth'
 import { withErrorLogging } from '@/lib/logger'
 import { makeUniqueSku } from '@/lib/admin-products'
+import { revalidateCatalog } from '@/lib/revalidate-catalog'
 
 // ------------------------------------------------------------
 // What the edit form may send. Everything is optional — the form
@@ -147,7 +148,7 @@ export const PATCH = withErrorLogging('api/admin/products/[id] PATCH', async (re
         // Has this size ever been sold? (appears in any order line)
         const soldCount = await tx.orderItem.count({ where: { variantId: old.id } })
 
-        if (soldCount > 0) {
+        if (soldCount > 0 || await tx.checkoutItem.count({ where: { variantId: old.id } }) > 0) {
           // Sold variants keep their history: old orders point at this
           // row, so we can't delete it. Setting stock to 0 hides it
           // from the shop, which is what the admin actually wanted.
@@ -226,6 +227,7 @@ export const PATCH = withErrorLogging('api/admin/products/[id] PATCH', async (re
     if (removedButSold.length > 0) {
       message += ` Note: ${removedButSold.join(', ')} could not be deleted because customers have ordered it — stock was set to 0 instead (old orders keep their history).`
     }
+    revalidateCatalog(product.slug)
     return NextResponse.json({ product, message })
   } catch (err) {
     // P2002 = duplicate SKU typed by the admin.
@@ -267,14 +269,15 @@ export const DELETE = withErrorLogging('api/admin/products/[id] DELETE', async (
       ? await prisma.orderItem.count({ where: { variantId: { in: variantIds } } })
       : 0
 
-    if (soldCount > 0) {
+    if (soldCount > 0 || await prisma.checkoutItem.count({ where: { variantId: { in: variantIds } } }) > 0) {
       // Ordered before -> archive instead of delete, so order
       // history stays intact. It disappears from the shop.
       await prisma.product.update({ where: { id }, data: { isActive: false } })
+      revalidateCatalog(product.slug)
       return NextResponse.json({
         archived: true,
         message:
-          'This product has been ordered by customers, so it was HIDDEN from the shop instead of deleted. Old orders keep their history.',
+          'This product has an order or checkout history, so it was HIDDEN from the shop instead of deleted. Old orders keep their history.',
       })
     }
 
@@ -292,6 +295,7 @@ export const DELETE = withErrorLogging('api/admin/products/[id] DELETE', async (
       await tx.product.delete({ where: { id } })
     })
 
+    revalidateCatalog(product.slug)
     return NextResponse.json({
       archived: false,
       message: 'Product deleted completely (it was never ordered).',

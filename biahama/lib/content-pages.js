@@ -60,7 +60,7 @@ Linen relaxes slightly with wear and washing, so a garment that feels crisp on d
     title: 'Shipping',
     body: `We ship across India. Orders are dispatched within 2–4 working days and typically arrive within 5–7 working days of dispatch, depending on your location. You will receive a tracking link by email as soon as your order leaves us.
 
-Shipping is free on orders above ₹3,000. For orders below that, a flat shipping fee is added at checkout.
+Shipping is free at ₹3,000 and above. For orders below that, shipping costs ₹99.
 
 Every order is packed in reusable cloth and recycled paper — no plastic. If your parcel arrives damaged or is delayed beyond the expected window, write to us and we will make it right.`,
   },
@@ -78,11 +78,11 @@ Exchanges for a different size are always free. Made-to-order and altered pieces
     title: 'Terms & Conditions of Sale',
     body: `Welcome to Biahama. By placing an order on our website, you agree to these terms. Every order is an offer to purchase, which we accept when we confirm dispatch by email. All prices are listed in Indian Rupees and are inclusive of GST; the price shown at checkout is the final price you pay, apart from any shipping fee displayed before you confirm the order.
 
-Payments are processed securely by Razorpay and can be made by UPI, credit or debit card, or net banking. Cash on Delivery is available on eligible orders; a COD order may be confirmed by phone or message before dispatch. We reserve the right to cancel any order in case of pricing errors, suspected fraud, or stock unavailability — if payment was already made, it will be refunded in full.
+Payments are processed securely by Razorpay and can be made by UPI, credit or debit card, or net banking. We reserve the right to cancel any order in case of pricing errors, suspected fraud, or stock unavailability — if payment was already made, it will be refunded in full.
 
 Orders are dispatched within 2–4 working days and usually delivered within 5–7 working days of dispatch, depending on your location. Delivery timelines are estimates, not guarantees; if a parcel is significantly delayed, write to us and we will chase it or make it right.
 
-If a garment is not right, you may return it within the window described on our Returns page, provided it is unworn, unwashed, and in original condition with tags attached. Refunds are issued to the original payment method; Cash on Delivery orders are refunded by bank transfer.
+If a garment is not right, you may return it within the window described on our Returns page, provided it is unworn, unwashed, and in original condition with tags attached. Refunds are issued to the original payment method.
 
 These terms are governed by the laws of India, and any dispute is subject to the jurisdiction of the courts of India. If you have any question about these terms, email us at hello@biahama.com and a real person will reply.`,
   },

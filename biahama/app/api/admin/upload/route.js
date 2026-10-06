@@ -18,6 +18,7 @@ import { prisma } from '@/lib/prisma'
 import { requireAdmin } from '@/lib/admin-auth'
 import { withErrorLogging } from '@/lib/logger'
 import cloudinary from '@/lib/cloudinary'
+import { revalidateCatalog } from '@/lib/revalidate-catalog'
 
 // 10 MB is plenty for a product photo. Bigger files are usually
 // a mistake (a RAW camera file) and would make the site slow.
@@ -118,6 +119,7 @@ export const POST = withErrorLogging('api/admin/upload POST', async (req) => {
       },
     })
 
+    revalidateCatalog(product.slug)
     return NextResponse.json({ image }, { status: 201 })
   } catch (err) {
     if (err.statusCode) {
@@ -166,6 +168,7 @@ export const DELETE = withErrorLogging('api/admin/upload DELETE', async (req) =>
 
     // Note: we do NOT delete the file from Cloudinary itself — old
     // order emails may still show it, and storage is cheap.
+    revalidateCatalog()
     return NextResponse.json({ ok: true, message: 'Photo removed.' })
   } catch (err) {
     if (err.statusCode) {
@@ -247,6 +250,7 @@ export const PATCH = withErrorLogging('api/admin/upload PATCH', async (req) => {
       where: { productId: image.productId },
       orderBy: { sortOrder: 'asc' },
     })
+    revalidateCatalog()
     return NextResponse.json({ ok: true, images })
   } catch (err) {
     if (err.statusCode) {

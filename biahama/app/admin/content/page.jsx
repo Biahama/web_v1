@@ -34,12 +34,7 @@ export default function AdminContentPage() {
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState(null)    // { kind: 'ok' | 'error', text }
 
-  // Load all pages once when the screen opens.
-  useEffect(() => {
-    loadPages()
-  }, [])
-
-  async function loadPages(keepSlug) {
+  const loadPages = useCallback(async (keepSlug) => {
     try {
       const res = await fetch('/api/admin/content')
       const data = await res.json()
@@ -49,13 +44,15 @@ export default function AdminContentPage() {
       // Keep the same page selected after a save, or pick the first one.
       const slug = keepSlug || data.pages[0]?.slug
       const page = data.pages.find((p) => p.slug === slug)
-      if (page) selectPage(page)
+      if (page) { setSelectedSlug(page.slug); setTitle(page.title); setBody(page.body); setMessage(null) }
     } catch (err) {
       setMessage({ kind: 'error', text: err.message })
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => { Promise.resolve().then(() => loadPages()) }, [loadPages])
 
   // Put a page's text into the editor on the right.
   function selectPage(page) {

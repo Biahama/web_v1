@@ -10,6 +10,7 @@
 // with the exact message from the server — nothing fails silently.
 // ============================================================
 
+import Link from 'next/link'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
@@ -110,9 +111,9 @@ export default function OrderDetail({ order }) {
     <div style={{ fontFamily: "var(--font-jost), 'Jost', sans-serif", color: '#1A202C', maxWidth: 960 }}>
       {/* Header */}
       <div style={{ marginBottom: 20 }}>
-        <a href="/admin/orders" style={{ fontSize: 13, color: '#4a5568', textDecoration: 'underline' }}>
+        <Link href="/admin/orders" style={{ fontSize: 13, color: '#4a5568', textDecoration: 'underline' }}>
           ← Back to orders
-        </a>
+        </Link>
         <h1 style={{ fontSize: 22, fontWeight: 500, margin: '10px 0 4px 0' }}>
           Order {order.id.slice(0, 8)}…
         </h1>
@@ -250,8 +251,8 @@ export default function OrderDetail({ order }) {
           </button>
         </div>
         <p style={{ fontSize: 12, color: '#4a5568', marginTop: 10, marginBottom: 0 }}>
-          "shipped" emails the customer · "delivered" marks COD orders as paid and credits loyalty points ·
-          "cancelled" puts the items back into stock.
+          &quot;shipped&quot; emails the customer · &quot;delivered&quot; marks COD orders as paid and credits loyalty points ·
+          &quot;cancelled&quot; puts the items back into stock.
         </p>
       </div>
 
@@ -330,7 +331,7 @@ export default function OrderDetail({ order }) {
 
         {order.srOrderId && (
           <p style={{ fontSize: 12, color: '#4a5568', marginTop: 10, marginBottom: 0 }}>
-            "Send to Shiprocket" is disabled because this order is already in Shiprocket.
+            &quot;Send to Shiprocket&quot; is disabled because this order is already in Shiprocket.
           </p>
         )}
 

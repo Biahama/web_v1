@@ -1,0 +1,101 @@
+BIAHAMA PRODUCTION ROLLOUT
+Prepared October 5, 2026. Source changes are local; the live site is not updated.
+
+1. DATABASE — EXPLICIT APPROVAL REQUIRED
+Review prisma/rollouts/20261005_checkout.sql before executing against production.
+Automatic approval review blocked this action because "fix everything" did not
+specifically authorize the persistent schema and access-control changes.
+Obtain a database backup/snapshot in the provider dashboard before the rollout.
+
+The SQL transaction creates six missing tables: LoyaltyTransaction,
+AnalyticsEvent, WardrobeItem, Checkout, CheckoutItem and OrderTask. It adds
+Order.srOrderId / Order.srShipmentId, indexes and foreign keys, and enables row
+security on all 21 store tables. Existing customer/order/product/stock records
+are preserved. There are no anonymous REST policies: storefront data goes
+through server APIs. The server database role must bypass RLS (checked by the
+script); the currently connected role meets that requirement. Verify no external
+integration depends on anonymous access to these tables before applying.
+
+Once specifically approved, from the biahama directory, with a secure env file:
+  node scripts/apply-launch-rollout.mjs --env /absolute/path/to/.env.local
+Do not use prisma db push or migrate reset on production. The rollout script is
+idempotent, applies one transaction and rolls back on failure. Do not deploy the
+new payment handlers until their tables exist. A rollback to old application code
+can retain the additive tables; do not drop checkout/order/payment records.
+
+2. HOSTING AND ENVIRONMENT
+Link the existing www.biahama.com hosting project in its correct account/team.
+Do not create a replacement project or alter DNS until the current project is
+identified. Use .env.example as the key list; store secrets in the provider's
+secure environment settings. Do not commit them.
+
+Required: database, public Supabase URL/anon key, ADMIN_EMAILS, live Razorpay key
+and secret, Razorpay webhook secret, CRON_SECRET (32+ random header-safe
+characters), BREVO_API_KEY and verified BREVO_SENDER_EMAIL. Cloudinary credentials
+are needed for admin uploads. Shiprocket credentials/pickup location are optional
+if the team fulfills manually and enters tracking in Admin → Orders.
+
+Run the read-only preflight against the target configuration:
+  npm run check:launch -- --env /absolute/path/to/.env.local --database
+It checks configuration names, live-mode key prefix, required tables/shipping
+columns, row security and the server's RLS bypass permission. It does not verify
+provider credentials or scheduler/dashboard configuration.
+
+3. PAYMENT, EMAIL AND AUTH PROVIDERS
+Razorpay: enable automatic capture. Register payment.captured at:
+  https://www.biahama.com/api/webhooks/razorpay
+Use the identical webhook secret in the hosting environment. Confirm successful
+webhook deliveries and retries in the provider dashboard.
+Brevo: verify the sending identity/domain and confirm transactional email access.
+Supabase Auth: configure the live Site URL and allow the exact recovery callback:
+  https://www.biahama.com/auth/callback?next=/reset-password
+Allow the normal auth callback/preview URLs as needed, following the provider's
+redirect allowlist. Have the owner test email delivery and password recovery.
+Do not change anyone's password during a smoke test.
+
+4. RECOVERY SCHEDULE — REQUIRED FOR RELIABLE RETRIES
+Call GET https://www.biahama.com/api/maintenance every five minutes with:
+  Authorization: Bearer <CRON_SECRET>
+Missing/wrong authorization returns 401. Monitor failed invocations and pending
+refund/email tasks in Admin → Store operations; its recovery button can run an
+immediate retry. One invocation processes a bounded batch; monitor queue growth
+and tune worker throughput if traffic outgrows the five-minute schedule.
+
+On an existing Vercel Pro/Enterprise project, merge vercel.cron.example.json's
+crons array into vercel.json before deploying; Vercel sends CRON_SECRET in the
+Authorization header automatically. Hobby native cron only runs daily, which is
+insufficient here. Use an already-authorized external scheduler on Hobby or
+choose an appropriate hosting plan; no paid plan was purchased/configured.
+Official documentation:
+  https://vercel.com/docs/cron-jobs/usage-and-pricing
+  https://vercel.com/docs/cron-jobs/manage-cron-jobs
+
+5. RELEASE VERIFICATION
+Before rollout, reconcile any legacy pending payments and existing order records
+in Razorpay/Admin. New code intentionally refuses to reconstruct a legacy paid
+order from a mutable cart; missing original snapshots require merchant review.
+Avoid cutting over while the old checkout is accepting a payment in flight.
+
+Deploy the reviewed source only after schema/configuration are ready. Confirm
+HTTPS/domain, login, size selection, cart, checkout address, shipping/coupon totals,
+real captured amount and exactly one paid order. Retry the same provider event;
+ensure no duplicate order/email/refund or fulfillment status regression. Test
+cancellation/refund and maintenance recovery with an owner-controlled test order.
+The owner must execute/approve the financial transaction; none was made here.
+Check mobile navigation/forms, forgot-password email, public catalog, sitemap,
+private-page indexing rules, upload/edit cache refresh and manual/shipping flow.
+Launch only after the deployed payment/email/recovery paths pass.
+
+6. LOCAL VERIFICATION AND PREVIEW
+npm run lint
+npm run build
+npm audit --omit=dev
+TEST_DATABASE_URL=<disposable localhost database named biahama_test> npm test
+Never point the test suite at the store database: integration tests truncate only
+that guarded local fixture database. Without TEST_DATABASE_URL they are skipped,
+so a test run with skipped integration tests is not sufficient launch evidence.
+
+The final local preview was started at http://localhost:3100 using a disposable
+Docker database and 25 public products. No customer/order/settings data was
+copied. It still needs the terminal process and biahama-checkout-tests container;
+stopping/removing that named container only discards local test/preview fixtures.

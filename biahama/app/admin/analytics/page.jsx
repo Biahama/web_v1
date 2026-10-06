@@ -42,11 +42,13 @@ function StatCard({ label, value, hint }) {
   )
 }
 
+async function rangeStart(days) { return new Date(Date.now() - days * 24 * 60 * 60 * 1000) }
+
 export default async function AdminAnalyticsPage({ searchParams }) {
   // Which time range? ?days=7, 30 or 90. Anything else -> 30.
   const params = await searchParams
   const days = [7, 30, 90].includes(Number(params?.days)) ? Number(params.days) : 30
-  const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000)
+  const since = await rangeStart(days)
 
   // ---- Gather every number the page needs (one safety net) ----
   let dbDown = false

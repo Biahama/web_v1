@@ -1,13 +1,10 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname, useSearchParams } from 'next/navigation'
 
 const CATEGORIES = ['All', 'Tunics', 'Shirts', 'Kurtas', 'Dresses', 'Sets', 'Trousers', 'Jackets', 'Wraps']
 
 export default function CategoryTabs({ activeCategory }) {
-  const pathname = usePathname()
-  const isShopRoot = pathname === '/shop'
 
   return (
     <div

@@ -19,7 +19,7 @@ function formatPrice(paise) {
 }
 
 /** Low-level send via Brevo's HTTP API. */
-async function sendEmail({ to, subject, html }) {
+async function sendEmail({ to, subject, html, idempotencyKey }) {
   const apiKey = process.env.BREVO_API_KEY
   const sender = process.env.BREVO_SENDER_EMAIL
   if (!apiKey || !sender) {
@@ -28,16 +28,20 @@ async function sendEmail({ to, subject, html }) {
 
   const res = await fetch('https://api.brevo.com/v3/smtp/email', {
     method: 'POST',
+    signal: AbortSignal.timeout(15000),
     headers: { 'api-key': apiKey, 'Content-Type': 'application/json' },
     body: JSON.stringify({
       sender: { name: 'Biahama', email: sender },
       to: [{ email: to }],
       subject,
       htmlContent: html,
+      ...(idempotencyKey ? { headers: { idempotencyKey } } : {}),
     }),
   })
   if (!res.ok) {
-    throw new Error(`Brevo replied ${res.status}: ${await res.text()}`)
+    const body = await res.json().catch(() => ({}))
+    if (idempotencyKey && body.code === 'duplicate_parameter') return
+    throw new Error(`Brevo replied ${res.status}: ${body.message || 'Email could not be sent'}`)
   }
 }
 
@@ -60,14 +64,17 @@ function emailShell(title, bodyHtml) {
   </div>`
 }
 
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch])
+}
 function orderItemsTable(items) {
   const rows = items
     .map(
       (i) => `
       <tr>
         <td style="padding:8px 0;border-bottom:1px solid #f0f0f0;font-size:13px;">
-          ${i.productName}<br/>
-          <span style="color:#6f6f6f;font-size:11px;">SKU ${i.variantDetails?.sku ?? '-'} · Size ${i.variantDetails?.size ?? '-'} · Qty ${i.quantity}</span>
+          ${escapeHtml(i.productName)}<br/>
+          <span style="color:#6f6f6f;font-size:11px;">SKU ${escapeHtml(i.variantDetails?.sku ?? '-')} · Size ${escapeHtml(i.variantDetails?.size ?? '-')} · Qty ${i.quantity}</span>
         </td>
         <td style="padding:8px 0;border-bottom:1px solid #f0f0f0;font-size:13px;text-align:right;vertical-align:top;">
           ${formatPrice(i.total)}
@@ -82,7 +89,7 @@ function orderItemsTable(items) {
  * Order confirmation — sent right after an order is created.
  * Never throws: failures are logged to ErrorLog instead.
  */
-export async function sendOrderConfirmationEmail(orderId) {
+export async function sendOrderConfirmationEmail(orderId, { retryable = false, idempotencyKey } = {}) {
   try {
     const order = await prisma.order.findUnique({
       where: { id: orderId },
@@ -92,24 +99,26 @@ export async function sendOrderConfirmationEmail(orderId) {
 
     const addr = order.shippingAddress || {}
     const cod = order.paymentMethod === 'cod'
+    const cancelled = order.status === 'cancelled'
     const html = emailShell(
-      'Thank you for your order',
+      cancelled ? 'An update about your order' : 'Thank you for your order',
       `
-      <p style="font-size:13px;line-height:1.7;">Hello ${order.user.name || addr.fullName || ''},<br/>
-      We've received your order and are preparing it with care.</p>
+      <p style="font-size:13px;line-height:1.7;">Hello ${escapeHtml(order.user.name || addr.fullName || '')},<br/>
+      ${cancelled ? 'Your order has been cancelled. If you paid online, a full refund is being arranged to your original payment method. Please contact hello@biahama.com if you need help.' : "We've received your order and are preparing it with care."}</p>
       ${orderItemsTable(order.items)}
       <p style="font-size:13px;margin:4px 0;">Shipping: <strong>${order.shippingAmount === 0 ? 'Free' : formatPrice(order.shippingAmount)}</strong></p>
       ${order.discountAmount > 0 ? `<p style="font-size:13px;margin:4px 0;">Discount: <strong>−${formatPrice(order.discountAmount)}</strong></p>` : ''}
       <p style="font-size:15px;margin:12px 0;">Total: <strong>${formatPrice(order.totalAmount)}</strong>
       ${cod ? '<span style="color:#6f6f6f;font-size:12px;"> (to pay on delivery)</span>' : ''}</p>
       <p style="font-size:13px;line-height:1.7;color:#6f6f6f;">Delivering to:<br/>
-      ${addr.fullName ?? ''}, ${addr.line1 ?? ''}${addr.line2 ? ', ' + addr.line2 : ''},<br/>
-      ${addr.city ?? ''}, ${addr.state ?? ''} — ${addr.pincode ?? ''}</p>
-      <p style="font-size:13px;line-height:1.7;">We'll email you again the moment it ships.</p>`
+      ${escapeHtml(addr.fullName ?? '')}, ${escapeHtml(addr.line1 ?? '')}${addr.line2 ? ', ' + escapeHtml(addr.line2) : ''},<br/>
+      ${escapeHtml(addr.city ?? '')}, ${escapeHtml(addr.state ?? '')} — ${escapeHtml(addr.pincode ?? '')}</p>
+      <p style="font-size:13px;line-height:1.7;">${cancelled ? 'You can check refund status in your account.' : "We'll email you again the moment it ships."}</p>`
     )
-    await sendEmail({ to: order.user.email, subject: 'Your Biahama order is confirmed', html })
+    await sendEmail({ to: order.user.email, subject: cancelled ? 'An update about your Biahama order' : 'Your Biahama order is confirmed', html, idempotencyKey })
   } catch (error) {
     await logError('email — order confirmation', error, { orderId })
+    if (retryable) throw error
   }
 }
 
@@ -117,7 +126,7 @@ export async function sendOrderConfirmationEmail(orderId) {
  * Shipped email — sent when the order gets a tracking number.
  * Never throws.
  */
-export async function sendOrderShippedEmail(orderId) {
+export async function sendOrderShippedEmail(orderId, { retryable = false, idempotencyKey } = {}) {
   try {
     const order = await prisma.order.findUnique({
       where: { id: orderId },
@@ -128,14 +137,15 @@ export async function sendOrderShippedEmail(orderId) {
     const html = emailShell(
       'Your order is on its way',
       `
-      <p style="font-size:13px;line-height:1.7;">Hello ${order.user.name || ''},<br/>
+      <p style="font-size:13px;line-height:1.7;">Hello ${escapeHtml(order.user.name || '')},<br/>
       Your Biahama order has been dispatched.</p>
-      ${order.awbNumber ? `<p style="font-size:14px;">Tracking number: <strong>${order.awbNumber}</strong>${order.shippingPartner ? ` (${order.shippingPartner})` : ''}</p>` : ''}
+      ${order.awbNumber ? `<p style="font-size:14px;">Tracking number: <strong>${escapeHtml(order.awbNumber)}</strong>${order.shippingPartner ? ` (${escapeHtml(order.shippingPartner)})` : ''}</p>` : ''}
       ${orderItemsTable(order.items)}
       <p style="font-size:13px;line-height:1.7;color:#6f6f6f;">You can also check the status any time from “My Account” on our site.</p>`
     )
-    await sendEmail({ to: order.user.email, subject: 'Your Biahama order has shipped', html })
+    await sendEmail({ to: order.user.email, subject: 'Your Biahama order has shipped', html, idempotencyKey })
   } catch (error) {
     await logError('email — order shipped', error, { orderId })
+    if (retryable) throw error
   }
 }

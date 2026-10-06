@@ -1,19 +1,19 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { useCart } from '@/lib/cart'
+import { useRouter, usePathname } from 'next/navigation'
 import { useWardrobe } from '@/lib/wardrobe'
 
 function formatPrice(paise) {
   return `₹${(paise / 100).toLocaleString('en-IN')}`
 }
 
-export default function ProductCard({ product, priority = false, index = 0 }) {
+export default function ProductCard({ product, priority = false }) {
+  const router = useRouter()
+  const pathname = usePathname()
   const [hovered, setHovered] = useState(false)
-  const [currentImageIndex, setCurrentImageIndex] = useState(0)
-  const { add } = useCart()
   // Wardrobe = saved items. Shared state, so the hanger stays
   // filled everywhere once a product is saved.
   const { isSaved, toggle } = useWardrobe()
@@ -25,55 +25,31 @@ export default function ProductCard({ product, priority = false, index = 0 }) {
     const result = await toggle(product.id)
     if (result === 'login-required') {
       // Not logged in — send them to the homepage with the login drawer open.
-      window.location.href = '/?login=true'
+      router.push(`/?login=true&next=${encodeURIComponent(pathname)}`)
     }
   }
 
-  const isLowStock = product.stockQty <= 3 && product.stockQty > 0
   const isSoldOut  = !product.inStock
 
   const imagesToCycle = product.images?.map(img => typeof img === 'string' ? img : img.url) || (product.image ? [product.image] : [])
 
-  useEffect(() => {
-    if (!hovered || imagesToCycle.length <= 1) {
-      setCurrentImageIndex(0)
-    }
-  }, [hovered, imagesToCycle])
-
-  const handleAddToCart = async (e) => {
-    e.preventDefault()
-    e.stopPropagation()
-    if (isSoldOut || !product.firstVariantId) return
-
-    const activeVariant = product.variants?.find(v => v.stockQty > 0) || product.variants?.[0]
-    if (activeVariant) {
-      await add({
-        id: activeVariant.id,
-        price: activeVariant.price,
-        size: activeVariant.size,
-        color: activeVariant.color,
-        product: {
-          name: product.name,
-          slug: product.slug,
-        }
-      }, 1)
-      alert(`${product.name} has been added to your bag.`)
-    }
-  }
-
   return (
-    <Link
-      href={`/products/${product.slug}`}
+    <div
       className="group block"
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
+      onFocus={() => setHovered(true)} onBlur={() => setHovered(false)}
     >
       {/* Image container */}
       <div className="relative w-full overflow-hidden" style={{ width: '100%' }}>
+        <Link href={`/products/${product.slug}`} aria-label={`View ${product.name}`} style={{ display: "block", aspectRatio: "4 / 5" }}>
         {imagesToCycle.length > 0 ? (
           <>
-            <img
-              src={imagesToCycle[currentImageIndex]}
+            <Image
+              width={1200} height={1500} sizes="(max-width: 767px) 50vw, 33vw"
+              loading={priority ? 'eager' : 'lazy'}
+              fetchPriority={priority ? 'high' : 'auto'}
+              src={imagesToCycle[hovered && imagesToCycle.length > 1 ? 1 : 0]}
               alt={product.altText || product.name}
               className="w-full h-auto block"
               style={{
@@ -87,73 +63,6 @@ export default function ProductCard({ product, priority = false, index = 0 }) {
                 transition: 'transform 700ms cubic-bezier(0.4, 0, 0.2, 1)'
               }}
             />
-            {imagesToCycle.length > 1 && (
-              <>
-                {/* Prev Arrow */}
-                <button
-                  onClick={(e) => {
-                    e.preventDefault()
-                    e.stopPropagation()
-                    setCurrentImageIndex(idx => (idx - 1 + imagesToCycle.length) % imagesToCycle.length)
-                  }}
-                  className="transition-opacity duration-200"
-                  style={{
-                    position: 'absolute',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    width: '32px',
-                    height: '32px',
-                    borderRadius: '50%',
-                    background: 'rgba(255,255,255,0.7)',
-                    border: 'none',
-                    zIndex: 10,
-                    left: '8px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                    opacity: hovered ? 1 : 0
-                  }}
-                  aria-label="Previous image"
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#262626" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M15 18l-6-6 6-6" />
-                  </svg>
-                </button>
-
-                {/* Next Arrow */}
-                <button
-                  onClick={(e) => {
-                    e.preventDefault()
-                    e.stopPropagation()
-                    setCurrentImageIndex(idx => (idx + 1) % imagesToCycle.length)
-                  }}
-                  className="transition-opacity duration-200"
-                  style={{
-                    position: 'absolute',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    width: '32px',
-                    height: '32px',
-                    borderRadius: '50%',
-                    background: 'rgba(255,255,255,0.7)',
-                    border: 'none',
-                    zIndex: 10,
-                    right: '8px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                    opacity: hovered ? 1 : 0
-                  }}
-                  aria-label="Next image"
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#262626" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M9 18l6-6-6-6" />
-                  </svg>
-                </button>
-              </>
-            )}
           </>
         ) : (
           <div
@@ -168,6 +77,8 @@ export default function ProductCard({ product, priority = false, index = 0 }) {
             </span>
           </div>
         )}
+
+        </Link>
 
         {/* Wardrobe button — always visible */}
         <button
@@ -188,7 +99,8 @@ export default function ProductCard({ product, priority = false, index = 0 }) {
             border: 'none',
           }}
         >
-          <img
+          <Image
+            width={24} height={24}
             src="/cloth-hanger.png"
             alt="Save to wardrobe"
             style={{
@@ -206,7 +118,7 @@ export default function ProductCard({ product, priority = false, index = 0 }) {
       <div style={{ marginTop: '8px' }} className="flex justify-between items-start">
         <div className="flex-1" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}>
           <div className="flex justify-between items-center w-full" style={{ gap: '8px' }}>
-            <p 
+            <Link href={`/products/${product.slug}`}
               className="biahama-product-name"
               style={{
                 fontSize: 'var(--text-product-name-size)',
@@ -215,13 +127,13 @@ export default function ProductCard({ product, priority = false, index = 0 }) {
               }}
             >
               {product.name}
-            </p>
+            </Link>
             {/* + quick-add button */}
             {!isSoldOut && (
-              <button
-                onClick={handleAddToCart}
+              <Link
+                href={`/products/${product.slug}`}
                 className="hover:opacity-75 transition-opacity shrink-0 max-[1199px]:hidden min-[1200px]:flex flex-row items-start"
-                aria-label="Add to cart"
+                aria-label={`Choose size for ${product.name}`}
                 style={{
                   width: '18px',
                   height: '16px',
@@ -233,7 +145,9 @@ export default function ProductCard({ product, priority = false, index = 0 }) {
               >
                 {/* Smaller + icon (was 20px) so it sits subtly next to the
                     product name, like the reference design */}
-                <img
+                <Image
+                  loading="lazy"
+                  width={14} height={14}
                   src="/icons/plus.png"
                   alt="View sizes"
                   style={{
@@ -242,7 +156,7 @@ export default function ProductCard({ product, priority = false, index = 0 }) {
                     color: '#1A202C'
                   }}
                 />
-              </button>
+              </Link>
             )}
           </div>
           <p 
@@ -256,7 +170,6 @@ export default function ProductCard({ product, priority = false, index = 0 }) {
           </p>
         </div>
       </div>
-    </Link>
+    </div>
   )
 }
-

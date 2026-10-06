@@ -1,10 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useAuth } from '@/components/providers/AuthProvider'
 import { useRouter } from 'next/navigation'
 import { useCart } from '@/lib/cart'
-import Script from 'next/script'
+import { STORE_POLICY } from '@/lib/store-policy'
+import Link from 'next/link'
+import Image from 'next/image'
+import { useWardrobe } from '@/lib/wardrobe'
 
 function formatPrice(paise) {
   return `₹${(paise / 100).toLocaleString('en-IN')}`
@@ -25,47 +28,24 @@ export default function ProductDetailClient({
   const [sizeError, setSizeError] = useState(false)
   const [adding, setAdding] = useState(false)
   const [checkoutLoading, setCheckoutLoading] = useState(false)
-  const [addresses, setAddresses] = useState([])
-  const [wishlisted, setWishlisted] = useState(false)
+  const { isSaved, toggle } = useWardrobe()
+  const wishlisted = isSaved(product.id)
   const [copied, setCopied] = useState(false)
+  const [bagMessage, setBagMessage] = useState('')
   const [detailsExpanded, setDetailsExpanded] = useState(false)
   const [shippingExpanded, setShippingExpanded] = useState(false)
   const [packagingExpanded, setPackagingExpanded] = useState(false)
   const [returnExpanded, setReturnExpanded] = useState(false)
-  const [viewDetailsExpanded, setViewDetailsExpanded] = useState(false)
   // Stacked vertically images
   const displayImages = []
   if (product.images && product.images.length > 0) {
     product.images.forEach(img => {
       displayImages.push(typeof img === 'string' ? img : img.url)
     })
-  } else {
-    // Elegant fashion fallback images
-    const fallbacks = [
-      'https://images.unsplash.com/photo-1609357605129-26f69add5d6e?auto=format&fit=crop&w=600&h=800&q=80',
-      'https://images.unsplash.com/photo-1598033129183-c4f50c736f10?auto=format&fit=crop&w=600&h=800&q=80',
-      'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?auto=format&fit=crop&w=600&h=800&q=80',
-      'https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&w=600&h=800&q=80',
-      'https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=600&h=800&q=80',
-      'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=600&h=800&q=80',
-    ]
-    for (let i = 0; i < 6; i++) {
-      displayImages.push(fallbacks[i])
-    }
   }
 
-  // Fetch addresses on mount if logged in (for fast checkout)
-  useEffect(() => {
-    if (session) {
-      fetch('/api/addresses')
-        .then(r => r.json())
-        .then(setAddresses)
-        .catch(() => {})
-    }
-  }, [session])
-
   // Get active size options from product variants
-  const availableSizes = ['S', 'M', 'L', 'XL', '2XL', '3XL']
+  const availableSizes = [...new Set(product.variants?.map(v => v.size.toUpperCase()) || [])].sort((a, b) => ['XS', 'S', 'M', 'L', 'XL', 'XXL', '2XL', '3XL'].indexOf(a) - ['XS', 'S', 'M', 'L', 'XL', 'XXL', '2XL', '3XL'].indexOf(b))
   const inStockSizes = product.variants
     ?.filter(v => v.stockQty > 0)
     .map(v => v.size.toUpperCase()) || []
@@ -78,163 +58,32 @@ export default function ProductDetailClient({
     }
   }
 
-  const handleAddToBag = async () => {
-    if (!selectedSize) {
-      setSizeError(true)
-      return
-    }
-    setSizeError(false)
-    setAdding(true)
-
-    // Find the variant matching the selected size
-    const variant = product.variants?.find(
-      v => v.size.toUpperCase() === selectedSize.toUpperCase()
-    )
-
-    if (variant) {
-      await add({
-        id: variant.id,
-        price: variant.price,
-        size: variant.size,
-        color: variant.color,
-        product: {
-          name: product.name,
-          slug: product.slug,
-        }
-      }, 1)
-      alert(`${product.name} (Size ${selectedSize}) has been added to your bag.`)
-    }
-    setAdding(false)
+  function selectedVariant() {
+    return product.variants?.find(v => v.size.toUpperCase() === selectedSize?.toUpperCase() && v.stockQty > 0)
   }
-
-  const handleFastCheckout = async () => {
-    if (!selectedSize) {
-      setSizeError(true)
-      return
-    }
+  async function addSelected() {
+    const variant = selectedVariant()
+    if (!variant) { setSizeError(true); return false }
     setSizeError(false)
-
-    if (!session) {
-      // If guest, add to cart first, then redirect to cart page
-      const variant = product.variants?.find(
-        v => v.size.toUpperCase() === selectedSize.toUpperCase()
-      )
-      if (variant) {
-        await add({
-          id: variant.id,
-          price: variant.price,
-          size: variant.size,
-          color: variant.color,
-          product: {
-            name: product.name,
-            slug: product.slug,
-          }
-        }, 1)
-      }
-      router.push('/cart')
-      return
-    }
-
+    return add({ ...variant, product: { name: product.name, slug: product.slug, description: product.description, fabric: product.fabric, care: product.care, images: product.images }, images: product.images }, 1)
+  }
+  const handleAddToBag = async () => {
+    setAdding(true)
+    try { if (await addSelected()) setBagMessage(`Size ${selectedSize} has been added to your bag.`) }
+    finally { setAdding(false) }
+  }
+  const handleFastCheckout = async () => {
     setCheckoutLoading(true)
-
-    // Check default address
-    const defaultAddr = addresses.find(a => a.isDefault) || addresses[0]
-    if (!defaultAddr) {
-      // If no address, add to cart and redirect to cart to create address
-      const variant = product.variants?.find(
-        v => v.size.toUpperCase() === selectedSize.toUpperCase()
-      )
-      if (variant) {
-        await add({
-          id: variant.id,
-          price: variant.price,
-          size: variant.size,
-          color: variant.color,
-          product: {
-            name: product.name,
-            slug: product.slug,
-          }
-        }, 1)
-      }
-      router.push('/cart')
-      return
-    }
-
-    // Add selected variant to cart first to prepare order
-    const variant = product.variants?.find(
-      v => v.size.toUpperCase() === selectedSize.toUpperCase()
-    )
-    if (variant) {
-      await add({
-        id: variant.id,
-        price: variant.price,
-        size: variant.size,
-        color: variant.color,
-        product: {
-          name: product.name,
-          slug: product.slug,
-        }
-      }, 1)
-    }
-
-    try {
-      // Create Razorpay Order
-      const res = await fetch('/api/payments/create-order', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ addressId: defaultAddr.id })
-      })
-
-      if (!res.ok) throw new Error('Order creation failed')
-
-      const rzpData = await res.json()
-
-      const options = {
-        key: rzpData.keyId,
-        amount: rzpData.amount,
-        currency: rzpData.currency,
-        name: 'BIAHAMA',
-        description: `Checkout ${product.name}`,
-        order_id: rzpData.orderId,
-        prefill: rzpData.prefill,
-        handler: async function (response) {
-          try {
-            const verifyRes = await fetch('/api/payments/verify', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
-                addressId: defaultAddr.id
-              })
-            })
-
-            const verifyData = await verifyRes.json()
-            if (verifyRes.ok && verifyData.orderId) {
-              router.push(`/orders/${verifyData.orderId}`)
-            } else {
-              alert('Payment verification failed. Please try again.')
-            }
-          } catch {
-            alert('Verification connection error.')
-          }
-        },
-        theme: { color: '#262626' }
-      }
-
-      const rzp = new window.Razorpay(options)
-      rzp.open()
-    } catch (e) {
-      alert('Failed to initialize Razorpay checkout popup.')
-    } finally {
-      setCheckoutLoading(false)
-    }
+    try { if (await addSelected()) router.push(session ? '/checkout' : '/?login=true&next=%2Fcheckout') }
+    finally { setCheckoutLoading(false) }
+  }
+  async function handleWardrobe() {
+    if (await toggle(product.id) === 'login-required') router.push(`/?login=true&next=${encodeURIComponent(`/products/${product.slug}`)}`)
   }
 
   return (
     <>
-      <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
+
 
       <div 
         className="w-full max-w-none pl-6 pr-0 md:pl-12 md:pr-0 pb-24"
@@ -250,7 +99,8 @@ export default function ProductDetailClient({
                 className="w-full overflow-hidden relative"
                 style={{ width: '100%', marginBottom: '0' }}
               >
-                <img
+                <Image
+                  width={1200} height={1500} sizes="(max-width: 1023px) 100vw, 53vw" loading={i === 0 ? "eager" : "lazy"}
                   src={imgUrl}
                   alt={`${product.name} view ${i + 1}`}
                   className="w-full h-auto block"
@@ -259,7 +109,7 @@ export default function ProductDetailClient({
                 {/* Circular Hanger Wishlist button on first image */}
                 {i === 0 && (
                   <button
-                    onClick={() => setWishlisted(!wishlisted)}
+                    onClick={handleWardrobe}
                     aria-label="Save to wardrobe"
                     className="biahama-hanger-btn z-20 transition-colors"
                     style={{
@@ -276,7 +126,8 @@ export default function ProductDetailClient({
                       border: 'none',
                     }}
                   >
-                    <img
+                    <Image
+                      width={24} height={24}
                       src="/cloth-hanger.png"
                       alt="Save to wardrobe"
                       style={{
@@ -302,7 +153,7 @@ export default function ProductDetailClient({
             {/* Section 1: SKU & Share */}
             <div className="flex items-center justify-between">
               <span className="text-[10px] tracking-widest text-zinc-400 uppercase font-medium">
-                SKU: {product.variants?.[0]?.sku || 'BIA-LNN-01'}
+                SKU: {(selectedVariant() || product.variants?.[0])?.sku || 'BIA-LNN-01'}
               </span>
               <button
                 onClick={handleShare}
@@ -346,7 +197,7 @@ export default function ProductDetailClient({
                   marginTop: '12px', // 12px between name and price
                 }}
               >
-                {formatPrice(product.variants?.[0]?.price || 0)}
+                {formatPrice(selectedVariant()?.price || product.variants?.[0]?.price || 0)}
               </p>
               
               <div className="border-b border-zinc-200 mt-6" />
@@ -363,7 +214,8 @@ export default function ProductDetailClient({
                   title={product.variants?.[0]?.color}
                 >
                   {displayImages[0] ? (
-                    <img
+                    <Image
+                      width={40} height={40}
                       src={displayImages[0]}
                       alt={product.variants?.[0]?.color || 'Swatch'}
                       className="w-full h-full object-cover"
@@ -394,9 +246,11 @@ export default function ProductDetailClient({
                   return (
                     <button
                       key={size}
+                      aria-pressed={isSelected}
                       onClick={() => {
                         setSelectedSize(size)
                         setSizeError(false)
+                        setBagMessage('')
                       }}
                       disabled={!isInStock}
                       className="w-11 h-11 rounded-full flex items-center justify-center text-xs tracking-wider transition-all"
@@ -430,6 +284,8 @@ export default function ProductDetailClient({
               
               <div className="border-b border-zinc-200 mt-6" />
             </div>
+
+            {bagMessage && <p role="status" style={{ fontSize: 13, margin: "12px 0" }}>{bagMessage} <Link href="/cart" style={{ textDecoration: "underline" }}>View bag</Link></p>}
 
             {/* VIEW DETAILS link */}
             <button
@@ -479,13 +335,13 @@ export default function ProductDetailClient({
                     textTransform: 'uppercase',
                   }}
                 >
-                  {checkoutLoading ? 'OPENING CHECKOUT...' : 'PAY WITH RAZORPAY'}
+                  {checkoutLoading ? 'OPENING CHECKOUT...' : 'CHECKOUT'}
                 </button>
               )}
               
               <div className="text-center" style={{ marginTop: '16px' }}>
                 <span className="text-[10px] tracking-widest text-zinc-500 uppercase font-medium">
-                  Free shipping and 7 Days to Return
+                  Free shipping at ₹3,000 · 14-day returns
                 </span>
               </div>
             </div>
@@ -497,16 +353,16 @@ export default function ProductDetailClient({
         <div id="description-section" style={{ paddingTop: '26px', paddingLeft: '125px', paddingRight: '125px' }} className="w-full mt-12 hidden lg:block">
           {/* Top area: two columns side by side */}
           <div className="flex flex-row w-full mb-12">
-            <div className="w-1/2" style={{ padding: '0 15px' }}>
+            <div className="w-full md:w-1/2" style={{ padding: '0 15px' }}>
               <h2 style={{ fontSize: '32px', fontWeight: 500, color: '#262626', marginBottom: '16px', fontFamily: 'var(--font-display)' }}>DESCRIPTION</h2>
               <p style={{ fontSize: '16px', fontWeight: 300, lineHeight: '20px', color: '#6f6f6f', letterSpacing: '0.6px', marginBottom: '24px', fontFamily: 'var(--font-ui)' }}>
                 {product.description || 'Crafted with premium Indian linen, this clothing piece combines breathability with architectural silhouette lines. Designed for effortless transitions from morning to evening settings.'}
               </p>
             </div>
-            <div className="w-1/2" style={{ padding: '0 15px' }}>
+            <div className="w-full md:w-1/2" style={{ padding: '0 15px' }}>
               <h2 style={{ fontSize: '32px', fontWeight: 500, color: '#262626', marginBottom: '16px', fontFamily: 'var(--font-display)' }}>MATERIALS</h2>
               <p style={{ fontSize: '16px', fontWeight: 300, lineHeight: '20px', color: '#6f6f6f', letterSpacing: '0.6px', marginBottom: '24px', fontFamily: 'var(--font-ui)' }}>
-                {product.fabric || '100% Organic hand-spun Indian linen yarns. Structured yet lightweight breathable weave.'}
+                {product.fabric || 'Please contact us for fabric details.'}
                 <br/><br/>
                 Our items are manufactured in limited artisanal batches in India, respecting local craft traditions and community development.
               </p>
@@ -516,6 +372,7 @@ export default function ProductDetailClient({
           {/* Below the two columns: DETAILS accordion */}
           <div className="w-full relative" style={{ borderTop: '1px solid #D2D2D2' }}>
             <button 
+              aria-expanded={detailsExpanded}
               onClick={() => setDetailsExpanded(!detailsExpanded)}
               className="w-full text-left relative flex items-center hover:opacity-60 transition-opacity"
               style={{ height: '56px', padding: '16px 30px 16px 0', fontSize: '18px', fontWeight: 400, color: '#262626', fontFamily: 'var(--font-display)' }}
@@ -534,8 +391,8 @@ export default function ProductDetailClient({
                 )}
               </div>
             </button>
-            <div 
-              style={{ 
+            <div aria-hidden={!detailsExpanded} inert={!detailsExpanded}
+              style={{
                 maxHeight: detailsExpanded ? '1000px' : '0', 
                 overflow: detailsExpanded ? 'visible' : 'hidden', 
                 transition: '0.15s ease-in' 
@@ -543,11 +400,8 @@ export default function ProductDetailClient({
             >
               <div style={{ paddingBottom: '24px', paddingLeft: '15px', paddingRight: '15px' }}>
                 <p style={{ fontSize: '16px', fontWeight: 300, lineHeight: '20px', color: '#6f6f6f', letterSpacing: '0.6px', fontFamily: 'var(--font-ui)' }}>
-                  Handcrafted linen knitwear<br/>
-                  Unstructured relaxed shoulder<br/>
-                  Rib knit collar and clean hem<br/>
-                  Special workmanship<br/>
-                  <span style={{ fontWeight: 500, fontSize: '12px', letterSpacing: '1px', marginTop: '10px', display: 'block', color: '#262626' }}>100% ORGANIC LINEN</span>
+                  {product.description}
+                  {product.care && <><br /><br />Care: {product.care}</>}
                 </p>
               </div>
             </div>
@@ -569,6 +423,7 @@ export default function ProductDetailClient({
           {/* SHIPPING AND RETURNS accordion */}
           <div className="w-full relative" style={{ borderTop: '1px solid #D2D2D2' }}>
             <button 
+              aria-expanded={shippingExpanded}
               onClick={() => setShippingExpanded(!shippingExpanded)}
               className="w-full text-left relative flex items-center hover:opacity-60 transition-opacity"
               style={{ height: '56px', padding: '16px 30px 16px 0', fontSize: '18px', fontWeight: 400, color: '#262626', fontFamily: 'var(--font-display)' }}
@@ -587,19 +442,19 @@ export default function ProductDetailClient({
                 )}
               </div>
             </button>
-            <div 
-              style={{ 
-                maxHeight: shippingExpanded ? '1000px' : '0', 
+            <div aria-hidden={!shippingExpanded} inert={!shippingExpanded}
+              style={{
+                maxHeight: shippingExpanded ? '1000px' : '0',
                 overflow: shippingExpanded ? 'visible' : 'hidden', 
                 transition: '0.15s ease-in' 
               }}
             >
               <div style={{ paddingBottom: '24px', paddingLeft: '15px', paddingRight: '15px' }}>
                 <p style={{ fontSize: '16px', fontWeight: 300, lineHeight: '20px', color: '#6f6f6f', letterSpacing: '0.6px', marginBottom: '8px', fontFamily: 'var(--font-ui)' }}>
-                  <strong style={{ color: '#262626', fontWeight: 500 }}>Shipping:</strong> Free shipping across India, usually delivered within 3-5 working days.
+                  <strong style={{ color: '#262626', fontWeight: 500 }}>Shipping:</strong> {STORE_POLICY.shipping}
                 </p>
                 <p style={{ fontSize: '16px', fontWeight: 300, lineHeight: '20px', color: '#6f6f6f', letterSpacing: '0.6px', fontFamily: 'var(--font-ui)' }}>
-                  <strong style={{ color: '#262626', fontWeight: 500 }}>Returns:</strong> Free size exchanges and returns within 7 days of delivery.
+                  <strong style={{ color: '#262626', fontWeight: 500 }}>Returns:</strong> {STORE_POLICY.returns}
                 </p>
               </div>
             </div>
@@ -611,9 +466,9 @@ export default function ProductDetailClient({
             desktop={true}
           >
               <>
-                We guarantee 7 days from the delivery date to request a return or exchange. Pieces must be unworn, unwashed and in their original condition with tags attached.
+                You have 14 days from the delivery date to request a return or exchange. Pieces must be unworn, unwashed and in their original condition with tags attached.
                 <br/><br/>
-                Write to us with your order number and we will arrange a pickup where available. Size exchanges are always free.
+                Write to us with your order number to arrange a pickup where available. <Link href="/returns" className="underline">Read the returns policy.</Link>
               </>
           </PdpAccordion>
 
@@ -631,13 +486,14 @@ export default function ProductDetailClient({
             <div className="w-full">
               <h2 style={{ fontSize: '24px', fontWeight: 500, color: '#262626', marginBottom: '12px', fontFamily: 'var(--font-display)' }}>MATERIALS</h2>
               <p style={{ fontSize: '15px', fontWeight: 300, lineHeight: '22px', color: '#6f6f6f', letterSpacing: '0.5px', fontFamily: 'var(--font-ui)' }}>
-                {product.fabric || '100% Organic hand-spun Indian linen yarns. Structured yet lightweight breathable weave.'}
+                {product.fabric || 'Please contact us for fabric details.'}
               </p>
             </div>
           </div>
 
           <div className="w-full relative" style={{ borderTop: '1px solid #D2D2D2' }}>
             <button 
+              aria-expanded={detailsExpanded}
               onClick={() => setDetailsExpanded(!detailsExpanded)}
               className="w-full text-left relative flex items-center"
               style={{ height: '56px', padding: '16px 30px 16px 0', fontSize: '16px', fontWeight: 400, color: '#262626', fontFamily: 'var(--font-display)' }}
@@ -651,14 +507,11 @@ export default function ProductDetailClient({
                 )}
               </div>
             </button>
-            <div style={{ maxHeight: detailsExpanded ? '1000px' : '0', overflow: detailsExpanded ? 'visible' : 'hidden', transition: '0.15s ease-in' }}>
+            <div aria-hidden={!detailsExpanded} inert={!detailsExpanded} style={{ maxHeight: detailsExpanded ? '1000px' : '0', overflow: detailsExpanded ? 'visible' : 'hidden', transition: '0.15s ease-in' }}>
               <div style={{ paddingBottom: '24px' }}>
                 <p style={{ fontSize: '15px', fontWeight: 300, lineHeight: '22px', color: '#6f6f6f', fontFamily: 'var(--font-ui)' }}>
-                  Handcrafted linen knitwear<br/>
-                  Unstructured relaxed shoulder<br/>
-                  Rib knit collar and clean hem<br/>
-                  Special workmanship<br/>
-                  <span style={{ fontWeight: 500, fontSize: '11px', letterSpacing: '1px', marginTop: '10px', display: 'block', color: '#262626' }}>100% ORGANIC LINEN</span>
+                  {product.description}
+                  {product.care && <><br /><br />Care: {product.care}</>}
                 </p>
               </div>
             </div>
@@ -679,6 +532,7 @@ export default function ProductDetailClient({
 
           <div className="w-full relative" style={{ borderTop: '1px solid #D2D2D2' }}>
             <button 
+              aria-expanded={shippingExpanded}
               onClick={() => setShippingExpanded(!shippingExpanded)}
               className="w-full text-left relative flex items-center"
               style={{ height: '56px', padding: '16px 30px 16px 0', fontSize: '16px', fontWeight: 400, color: '#262626', fontFamily: 'var(--font-display)' }}
@@ -692,13 +546,13 @@ export default function ProductDetailClient({
                 )}
               </div>
             </button>
-            <div style={{ maxHeight: shippingExpanded ? '1000px' : '0', overflow: shippingExpanded ? 'visible' : 'hidden', transition: '0.15s ease-in' }}>
+            <div aria-hidden={!shippingExpanded} inert={!shippingExpanded} style={{ maxHeight: shippingExpanded ? '1000px' : '0', overflow: shippingExpanded ? 'visible' : 'hidden', transition: '0.15s ease-in' }}>
               <div style={{ paddingBottom: '24px' }}>
                 <p style={{ fontSize: '15px', fontWeight: 300, lineHeight: '22px', color: '#6f6f6f', marginBottom: '8px', fontFamily: 'var(--font-ui)' }}>
-                  <strong style={{ color: '#262626', fontWeight: 500 }}>Shipping:</strong> Free shipping across India, usually delivered within 3-5 working days.
+                  <strong style={{ color: '#262626', fontWeight: 500 }}>Shipping:</strong> {STORE_POLICY.shipping}
                 </p>
                 <p style={{ fontSize: '15px', fontWeight: 300, lineHeight: '22px', color: '#6f6f6f', fontFamily: 'var(--font-ui)' }}>
-                  <strong style={{ color: '#262626', fontWeight: 500 }}>Returns:</strong> Free size exchanges and returns within 7 days of delivery.
+                  <strong style={{ color: '#262626', fontWeight: 500 }}>Returns:</strong> {STORE_POLICY.returns}
                 </p>
               </div>
             </div>
@@ -710,9 +564,9 @@ export default function ProductDetailClient({
             desktop={false}
           >
               <>
-                We guarantee 7 days from the delivery date to request a return or exchange. Pieces must be unworn, unwashed and in their original condition with tags attached.
+                You have 14 days from the delivery date to request a return or exchange. Pieces must be unworn, unwashed and in their original condition with tags attached.
                 <br/><br/>
-                Write to us with your order number and we will arrange a pickup where available. Size exchanges are always free.
+                Write to us with your order number to arrange a pickup where available. <Link href="/returns" className="underline">Read the returns policy.</Link>
               </>
           </PdpAccordion>
 
@@ -728,6 +582,7 @@ function PdpAccordion({ title, open, onToggle, desktop, children }) {
   return (
     <div className="w-full relative" style={{ borderTop: '1px solid #D2D2D2' }}>
       <button
+        aria-expanded={open}
         onClick={onToggle}
         className="w-full text-left relative flex items-center hover:opacity-60 transition-opacity"
         style={{ height: '56px', padding: '16px 30px 16px 0', fontSize: desktop ? '18px' : '16px', fontWeight: 400, color: '#262626', fontFamily: 'var(--font-display)' }}
@@ -740,7 +595,7 @@ function PdpAccordion({ title, open, onToggle, desktop, children }) {
           </svg>
         </div>
       </button>
-      <div style={{ maxHeight: open ? '1000px' : '0', overflow: open ? 'visible' : 'hidden', transition: '0.15s ease-in' }}>
+      <div aria-hidden={!open} inert={!open} style={{ maxHeight: open ? '1000px' : '0', overflow: open ? 'visible' : 'hidden', transition: '0.15s ease-in' }}>
         <div style={{ paddingBottom: '24px', paddingLeft: desktop ? '15px' : 0, paddingRight: desktop ? '15px' : 0 }}>
           <p style={{ fontSize: desktop ? '16px' : '15px', fontWeight: 300, lineHeight: desktop ? '20px' : '22px', color: '#6f6f6f', letterSpacing: desktop ? '0.6px' : 'normal', fontFamily: 'var(--font-ui)' }}>
             {children}

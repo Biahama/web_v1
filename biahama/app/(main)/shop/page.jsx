@@ -1,4 +1,3 @@
-import Link from 'next/link'
 import ProductGrid from '@/components/product/ProductGrid'
 import FilterTabBar from '@/components/ui/FilterTabBar'
 import { prisma } from '@/lib/prisma'
@@ -7,7 +6,12 @@ import { getSiteSettings } from '@/lib/site-settings'
 
 export const revalidate = 3600
 
-export const metadata = { title: 'Collections — Biahama' }
+export async function generateMetadata({ searchParams }) {
+  const params = await searchParams
+  const category = CATEGORIES.find(c => c.slug === params?.cat) || CATEGORIES[0]
+  if (params?.q) return { title: 'Search results', robots: { index: false, follow: true } }
+  return { title: `${category.name} Collection`, alternates: { canonical: `/shop?cat=${category.slug}` } }
+}
 
 const CATEGORIES = [
   { name: 'KURTA', slug: 'kurtas' },
@@ -67,7 +71,7 @@ async function getProducts(category) {
   } catch (err) {
     // Record it in the ErrorLog table (with a timestamp) so this can
     // never fail invisibly again — when this happens, the shop shows
-    // "layout preview placeholders" instead of real products.
+    // "an honest empty state" instead of real products.
     await logError('shop page — load products', err, { category })
     return []
   }
@@ -122,7 +126,7 @@ export default async function ShopPage({ searchParams }) {
     { bannerSide: settings.layout.collectionBannerSide, bannerImage: '' }
 
   return (
-    <div style={{ paddingTop: '56px' }}>
+    <div>
       {/* Category subheader bar */}
       <FilterTabBar />
 

@@ -40,7 +40,7 @@ export async function generateMetadata({ params }) {
   const { slug } = await params
   const page = await getPage(slug)
   if (!page) return { title: 'Not found — Biahama' }
-  return { title: `${page.title} — Biahama` }
+  return { title: page.title, alternates: { canonical: `/${slug}` }, description: page.body.split(/\n/)[0].slice(0, 160) }
 }
 
 export default async function ContentPage({ params }) {

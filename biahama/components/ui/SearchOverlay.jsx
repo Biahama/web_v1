@@ -1,25 +1,13 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
+import { useDialog } from '@/components/ui/useDialog'
 import { useRouter } from 'next/navigation'
 
 export default function SearchOverlay({ open, onClose }) {
   const [query, setQuery] = useState('')
-  const inputRef = useRef(null)
+  const dialogRef = useDialog(open, onClose)
   const router = useRouter()
-
-  useEffect(() => {
-    if (open) {
-      setQuery('')
-      setTimeout(() => inputRef.current?.focus(), 50)
-    }
-  }, [open])
-
-  useEffect(() => {
-    function onKey(e) { if (e.key === 'Escape') onClose() }
-    document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
-  }, [onClose])
 
   function handleSubmit(e) {
     e.preventDefault()
@@ -33,6 +21,8 @@ export default function SearchOverlay({ open, onClose }) {
 
   return (
     <div
+      ref={dialogRef}
+      role="dialog" aria-modal="true" aria-label="Search products"
       className="fixed inset-0 z-50 flex flex-col items-center justify-center"
       style={{ background: 'rgba(240,237,232,0.97)', backdropFilter: 'blur(4px)' }}
       onClick={e => e.target === e.currentTarget && onClose()}
@@ -50,7 +40,8 @@ export default function SearchOverlay({ open, onClose }) {
           Search
         </p>
         <input
-          ref={inputRef}
+          aria-label="Search products"
+          autoFocus
           type="text"
           value={query}
           onChange={e => setQuery(e.target.value)}

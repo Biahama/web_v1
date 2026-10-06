@@ -12,13 +12,13 @@
 //   * marked "cancelled"  -> the items go back into stock
 // ============================================================
 
-import { NextResponse } from 'next/server'
+import { after, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { requireAdmin } from '@/lib/admin-auth'
 import { withErrorLogging } from '@/lib/logger'
-import { sendOrderShippedEmail } from '@/lib/email'
-import { creditPointsForOrder } from '@/lib/loyalty'
+import { updateOrderStatus } from '@/lib/order-status-service'
+import { processOrderTasks } from '@/lib/order-tasks'
 
 // What the admin panel may change on an order. Everything is
 // optional — send only what changed.
@@ -70,72 +70,8 @@ export const PATCH = withErrorLogging('api/admin/orders/[id] PATCH', async (req,
     }
     const data = parsed.data
 
-    // Load the order as it is right now — we need the OLD status
-    // to know which follow-up actions to run, and the items in
-    // case we have to put stock back.
-    const existing = await prisma.order.findUnique({
-      where: { id },
-      include: { items: true },
-    })
-    if (!existing) {
-      return NextResponse.json({ error: 'Order not found' }, { status: 404 })
-    }
-
-    // Only touch the fields the admin actually sent.
-    const changes = {}
-    if (data.status !== undefined) changes.status = data.status
-    if (data.awbNumber !== undefined) changes.awbNumber = data.awbNumber.trim() || null
-    if (data.shippingPartner !== undefined) changes.shippingPartner = data.shippingPartner.trim() || null
-    if (data.notes !== undefined) changes.notes = data.notes.trim() || null
-
-    // Which follow-ups apply? (only when the status actually CHANGES
-    // to that value — saving "shipped" twice must not email twice)
-    const becomesShipped = data.status === 'shipped' && existing.status !== 'shipped'
-    const becomesDelivered = data.status === 'delivered' && existing.status !== 'delivered'
-    const becomesCancelled = data.status === 'cancelled' && existing.status !== 'cancelled'
-
-    // SIDE EFFECT: shipped -> keep the shipping status in step so
-    // the customer's account page shows the parcel as moving.
-    if (becomesShipped) changes.shippingStatus = 'in_transit'
-
-    // SIDE EFFECT: delivered -> for Cash on Delivery, the money was
-    // received at the door, so the order is now PAID.
-    if (becomesDelivered) {
-      changes.shippingStatus = 'delivered'
-      if (existing.paymentMethod === 'cod') changes.paymentStatus = 'paid'
-    }
-
-    if (becomesCancelled) {
-      // SIDE EFFECT: cancelled -> put every item back into stock.
-      // The status change and the stock changes happen in ONE
-      // transaction: either all of it saves or none of it does —
-      // otherwise a crash halfway could cancel the order but
-      // "lose" the stock (or vice versa).
-      await prisma.$transaction(async (tx) => {
-        await tx.order.update({ where: { id }, data: changes })
-        for (const item of existing.items) {
-          await tx.productVariant.update({
-            where: { id: item.variantId },
-            data: { stockQty: { increment: item.quantity } },
-          })
-        }
-      })
-    } else {
-      await prisma.order.update({ where: { id }, data: changes })
-    }
-
-    // SIDE EFFECT: shipped -> tell the customer. This never throws
-    // (email failures are logged, they don't block the save).
-    if (becomesShipped) {
-      await sendOrderShippedEmail(id)
-    }
-
-    // SIDE EFFECT: COD delivered -> credit loyalty points, now that
-    // the order is actually paid. Safe to call twice (the ledger
-    // refuses duplicates) and never throws.
-    if (becomesDelivered && existing.paymentMethod === 'cod') {
-      await creditPointsForOrder(id)
-    }
+    await updateOrderStatus(prisma, id, data)
+    after(() => processOrderTasks(id))
 
     // Send back the freshly saved order so the page can refresh.
     const order = await prisma.order.findUnique({

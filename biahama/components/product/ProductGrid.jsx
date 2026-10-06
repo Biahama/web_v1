@@ -1,38 +1,5 @@
+import Link from 'next/link'
 import ProductCard from '@/components/ui/ProductCard'
-
-// Helper to generate mock products for UI demonstration when DB is empty
-function getMockProducts(category) {
-  const isLarge = category === 'shirts' || category === 'tunics' ? 3 : 10
-  const mockList = []
-  
-  const titles = {
-    kurtas: ['Ivory Linen Kurta', 'Sand Tunic Dress', 'Natural Linen Set', 'Stone Wrap Shirt', 'Ecru Wide Trousers', 'Oat Linen Jacket', 'Fluid Wrap Kurta', 'Architectural Linen Tunic', 'COS Style Kurta', 'Classic Linen Trousers'],
-    shirts: ['Stone Wrap Shirt', 'Classic White Linen Shirt', 'Relaxed Fit Linen Shirt'],
-    tunics: ['Sand Tunic Dress', 'Architectural Linen Tunic', 'Oat Tunic Coat'],
-    trousers: ['Ecru Wide Trousers', 'Classic Linen Trousers', 'Sand Linen Pants', 'Natural Linen Shorts', 'Crop Linen Pants', 'Flowing White Trouser', 'Loose Linen Pant', 'Belted Linen Trouser', 'Pleated Sand Trousers', 'Tailored Linen Pants']
-  }
-  
-  const activeTitles = titles[category] || titles['kurtas']
-
-  for (let i = 1; i <= isLarge; i++) {
-    const title = activeTitles[(i - 1) % activeTitles.length]
-    mockList.push({
-      id: `mock-${category}-${i}`,
-      name: title,
-      slug: `mock-${category}-${i}`,
-      category: category === 'trousers' ? 'Pant' : category.charAt(0).toUpperCase() + category.slice(1, -1),
-      price: 245000 + i * 20000,
-      inStock: true,
-      image: null,
-      altText: 'Sample',
-      firstVariantId: `mock-var-${i}`,
-      variants: [
-        { id: `mock-var-${i}`, price: 245000 + i * 20000, size: 'M', color: 'Natural', stockQty: 5 }
-      ]
-    })
-  }
-  return mockList
-}
 
 // collectionSettings (from the admin panel, per category):
 //   bannerSide:  'right' or 'left' — which side of the product
@@ -52,18 +19,18 @@ export default function ProductGrid({
     bannerImage: collectionSettings?.bannerImage ?? '',
   }
   const cat = (category || 'all').toLowerCase()
-  const isMock = products.length === 0
-  const displayProducts = isMock ? getMockProducts(cat) : products
+  const displayProducts = products
+  if (!products.length) return (
+    <div className="collection-empty" role="status">
+      <p>This collection is coming soon.</p>
+      <Link href="/shop?cat=kurtas">Explore available pieces →</Link>
+    </div>
+  )
 
   // Shirts Category Layout (3 + 1)
   if (cat === 'shirts') {
     return (
       <>
-        {isMock && (
-          <p className="text-[10px] tracking-widest uppercase mb-8 text-center text-zinc-400 font-light" style={{ fontFamily: 'var(--font-ui)' }}>
-            Showing layout preview placeholders
-          </p>
-        )}
         {/* Desktop Layout */}
         <div className="hidden lg:block space-y-14">
           <div style={{
@@ -167,11 +134,6 @@ export default function ProductGrid({
 
     return (
       <>
-        {isMock && (
-          <p className="text-[10px] tracking-widest uppercase mb-8 text-center text-zinc-400 font-light" style={{ fontFamily: 'var(--font-ui)' }}>
-            Showing layout preview placeholders
-          </p>
-        )}
         {/* Desktop Layout — matches the approved design.
             Both KURTA and PANT pages use the same layout:
             4-column grid. Left = 2x2 product cards.
@@ -195,7 +157,7 @@ export default function ProductGrid({
                   {displayProducts[1] && <ProductCard key={displayProducts[1].id} product={displayProducts[1]} priority={true} index={1} />}
                 </>
               )
-              const banner = (
+              const campaignBanner = (
                 <div
                   key="campaign-banner"
                   className="relative bg-zinc-100 overflow-hidden"
@@ -212,8 +174,8 @@ export default function ProductGrid({
               )
               // banner first = banner on the left, cards flow to its right
               return banner.bannerSide === 'left'
-                ? <>{banner}{firstTwoCards}</>
-                : <>{firstTwoCards}{banner}</>
+                ? <>{campaignBanner}{firstTwoCards}</>
+                : <>{firstTwoCards}{campaignBanner}</>
             })()}
 
             {displayProducts[2] && <ProductCard key={displayProducts[2].id} product={displayProducts[2]} priority={true} index={2} />}
@@ -243,11 +205,6 @@ export default function ProductGrid({
   // Default Tunics & General Layout (3 + 0 / standard grid)
   return (
     <>
-      {isMock && (
-        <p className="text-[10px] tracking-widest uppercase mb-8 text-center text-zinc-400 font-light" style={{ fontFamily: 'var(--font-ui)' }}>
-          Showing layout preview placeholders
-        </p>
-      )}
       <div className="grid grid-cols-2 lg:grid-cols-3" style={{ gap: '32px 8px' }}>
         {displayProducts.map((product, i) => (
           <ProductCard key={product.id} product={product} priority={i < 4} index={i} />

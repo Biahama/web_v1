@@ -54,6 +54,7 @@ export async function getToken() {
 
   const res = await fetch(`${BASE}/auth/login`, {
     method: 'POST',
+    signal: AbortSignal.timeout(15000),
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password }),
   })
@@ -88,6 +89,7 @@ export async function srRequest(method, path, body) {
 
   const res = await fetch(`${BASE}${path}`, {
     method,
+    signal: AbortSignal.timeout(15000),
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
