@@ -119,7 +119,7 @@ export default function CartDrawer({ open, onClose }) {
                 letterSpacing: '0.14em',
                 textTransform: 'uppercase',
                 background: 'var(--black)',
-                color: 'var(--white)',
+                color: '#ffffff',
                 padding: '12px 24px',
                 textDecoration: 'none',
                 marginTop: 0,
@@ -321,7 +321,7 @@ export default function CartDrawer({ open, onClose }) {
                   letterSpacing: '0.16em',
                   textTransform: 'uppercase',
                   background: 'var(--black)',
-                  color: 'var(--white)',
+                  color: '#ffffff',
                   textDecoration: 'none',
                 }}
               >

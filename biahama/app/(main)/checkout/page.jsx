@@ -375,7 +375,7 @@ export default function CheckoutPage() {
                     }}>
                       <div style={{ width: 12, height: 12, border: '4px solid var(--black)', borderRadius: '50%' }} />
                       <span style={{ fontFamily: 'var(--font-ui)', fontSize: 12, color: 'var(--black)', fontWeight: 400 }}>
-                        Free
+                        {shipping === 0 ? 'Free shipping' : `Standard shipping · ${formatPrice(shipping)}`}
                       </span>
                     </div>
 

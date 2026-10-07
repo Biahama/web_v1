@@ -215,7 +215,7 @@ export default function OrderPage() {
         <Link href="/shop" style={{
           padding: '14px 28px',
           background: 'var(--black)',
-          color: 'var(--white)',
+          color: '#ffffff',
           textDecoration: 'none',
           fontSize: 11,
           letterSpacing: '0.14em',
