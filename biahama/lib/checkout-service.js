@@ -89,11 +89,11 @@ export function createCheckoutService({ db, gateway, now = () => new Date() }) {
         discount = Math.max(0, Math.min(subtotal, discount))
       }
       const shipping = subtotal - discount >= SHIPPING_THRESHOLD ? 0 : SHIPPING_COST
-      const { fullName, phone, line1, line2, pincode, city, state } = address
+      const { fullName, phone, line1, line2, area, pincode, city, district, state } = address
       await reserve(tx, items)
       return tx.checkout.create({ data: {
         userId, requestKey, fingerprint: crypto.createHash('sha256').update(JSON.stringify(items)).digest('hex'),
-        shippingAddress: { fullName, phone, line1, line2: line2 || null, pincode, city, state },
+        shippingAddress: { fullName, phone, line1, line2: line2 || null, area: area || null, pincode, city, district: district || null, state },
         items, reservations: { create: items.map(item => ({ variantId: item.variantId, quantity: item.quantity })) }, totalAmount: subtotal - discount + shipping, shippingAmount: shipping,
         discountAmount: discount, couponCode: applied?.code || null,
         expiresAt: new Date(now().getTime() + 30 * 60 * 1000),

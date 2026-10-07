@@ -203,8 +203,8 @@ export default function OrderPage() {
           </p>
           <p style={{ fontSize: 13, color: 'var(--black)', lineHeight: 1.7, letterSpacing: '0.02em' }}>
             {addr.fullName}<br />
-            {addr.line1}{addr.line2 ? `, ${addr.line2}` : ''}<br />
-            {addr.city}, {addr.state} – {addr.pincode}<br />
+            {[addr.line2, addr.line1, addr.area].filter(Boolean).join(', ')}<br />
+            {[addr.city, addr.district !== addr.city && addr.district, addr.state].filter(Boolean).join(', ')} – {addr.pincode}<br />
             {addr.phone}
           </p>
         </div>

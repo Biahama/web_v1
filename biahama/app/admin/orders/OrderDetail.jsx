@@ -194,8 +194,8 @@ export default function OrderDetail({ order }) {
           <h2 style={sectionTitle}>Ship to</h2>
           <div style={{ fontSize: 14, lineHeight: 1.7, color: '#4a5568' }}>
             <div style={{ color: '#1A202C', fontWeight: 500 }}>{addr.fullName || order.user?.name || '—'}</div>
-            <div>{addr.line1}{addr.line2 ? `, ${addr.line2}` : ''}</div>
-            <div>{addr.city}, {addr.state} — {addr.pincode}</div>
+            <div>{[addr.line2, addr.line1, addr.area].filter(Boolean).join(', ')}</div>
+            <div>{[addr.city, addr.district !== addr.city && addr.district, addr.state].filter(Boolean).join(', ')} — {addr.pincode}</div>
             <div>Phone: {addr.phone || '—'}</div>
             <div>Email: {order.user?.email || '—'}</div>
           </div>

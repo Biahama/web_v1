@@ -31,8 +31,10 @@ model Address {
   phone     String
   line1     String
   line2     String?
+  area      String?
   pincode   String
   city      String
+  district  String?
   state     String
   isDefault Boolean  @default(false)
   createdAt DateTime @default(now())

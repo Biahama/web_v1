@@ -41,7 +41,10 @@ export default function CheckoutPage() {
   const [line1, setLine1] = useState('')
   const [line2, setLine2] = useState('')
   const [zipCode, setZipCode] = useState('')
+  const [area, setArea] = useState('')
   const [city, setCity] = useState('')
+  const [district, setDistrict] = useState('')
+  const [postOffices, setPostOffices] = useState([])
   const [stateName, setStateName] = useState('')
   const [pincodeLoading, setPincodeLoading] = useState(false)
   const [zipError, setZipError] = useState('')
@@ -81,7 +84,9 @@ export default function CheckoutPage() {
             setLine1(def.line1)
             setLine2(def.line2 || '')
             setZipCode(def.pincode)
+            setArea(def.area || '')
             setCity(def.city)
+            setDistrict(def.district || '')
             setStateName(def.state)
           }
         })
@@ -101,9 +106,13 @@ export default function CheckoutPage() {
         const res = await fetch(`https://api.postalpincode.in/pincode/${formatted}`)
         const data = await res.json()
         if (data[0]?.Status === 'Success') {
-          const po = data[0].PostOffice[0]
-          setCity(po.District)
-          setStateName(po.State)
+          const offices = data[0].PostOffice
+          // ponytail: town = first head/sub post office for this PIN; postal data has no clean "city" field, so the customer can edit it
+          const town = offices.find(o => o.BranchType !== 'Branch Post Office')?.Name.replace(/\s*\(.*\)$/, '')
+          setPostOffices(offices.map(o => o.Name))
+          setCity(town || offices[0].District)
+          setDistrict(offices[0].District)
+          setStateName(offices[0].State)
         } else {
           setZipError('Enter a valid 6-digit PIN code, e.g. 638052')
         }
@@ -125,7 +134,7 @@ export default function CheckoutPage() {
 
     if (showNewAddressForm) {
       // Validate
-      if (!firstName || !lastName || !phone || !line1 || !zipCode || !city || !stateName) {
+      if (!firstName || !lastName || !phone || !line1 || !line2 || !area || !zipCode || !city || !district || !stateName) {
         setPaymentError('Please fill out all required fields.')
         return
       }
@@ -150,7 +159,9 @@ export default function CheckoutPage() {
             phone: mobile,
             line1,
             line2,
+            area,
             pincode: zipCode,
+            district,
             city,
             state: stateName,
             isDefault: addresses.length === 0,
@@ -421,7 +432,9 @@ export default function CheckoutPage() {
                                 setLine1(addr.line1)
                                 setLine2(addr.line2 || '')
                                 setZipCode(addr.pincode)
+                                setArea(addr.area || '')
                                 setCity(addr.city)
+                                setDistrict(addr.district || '')
                                 setStateName(addr.state)
                               }}
                               style={{ marginTop: 2, accentColor: 'var(--black)' }}
@@ -429,8 +442,8 @@ export default function CheckoutPage() {
                             <div style={{ fontFamily: 'var(--font-ui)', fontSize: 12 }}>
                               <p style={{ margin: '0 0 4px 0', fontWeight: 500 }}>{addr.fullName}</p>
                               <p style={{ margin: 0, color: 'var(--gray)', lineHeight: 1.5 }}>
-                                {addr.line1}{addr.line2 ? `, ${addr.line2}` : ''}<br />
-                                {addr.city}, {addr.state} &mdash; {addr.pincode}
+                                {[addr.line2, addr.line1, addr.area].filter(Boolean).join(', ')}<br />
+                                {[addr.city, addr.district !== addr.city && addr.district, addr.state].filter(Boolean).join(', ')} &mdash; {addr.pincode}
                               </p>
                             </div>
                           </label>
@@ -449,7 +462,9 @@ export default function CheckoutPage() {
                               setLine1('')
                               setLine2('')
                               setZipCode('')
+                              setArea('')
                               setCity('')
+                              setDistrict('')
                               setStateName('')
                             }}
                             style={{
@@ -520,25 +535,40 @@ export default function CheckoutPage() {
                           />
                         </div>
 
-                        {/* Address Lines */}
                         <div>
-                          <label style={{ fontFamily: 'var(--font-ui)', fontSize: 10, textTransform: 'uppercase', color: 'var(--gray)', letterSpacing: '0.1em', display: 'block', marginBottom: 6 }}>
-                            Address *
-                          </label>
+                          <label style={FIELD_LABEL}>Street *</label>
                           <input
                             type="text"
                             required
                             value={line1}
                             onChange={(e) => setLine1(e.target.value)}
-                            placeholder="Street address, apartment, suite, unit etc."
-                            style={{ width: '100%', border: '1px solid var(--border)', padding: '10px 12px', fontSize: 12, fontFamily: 'var(--font-ui)', outline: 'none', marginBottom: 10 }}
+                            placeholder="e.g. Pethamapalayam Road"
+                            style={FIELD_INPUT}
                           />
+                        </div>
+
+                        <div>
+                          <label style={FIELD_LABEL}>House / Flat No. *</label>
                           <input
                             type="text"
+                            required
                             value={line2}
                             onChange={(e) => setLine2(e.target.value)}
-                            placeholder="Apartment, suite, unit etc. (optional)"
-                            style={{ width: '100%', border: '1px solid var(--border)', padding: '10px 12px', fontSize: 12, fontFamily: 'var(--font-ui)', outline: 'none' }}
+                            placeholder="e.g. 514/3/1"
+                            style={FIELD_INPUT}
+                          />
+                        </div>
+
+                        <div>
+                          <label style={FIELD_LABEL}>Area / Locality *</label>
+                          <input
+                            type="text"
+                            required
+                            value={area}
+                            onChange={(e) => setArea(e.target.value)}
+                            placeholder="Village, locality or landmark"
+                            list="area-options"
+                            style={FIELD_INPUT}
                           />
                         </div>
 
@@ -565,34 +595,42 @@ export default function CheckoutPage() {
                           )}
                         </div>
 
-                        {/* City & State (Auto-populated or filled) */}
-                        <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-                          <div style={{ flex: '1 1 45%' }}>
-                            <label style={{ fontFamily: 'var(--font-ui)', fontSize: 10, textTransform: 'uppercase', color: 'var(--gray)', letterSpacing: '0.1em', display: 'block', marginBottom: 6 }}>
-                              City *
-                            </label>
-                            <input
-                              type="text"
-                              required
-                              value={city}
-                              onChange={(e) => setCity(e.target.value)}
-                              style={{ width: '100%', border: '1px solid var(--border)', padding: '10px 12px', fontSize: 12, fontFamily: 'var(--font-ui)', outline: 'none', background: city ? '#faf9f6' : '#ffffff' }}
-                            />
-                          </div>
-                          <div style={{ flex: '1 1 45%' }}>
-                            <label style={{ fontFamily: 'var(--font-ui)', fontSize: 10, textTransform: 'uppercase', color: 'var(--gray)', letterSpacing: '0.1em', display: 'block', marginBottom: 6 }}>
-                              State *
-                            </label>
-                            <input
-                              type="text"
-                              required
-                              value={stateName}
-                              onChange={(e) => setStateName(e.target.value)}
-                              style={{ width: '100%', border: '1px solid var(--border)', padding: '10px 12px', fontSize: 12, fontFamily: 'var(--font-ui)', outline: 'none', background: stateName ? '#faf9f6' : '#ffffff' }}
-                            />
-                          </div>
+                        <div>
+                          <label style={FIELD_LABEL}>City / Town *</label>
+                          <input
+                            type="text"
+                            required
+                            value={city}
+                            onChange={(e) => setCity(e.target.value)}
+                            list="city-options"
+                            style={FIELD_INPUT}
+                          />
                         </div>
 
+                        <div>
+                          <label style={FIELD_LABEL}>District *</label>
+                          <input
+                            type="text"
+                            required
+                            value={district}
+                            onChange={(e) => setDistrict(e.target.value)}
+                            style={FIELD_INPUT}
+                          />
+                        </div>
+
+                        <div>
+                          <label style={FIELD_LABEL}>State *</label>
+                          <input
+                            type="text"
+                            required
+                            value={stateName}
+                            onChange={(e) => setStateName(e.target.value)}
+                            style={FIELD_INPUT}
+                          />
+                        </div>
+
+                        <datalist id="area-options">{postOffices.map(n => <option key={n} value={n} />)}</datalist>
+                        <datalist id="city-options">{[...new Set([city, district].filter(Boolean))].map(n => <option key={n} value={n} />)}</datalist>
 
                         <button
                           type="submit"
@@ -834,3 +872,6 @@ function normalizeIndianMobile(value) {
   const digits = String(value).replace(/\D/g, '').replace(/^(91|0)(?=\d{10}$)/, '')
   return /^[6-9]\d{9}$/.test(digits) ? digits : null
 }
+
+const FIELD_LABEL = { fontFamily: 'var(--font-ui)', fontSize: 10, textTransform: 'uppercase', color: 'var(--gray)', letterSpacing: '0.1em', display: 'block', marginBottom: 6 }
+const FIELD_INPUT = { width: '100%', border: '1px solid var(--border)', padding: '10px 12px', fontSize: 12, fontFamily: 'var(--font-ui)', outline: 'none' }

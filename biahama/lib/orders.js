@@ -87,6 +87,8 @@ export async function createOrderFromCart(userId, addressId, payment, couponCode
     phone:    address.phone,
     line1:    address.line1,
     line2:    address.line2 || null,
+    area:     address.area || null,
+    district: address.district || null,
     pincode:  address.pincode,
     city:     address.city,
     state:    address.state,

@@ -14,8 +14,10 @@ const updateSchema = z.object({
   phone:     z.string().regex(/^[6-9]\d{9}$/, 'Enter a valid 10-digit Indian mobile number').optional(),
   line1:     z.string().min(3).optional(),
   line2:     z.string().optional(),
+  area:     z.string().max(120).optional(),
   pincode:   z.string().regex(/^[1-9]\d{5}$/, 'Enter a valid 6-digit PIN code').optional(),
   city:      z.string().min(2).optional(),
+  district:      z.string().max(80).optional(),
   state:     z.string().min(2).optional(),
   isDefault: z.boolean().optional(),
 })

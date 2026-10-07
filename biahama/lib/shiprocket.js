@@ -150,7 +150,7 @@ export async function createShiprocketOrder(order) {
 
     billing_customer_name: firstName,
     billing_last_name: lastName,
-    billing_address: [addr.line1, addr.line2].filter(Boolean).join(', '),
+    billing_address: [addr.line2, addr.line1, addr.area].filter(Boolean).join(', '),
     billing_city: addr.city || '',
     billing_pincode: addr.pincode || '',
     billing_state: addr.state || '',

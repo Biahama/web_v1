@@ -152,8 +152,8 @@ export default async function AccountPage() {
                   <p style={{ fontSize: 10, letterSpacing: 1.5, textTransform: 'uppercase', color: '#6f6f6f', margin: '0 0 8px 0' }}>Default</p>
                 )}
                 <p style={{ margin: 0, color: '#262626' }}>{a.fullName}</p>
-                <p style={{ margin: 0 }}>{a.line1}{a.line2 ? `, ${a.line2}` : ''}</p>
-                <p style={{ margin: 0 }}>{a.city}, {a.state} — {a.pincode}</p>
+                <p style={{ margin: 0 }}>{[a.line2, a.line1, a.area].filter(Boolean).join(', ')}</p>
+                <p style={{ margin: 0 }}>{[a.city, a.district !== a.city && a.district, a.state].filter(Boolean).join(', ')} — {a.pincode}</p>
                 <p style={{ margin: 0 }}>{a.phone}</p>
               </div>
             ))}

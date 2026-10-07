@@ -111,8 +111,8 @@ export async function sendOrderConfirmationEmail(orderId, { retryable = false, i
       <p style="font-size:15px;margin:12px 0;">Total: <strong>${formatPrice(order.totalAmount)}</strong>
       ${cod ? '<span style="color:#6f6f6f;font-size:12px;"> (to pay on delivery)</span>' : ''}</p>
       <p style="font-size:13px;line-height:1.7;color:#6f6f6f;">Delivering to:<br/>
-      ${escapeHtml(addr.fullName ?? '')}, ${escapeHtml(addr.line1 ?? '')}${addr.line2 ? ', ' + escapeHtml(addr.line2) : ''},<br/>
-      ${escapeHtml(addr.city ?? '')}, ${escapeHtml(addr.state ?? '')} — ${escapeHtml(addr.pincode ?? '')}</p>
+      ${escapeHtml(addr.fullName ?? '')}, ${escapeHtml([addr.line2, addr.line1, addr.area].filter(Boolean).join(', '))},<br/>
+      ${escapeHtml([addr.city, addr.district !== addr.city && addr.district, addr.state].filter(Boolean).join(', '))} — ${escapeHtml(addr.pincode ?? '')}</p>
       <p style="font-size:13px;line-height:1.7;">${cancelled ? 'You can check refund status in your account.' : "We'll email you again the moment it ships."}</p>`
     )
     await sendEmail({ to: order.user.email, subject: cancelled ? 'An update about your Biahama order' : 'Your Biahama order is confirmed', html, idempotencyKey })
