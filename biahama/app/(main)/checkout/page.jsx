@@ -35,7 +35,6 @@ export default function CheckoutPage() {
   const [showNewAddressForm, setShowNewAddressForm] = useState(true)
 
   // Address form inputs
-  const [title, setTitle] = useState('Mr.') // Mr., Ms., Miss, Mrs.
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [phone, setPhone] = useState('')
@@ -44,7 +43,6 @@ export default function CheckoutPage() {
   const [zipCode, setZipCode] = useState('')
   const [city, setCity] = useState('')
   const [stateName, setStateName] = useState('')
-  const [invoiceSame, setInvoiceSame] = useState(true)
   const [pincodeLoading, setPincodeLoading] = useState(false)
   const [zipError, setZipError] = useState('')
   const [addressSaving, setAddressSaving] = useState(false)
@@ -91,7 +89,7 @@ export default function CheckoutPage() {
     }
   }, [session, status])
 
-  // ZIP Code postal lookup
+  // PIN code lookup
   async function handleZipCodeChange(value) {
     const formatted = value.replace(/\D/g, '')
     setZipCode(formatted)
@@ -107,7 +105,7 @@ export default function CheckoutPage() {
           setCity(po.District)
           setStateName(po.State)
         } else {
-          setZipError('Enter a valid ZIP code in the following sample format: 999999')
+          setZipError('Enter a valid 6-digit PIN code, e.g. 638052')
         }
       } catch {
         setZipError('Could not look up this PIN code. Please enter your city and state.')
@@ -131,8 +129,13 @@ export default function CheckoutPage() {
         setPaymentError('Please fill out all required fields.')
         return
       }
-      if (zipCode.length !== 6) {
-        setZipError('Enter a valid ZIP code in the following sample format: 999999')
+      const mobile = normalizeIndianMobile(phone)
+      if (!mobile) {
+        setPaymentError('Enter a valid 10-digit Indian mobile number, e.g. 9876543210.')
+        return
+      }
+      if (!/^[1-9]\d{5}$/.test(zipCode)) {
+        setZipError('Enter a valid 6-digit PIN code, e.g. 638052')
         return
       }
 
@@ -144,7 +147,7 @@ export default function CheckoutPage() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             fullName: full,
-            phone,
+            phone: mobile,
             line1,
             line2,
             pincode: zipCode,
@@ -382,7 +385,7 @@ export default function CheckoutPage() {
 
                     {/* Regional India Notice */}
                     <p style={{ fontFamily: 'var(--font-ui)', fontSize: 12, color: '#a0522d', lineHeight: 1.6, margin: '0 0 24px 0' }}>
-                      You are shopping from the <strong>Online Boutique India</strong>. To ensure the correct processing of your order, please verify that your shipping address corresponds to the selected country.
+                      We currently ship within India only.
                     </p>
 
                     {/* Saved Addresses Picker */}
@@ -471,27 +474,6 @@ export default function CheckoutPage() {
                     {(showNewAddressForm || addresses.length === 0) && (
                       <form onSubmit={handleShippingContinue} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
-                        {/* Title Radio Selection */}
-                        <div>
-                          <span style={{ fontFamily: 'var(--font-ui)', fontSize: 10, textTransform: 'uppercase', color: 'var(--gray)', letterSpacing: '0.1em', display: 'block', marginBottom: 8 }}>
-                            Title *
-                          </span>
-                          <div style={{ display: 'flex', gap: 20 }}>
-                            {['Mr.', 'Ms.', 'Miss', 'Mrs.'].map(opt => (
-                              <label key={opt} style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'var(--font-ui)', fontSize: 12, cursor: 'pointer' }}>
-                                <input
-                                  type="radio"
-                                  name="title"
-                                  value={opt}
-                                  checked={title === opt}
-                                  onChange={(e) => setTitle(e.target.value)}
-                                  style={{ accentColor: 'var(--black)' }}
-                                />
-                                {opt}
-                              </label>
-                            ))}
-                          </div>
-                        </div>
 
                         {/* First and Last Name */}
                         <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
@@ -528,6 +510,9 @@ export default function CheckoutPage() {
                           </label>
                           <input
                             type="tel"
+                            inputMode="numeric"
+                            autoComplete="tel-national"
+                            placeholder="10-digit mobile number"
                             required
                             value={phone}
                             onChange={(e) => setPhone(e.target.value)}
@@ -557,14 +542,16 @@ export default function CheckoutPage() {
                           />
                         </div>
 
-                        {/* ZIP Code / Pincode */}
+                        {/* PIN code */}
                         <div>
                           <label style={{ fontFamily: 'var(--font-ui)', fontSize: 10, textTransform: 'uppercase', color: 'var(--gray)', letterSpacing: '0.1em', display: 'block', marginBottom: 6 }}>
-                            ZIP Code *
+                            PIN Code *
                           </label>
                           <input
                             type="text"
                             required
+                            inputMode="numeric"
+                            autoComplete="postal-code"
                             maxLength={6}
                             value={zipCode}
                             onChange={(e) => handleZipCodeChange(e.target.value)}
@@ -606,19 +593,6 @@ export default function CheckoutPage() {
                           </div>
                         </div>
 
-                        {/* Invoice Address Checkbox */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
-                          <input
-                            type="checkbox"
-                            id="invoice_same"
-                            checked={invoiceSame}
-                            onChange={(e) => setInvoiceSame(e.target.checked)}
-                            style={{ accentColor: 'var(--black)' }}
-                          />
-                          <label htmlFor="invoice_same" style={{ fontFamily: 'var(--font-ui)', fontSize: 12, color: 'var(--black)', cursor: 'pointer' }}>
-                            The delivery address is the same as the invoice address
-                          </label>
-                        </div>
 
                         <button
                           type="submit"
@@ -853,4 +827,10 @@ export default function CheckoutPage() {
       </div>
     </>
   )
+}
+
+// Accepts "9876543210", "+91 98765 43210", "09876543210"; returns 10 digits or null.
+function normalizeIndianMobile(value) {
+  const digits = String(value).replace(/\D/g, '').replace(/^(91|0)(?=\d{10}$)/, '')
+  return /^[6-9]\d{9}$/.test(digits) ? digits : null
 }

@@ -8,10 +8,10 @@ import { ensureUser } from '@/lib/ensure-user'
 
 const schema = z.object({
   fullName: z.string().min(2),
-  phone:    z.string().length(10),
+  phone:    z.string().regex(/^[6-9]\d{9}$/, 'Enter a valid 10-digit Indian mobile number'),
   line1:    z.string().min(3),
   line2:    z.string().optional(),
-  pincode:  z.string().length(6),
+  pincode:  z.string().regex(/^[1-9]\d{5}$/, 'Enter a valid 6-digit PIN code'),
   city:     z.string().min(2),
   state:    z.string().min(2),
   isDefault: z.boolean().optional(),
