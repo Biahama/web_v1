@@ -25,7 +25,7 @@
    ------------------------------------------------------------ */
 :root {
   --font-ui:       var(--font-dm-sans), 'DM Sans', sans-serif; /* nav, tabs, product info */
-  --font-display:  'Cormorant Garamond', serif;  /* headings, page titles (italic) */
+  --font-display:  var(--font-cormorant), 'Cormorant Garamond', serif;
 }
 
 /* ------------------------------------------------------------
@@ -52,7 +52,7 @@
 
   /* Product Name — design spec: DM Sans Bold */
   --text-product-name-size:     16px;
-  --text-product-name-weight:   700;
+  --text-product-name-weight:   400;
   --text-product-name-tracking: 0.8px;
   --text-product-name-lh:       20px;
 
@@ -145,8 +145,8 @@
    ------------------------------------------------------------ */
 :root {
   --grid-columns:      3;
-  --grid-col-gap:      8px;    /* Updated to 8px */
-  --grid-row-gap:      32px;   /* BC: row gap */
+  --grid-col-gap:      16px;
+  --grid-row-gap:      48px;
   --grid-padding:      16px;   /* BC: container left/right padding */
 }
 

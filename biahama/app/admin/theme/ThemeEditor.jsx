@@ -360,6 +360,7 @@ export default function ThemeEditor({ tokens, defaultFonts, defaultLayout }) {
 
       {/* ================= STICKY SAVE BAR ================= */}
       <div
+        className="admin-save-bar"
         style={{
           position: 'fixed',
           bottom: 0,

@@ -1,165 +1,44 @@
-// ============================================================
-// MY ACCOUNT — profile, order history, saved addresses.
-// (The profile icon in the navbar links here; it used to 404.)
-// ============================================================
-
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/utils/supabase/server'
 import { prisma } from '@/lib/prisma'
-import { logError } from '@/lib/logger'
 import { getPointsBalance } from '@/lib/loyalty'
+import { logError } from '@/lib/logger'
 import SignOutButton from '@/components/auth/SignOutButton'
+import AddressBook from '@/components/account/AddressBook'
+import ProfileForm from '@/components/account/ProfileForm'
 
 export const dynamic = 'force-dynamic'
-
-export const metadata = { title: 'My Account — Biahama' }
-
-function formatPrice(paise) {
-  return `₹${(paise / 100).toLocaleString('en-IN')}`
-}
-
-const sectionTitle = {
-  fontFamily: 'var(--font-ui)',
-  fontSize: 13,
-  fontWeight: 400,
-  letterSpacing: 2,
-  textTransform: 'uppercase',
-  color: '#262626',
-  margin: '0 0 16px 0',
-}
+export const metadata = { title: 'My Account' }
+const price = amount => '₹' + (amount / 100).toLocaleString('en-IN')
 
 export default async function AccountPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/?login=true')
-
-  // Load orders and addresses — if the database hiccups, show the
-  // page anyway with a notice instead of crashing.
-  let orders = []
-  let addresses = []
-  let loyaltyPoints = 0 // falls back to 0 if the database hiccups
-  let loadFailed = false
-  try {
-    ;[orders, addresses, loyaltyPoints] = await Promise.all([
-      prisma.order.findMany({
-        where: { userId: user.id },
-        orderBy: { createdAt: 'desc' },
-        include: { items: true },
-      }),
-      prisma.address.findMany({
-        where: { userId: user.id },
-        orderBy: [{ isDefault: 'desc' }, { createdAt: 'desc' }],
-      }),
-      getPointsBalance(user.id), // loyalty points earned so far
-    ])
-  } catch (error) {
-    loadFailed = true
-    await logError('account page — load', error, { userId: user.id })
-  }
-
+  if (!user) redirect('/?login=true&next=/account')
+  const results = await Promise.allSettled([
+    prisma.order.findMany({ where: { userId: user.id }, orderBy: { createdAt: 'desc' }, take: 50, include: { items: true } }),
+    prisma.address.findMany({ where: { userId: user.id }, orderBy: [{ isDefault: 'desc' }, { createdAt: 'desc' }] }),
+    prisma.user.findUnique({ where: { id: user.id }, select: { name: true, phone: true } }),
+    getPointsBalance(user.id),
+  ])
+  for (const result of results) if (result.status === 'rejected') await logError('account — load', result.reason, { userId: user.id })
+  const orders = results[0].status === 'fulfilled' ? results[0].value : []
+  const addresses = results[1].status === 'fulfilled' ? results[1].value : []
+  const profile = results[2].status === 'fulfilled' ? results[2].value : null
+  const points = results[3].status === 'fulfilled' ? results[3].value : null
   const meta = user.user_metadata ?? {}
-  const name =
-    [meta.first_name, meta.last_name].filter(Boolean).join(' ') ||
-    meta.full_name || meta.name || 'there'
-
-  return (
-    <div style={{ maxWidth: 880, margin: '0 auto', padding: '140px 24px 96px' }}>
-      {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 16, marginBottom: 48 }}>
-        <div>
-          <h1 style={{ fontFamily: 'var(--font-display)', fontStyle: 'italic', fontSize: 38, fontWeight: 300, color: '#262626', margin: '0 0 6px 0' }}>
-            Hello, {name}
-          </h1>
-          <p style={{ fontFamily: 'var(--font-ui)', fontSize: 13, color: '#6f6f6f', margin: 0 }}>{user.email}</p>
-          {/* Loyalty points — earned on paid orders, ₹100 spent = points */}
-          <p style={{ fontFamily: 'var(--font-ui)', fontSize: 13, color: '#6f6f6f', margin: '4px 0 0 0' }}>
-            ★ {loyaltyPoints.toLocaleString('en-IN')} point{loyaltyPoints === 1 ? '' : 's'}
-          </p>
-        </div>
-        <SignOutButton />
-      </div>
-
-      {loadFailed && (
-        <p style={{ fontFamily: 'var(--font-ui)', fontSize: 13, color: '#cc0000', marginBottom: 32 }}>
-          We couldn&apos;t load your orders right now — the issue has been recorded. Please refresh in a moment.
-        </p>
-      )}
-
-      {/* Quick link to wardrobe */}
-      <div style={{ marginBottom: 48 }}>
-        <Link
-          href="/account/wardrobe"
-          style={{ fontFamily: 'var(--font-ui)', fontSize: 13, letterSpacing: 1.5, textTransform: 'uppercase', color: '#262626', textDecoration: 'underline' }}
-        >
-          View My Wardrobe (saved items) →
-        </Link>
-      </div>
-
-      {/* Orders */}
-      <div style={{ marginBottom: 56 }}>
-        <h2 id="orders" style={sectionTitle}>My Orders</h2>
-        {orders.length === 0 ? (
-          <p style={{ fontFamily: 'var(--font-ui)', fontSize: 14, color: '#6f6f6f' }}>
-            No orders yet. <Link href="/shop" style={{ color: '#262626', textDecoration: 'underline' }}>Explore the collection</Link>.
-          </p>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            {orders.map((order) => (
-              <Link
-                key={order.id}
-                href={`/orders/${order.id}`}
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  gap: 16,
-                  padding: '18px 0',
-                  borderBottom: '1px solid #e5e5e5',
-                  textDecoration: 'none',
-                  fontFamily: 'var(--font-ui)',
-                }}
-              >
-                <div>
-                  <p style={{ fontSize: 14, color: '#262626', margin: '0 0 4px 0' }}>
-                    {order.items.length} item{order.items.length > 1 ? 's' : ''} · {formatPrice(order.totalAmount)}
-                  </p>
-                  <p style={{ fontSize: 12, color: '#6f6f6f', margin: 0 }}>
-                    {new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
-                  </p>
-                </div>
-                <span style={{ fontSize: 11, letterSpacing: 1.5, textTransform: 'uppercase', color: order.status === 'cancelled' ? '#cc0000' : '#262626' }}>
-                  {order.status}
-                </span>
-              </Link>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Addresses */}
-      <div>
-        <h2 style={sectionTitle}>Saved Addresses</h2>
-        {addresses.length === 0 ? (
-          <p style={{ fontFamily: 'var(--font-ui)', fontSize: 14, color: '#6f6f6f' }}>
-            No saved addresses yet — you can add one during checkout.
-          </p>
-        ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 16 }}>
-            {addresses.map((a) => (
-              <div key={a.id} style={{ border: '1px solid #e5e5e5', padding: '20px', fontFamily: 'var(--font-ui)', fontSize: 13, lineHeight: 1.7, color: '#404040' }}>
-                {a.isDefault && (
-                  <p style={{ fontSize: 10, letterSpacing: 1.5, textTransform: 'uppercase', color: '#6f6f6f', margin: '0 0 8px 0' }}>Default</p>
-                )}
-                <p style={{ margin: 0, color: '#262626' }}>{a.fullName}</p>
-                <p style={{ margin: 0 }}>{[a.line2, a.line1, a.area].filter(Boolean).join(', ')}</p>
-                <p style={{ margin: 0 }}>{[a.city, a.district !== a.city && a.district, a.state].filter(Boolean).join(', ')} — {a.pincode}</p>
-                <p style={{ margin: 0 }}>{a.phone}</p>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  )
+  const name = profile?.name ?? ([meta.first_name, meta.last_name].filter(Boolean).join(' ') || meta.full_name || meta.name || '')
+  return <div className="account-page">
+    <header className="account-header"><div><p className="eyebrow">Your Biahama</p><h1>Welcome{name ? ', ' + name : ' back'}.</h1><p className="muted">A place for your pieces, your details, and everything in between.</p></div><SignOutButton /></header>
+    <nav className="account-tabs" aria-label="Account sections"><a href="#orders">My orders</a><Link href="/account/wardrobe">My wardrobe</Link><a href="#addresses">Addresses</a><a href="#details">My profile</a></nav>
+    <div className="account-summary"><span>{results[0].status === 'fulfilled' ? orders.length + (orders.length === 50 ? '+' : '') + ' orders' : 'Orders unavailable'}</span><span>{points === null ? 'Points unavailable' : points.toLocaleString('en-IN') + ' loyalty points'}</span><Link href="/contact">A little assistance →</Link></div>
+    <section id="orders" className="account-section"><div className="section-header"><div><p className="eyebrow">The pieces you chose</p><h2>My orders</h2></div><Link className="text-action" href="/shop">Explore the collection →</Link></div>
+      {results[0].status === 'rejected' ? <p className="form-error" role="alert">We couldn’t load your orders. Please refresh in a moment.</p> : orders.length === 0 ? <div className="quiet-empty">Your story with us starts here.<p>Your orders and delivery updates will appear in this space.</p></div> : <div>{orders.map(order => <Link key={order.id} href={'/orders/' + order.id} className="account-order"><div><p className="order-number">Order #{order.id.slice(-8).toUpperCase()}</p><p className="muted">{new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Kolkata' })} · {order.items.reduce((sum, item) => sum + item.quantity, 0)} pieces</p></div><div className="order-summary"><span className="subtle-badge">{order.status}</span><span>{price(order.totalAmount)}</span><span aria-hidden="true">→</span></div></Link>)}</div>}
+      <p className="muted section-description">Track a delivery or request a return or size exchange from your order details.</p>
+    </section>
+    <AddressBook addresses={addresses} unavailable={results[1].status === 'rejected'} />
+    <ProfileForm name={name} phone={profile?.phone || ''} email={user.email} unavailable={results[2].status === 'rejected'} />
+    <div className="account-care"><div><p className="eyebrow">Here to help</p><h2>A personal touch.</h2><p>From finding your fit to caring for linen, we’re just a message away.</p></div><Link className="text-action" href="/contact">Contact customer care →</Link></div>
+  </div>
 }

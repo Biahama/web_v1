@@ -69,7 +69,7 @@ Every order is packed in reusable cloth and recycled paper — no plastic. If yo
     title: 'Returns',
     body: `We want you to keep only what you love. If a piece is not right, you may return it within 14 days of delivery, provided it is unworn, unwashed, and in its original condition with tags attached.
 
-To start a return, write to us with your order number and we will arrange a pickup where available. Refunds are issued to your original payment method within 7–10 working days of the garment reaching us. Cash-on-delivery orders are refunded by bank transfer.
+To start a return or size exchange, open your delivered order in My Account and select Request a return or exchange. Choose the pieces and quantities, tell us the reason, and wait for our approval and pickup instructions. You can follow the request and our updates in your order details. For help or changes to a request, write to us with your order number. Refunds are issued to your original payment method within 7–10 working days of the garment reaching us. Cash-on-delivery orders are refunded by bank transfer.
 
 Exchanges for a different size are always free. Made-to-order and altered pieces cannot be returned, but we will always help with sizing before you buy.`,
   },

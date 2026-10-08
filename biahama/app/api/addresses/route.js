@@ -1,23 +1,10 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/utils/supabase/server'
-import { z } from 'zod'
+import { addressSchema, saveAddress } from '@/lib/address-service'
 
 import { prisma } from '@/lib/prisma'
 import { withErrorLogging } from '@/lib/logger'
 import { ensureUser } from '@/lib/ensure-user'
-
-const schema = z.object({
-  fullName: z.string().min(2),
-  phone:    z.string().regex(/^[6-9]\d{9}$/, 'Enter a valid 10-digit Indian mobile number'),
-  line1:    z.string().min(3),
-  line2:    z.string().optional(),
-  area:    z.string().max(120).optional(),
-  pincode:  z.string().regex(/^[1-9]\d{5}$/, 'Enter a valid 6-digit PIN code'),
-  city:     z.string().min(2),
-  district:     z.string().max(80).optional(),
-  state:    z.string().min(2),
-  isDefault: z.boolean().optional(),
-})
 
 export const GET = withErrorLogging('api/addresses GET', async () => {
   const supabase = await createClient()
@@ -37,23 +24,14 @@ export const POST = withErrorLogging('api/addresses POST', async (req) => {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const body = await req.json()
-  const parsed = schema.safeParse(body)
+  const parsed = addressSchema.safeParse(await req.json().catch(() => null))
   if (!parsed.success) return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 })
 
   // Make sure this Supabase user has a row in our own User table,
   // otherwise saving the address would fail with a database error.
   await ensureUser(user)
 
-  const { isDefault, ...data } = parsed.data
-
-  if (isDefault) {
-    await prisma.address.updateMany({ where: { userId: user.id }, data: { isDefault: false } })
-  }
-
-  const address = await prisma.address.create({
-    data: { ...data, userId: user.id, isDefault: isDefault ?? false },
-  })
+  const address = await saveAddress(prisma, user.id, parsed.data)
 
   return NextResponse.json(address, { status: 201 })
 })

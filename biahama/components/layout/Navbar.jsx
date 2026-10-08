@@ -1,5 +1,6 @@
  'use client'
 import Link from 'next/link'
+import { STOREFRONT_COLLECTIONS } from '@/lib/collections'
 import Image from 'next/image'
 import { useAuth } from '@/components/providers/AuthProvider'
 import { Suspense, useState, useEffect, useCallback } from 'react'
@@ -11,12 +12,7 @@ import { useDialog } from '@/components/ui/useDialog'
 import { safeReturnPath } from '@/lib/auth-redirect'
 import { useCart } from '@/lib/cart'
 
-const CATEGORIES = [
-  { name: 'Kurta', slug: 'kurtas', img: 'https://res.cloudinary.com/dc30t7io2/image/upload/q_auto,f_auto,w_400,h_600,c_fill/v1781050257/biahama/collection_hover_kurta.png' },
-  { name: 'Shirts', slug: 'shirts', img: 'https://res.cloudinary.com/dc30t7io2/image/upload/q_auto,f_auto,w_400,h_600,c_fill/v1781050258/biahama/collection_hover_shirt.png' },
-  { name: 'Tunics', slug: 'tunics', img: 'https://res.cloudinary.com/dc30t7io2/image/upload/q_auto,f_auto,w_400,h_600,c_fill/v1781050259/biahama/collection_hover_tunic.png' },
-  { name: 'Pant', slug: 'trousers', img: 'https://res.cloudinary.com/dc30t7io2/image/upload/q_auto,f_auto,w_400,h_600,c_fill/v1781050260/biahama/collection_hover_pant.png' },
-]
+const CATEGORIES = STOREFRONT_COLLECTIONS.map(c => ({ ...c, img: c.image }))
 export default function Navbar() {
   const { session } = useAuth()
   const { count } = useCart()

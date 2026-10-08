@@ -3,6 +3,8 @@ import FilterTabBar from '@/components/ui/FilterTabBar'
 import { prisma } from '@/lib/prisma'
 import { logError } from '@/lib/logger'
 import { getSiteSettings } from '@/lib/site-settings'
+import Link from 'next/link'
+import { filterCatalog } from '@/lib/catalog-filters'
 
 export const revalidate = 3600
 
@@ -34,6 +36,7 @@ function shapeProduct(p) {
     slug:           p.slug,
     category:       p.category,
     image:          p.images[0]?.url ?? null,
+    images:         p.images,
     altText:        p.images[0]?.altText ?? p.name,
     price:          minPrice,
     inStock,
@@ -45,7 +48,7 @@ function shapeProduct(p) {
 
 // The photos + size options every product listing query needs.
 const PRODUCT_INCLUDE = {
-  images:   { where: { isPrimary: true }, take: 1 },
+  images:   { orderBy: [{ isPrimary: 'desc' }, { sortOrder: 'asc' }], take: 2 },
   variants: { select: { id: true, price: true, comparePrice: true, stockQty: true, color: true, colorHex: true, size: true } },
 }
 
@@ -115,7 +118,18 @@ export default async function ShopPage({ searchParams }) {
   // Searching? Show matching products from every category instead
   // of one category's collection.
   const searching = q !== ''
-  const products = searching ? await searchProducts(q) : await getProducts(activeCategory)
+  const catalog = searching ? await searchProducts(q) : await getProducts(activeCategory)
+  const filters = {
+    size: typeof params?.size === 'string' ? params.size : '',
+    color: typeof params?.color === 'string' ? params.color : '',
+    availability: params?.availability === 'in-stock' ? 'in-stock' : '',
+    sort: ['price-asc', 'price-desc', 'name'].includes(params?.sort) ? params.sort : 'newest',
+  }
+  const products = filterCatalog(catalog, filters)
+  const sizes = [...new Set(catalog.flatMap(p => p.variants.map(v => v.size)))]
+  const colors = [...new Set(catalog.flatMap(p => p.variants.map(v => v.color)))].sort()
+  const filtered = Boolean(filters.size || filters.color || filters.availability)
+
 
   // Admin panel settings: per-category banner side + optional
   // custom banner photo (edited under Admin -> Collections).
@@ -155,6 +169,17 @@ export default async function ShopPage({ searchParams }) {
         </h1>
       </div>
 
+      {catalog.length > 0 && <form className="catalog-controls" aria-label="Collection filters">
+        <input type="hidden" name="cat" value={activeCategory} />{q && <input type="hidden" name="q" value={q} />}
+        <p className="muted">{products.length} {products.length === 1 ? 'piece' : 'pieces'}</p>
+        <label>Size<select name="size" defaultValue={filters.size}><option value="">All sizes</option>{sizes.map(size => <option key={size}>{size}</option>)}</select></label>
+        <label>Colour<select name="color" defaultValue={filters.color}><option value="">All colours</option>{colors.map(color => <option key={color}>{color}</option>)}</select></label>
+        <label>Availability<select name="availability" defaultValue={filters.availability}><option value="">All pieces</option><option value="in-stock">In stock</option></select></label>
+        <label>Sort by<select name="sort" defaultValue={filters.sort}><option value="newest">Newest</option><option value="price-asc">Price: low to high</option><option value="price-desc">Price: high to low</option><option value="name">Name</option></select></label>
+        <button className="secondary-action">Apply</button>
+        {filtered && <Link className="text-action" href={'/shop?cat=' + activeCategory + (q ? '&q=' + encodeURIComponent(q) : '')}>Clear filters</Link>}
+      </form>}
+      {filtered && products.length === 0 ? <div className="collection-empty"><p>No pieces match these filters.</p><Link href={'/shop?cat=' + activeCategory + (q ? '&q=' + encodeURIComponent(q) : '')}>Clear filters →</Link></div> : <>
       {/* Product grid */}
       <div
         style={{
@@ -184,6 +209,7 @@ export default async function ShopPage({ searchParams }) {
           />
         )}
       </div>
+      </>}
     </div>
   )
 }

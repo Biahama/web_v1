@@ -126,6 +126,28 @@ model Order {
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
   items           OrderItem[]
+  deliveredAt     DateTime?
+  returnRequest   ReturnRequest?
+}
+
+model ReturnRequest {
+  id                  String   @id @default(uuid())
+  orderId             String   @unique
+  order               Order    @relation(fields: [orderId], references: [id])
+  userId              String
+  kind                String
+  reason              String
+  details             String?
+  items               Json
+  status              String   @default("requested")
+  customerMessage     String?
+  internalNotes       String?
+  resolutionReference String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@index([status, createdAt])
+  @@index([userId])
 }
 
 model OrderItem {

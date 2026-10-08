@@ -242,6 +242,7 @@ export default function CollectionsEditor({ cat, defaultCollections }) {
 
       {/* ================= STICKY SAVE BAR ================= */}
       <div
+        className="admin-save-bar"
         style={{
           position: 'fixed',
           bottom: 0,

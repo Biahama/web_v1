@@ -9,6 +9,7 @@
 // ============================================================
 
 import { useEffect, useState } from 'react'
+import CampaignHero from '@/components/layout/CampaignHero'
 
 // ---- Small shared styles (same look as the theme editor) ----
 const labelStyle = {
@@ -41,6 +42,7 @@ const sectionTitleStyle = {
 export default function LandingEditor({ defaultLayout }) {
   const [layout, setLayout] = useState({ ...defaultLayout })
   const [loading, setLoading] = useState(true)
+  const [uploading, setUploading] = useState(null)
   // status = { type: 'idle' | 'saving' | 'success' | 'error', message }
   const [status, setStatus] = useState({ type: 'idle', message: '' })
 
@@ -58,7 +60,32 @@ export default function LandingEditor({ defaultLayout }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const setField = (key, value) => setLayout((prev) => ({ ...prev, [key]: value }))
+  const setField = (key, value) => {
+    setLayout((prev) => ({ ...prev, [key]: value }))
+    setStatus({ type: 'idle', message: '' })
+  }
+
+  async function handleUpload(event, key) {
+    const input = event.currentTarget
+    const file = input.files?.[0]
+    if (!file) return
+    setUploading(key)
+    setStatus({ type: 'idle', message: '' })
+    try {
+      const form = new FormData()
+      form.append('file', file)
+      const res = await fetch('/api/admin/upload', { method: 'POST', body: form })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok || !data.url) throw new Error(data?.error || 'Could not upload the image. Please try again.')
+      setField(key, data.url)
+      setStatus({ type: 'success', message: 'Image uploaded. Save changes to publish it.' })
+    } catch (err) {
+      setStatus({ type: 'error', message: err.message })
+    } finally {
+      setUploading(null)
+      input.value = ''
+    }
+  }
 
   // ---- Save: send the whole layout back to the server. ----
   async function handleSave() {
@@ -73,6 +100,8 @@ export default function LandingEditor({ defaultLayout }) {
             // Sliders give strings; the server expects numbers.
             heroFocalX: Number(layout.heroFocalX),
             heroFocalY: Number(layout.heroFocalY),
+            heroMobileFocalX: Number(layout.heroMobileFocalX),
+            heroMobileFocalY: Number(layout.heroMobileFocalY),
           },
         }),
       })
@@ -89,7 +118,7 @@ export default function LandingEditor({ defaultLayout }) {
   }
 
   return (
-    <div style={{ maxWidth: 720, paddingBottom: 100 }}>
+    <div style={{ maxWidth: 1040, paddingBottom: 100 }}>
       <h1 style={{ fontFamily: 'var(--font-display), serif', fontSize: 32, fontWeight: 500, color: '#1A202C', margin: 0 }}>
         Landing page
       </h1>
@@ -129,8 +158,9 @@ export default function LandingEditor({ defaultLayout }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           {/* Headline — a textarea so Enter makes a line break */}
           <div>
-            <label style={labelStyle}>Headline</label>
+            <label htmlFor="hero-headline" style={labelStyle}>Headline</label>
             <textarea
+              id="hero-headline"
               rows={2}
               style={{ ...textInputStyle, maxWidth: 560, resize: 'vertical' }}
               value={layout.heroHeadline ?? ''}
@@ -141,51 +171,84 @@ export default function LandingEditor({ defaultLayout }) {
           </div>
 
           <div>
-            <label style={labelStyle}>Button text</label>
+            <label htmlFor="hero-button-text" style={labelStyle}>Button text</label>
             <input
               type="text"
               style={{ ...textInputStyle, maxWidth: 240 }}
+              id="hero-button-text"
               value={layout.heroButtonText ?? ''}
               maxLength={60}
               onChange={(e) => setField('heroButtonText', e.target.value)}
             />
           </div>
 
-          {/* Focal point sliders */}
-          <div>
-            <label style={labelStyle}>
-              Photo focus point (left-right): {layout.heroFocalX}
-            </label>
-            <input
-              type="range"
-              min="0"
-              max="100"
-              value={layout.heroFocalX}
-              onChange={(e) => setField('heroFocalX', Number(e.target.value))}
-              style={{ width: 280 }}
-            />
+          <label style={labelStyle}>
+            Image description
+            <input style={{ ...textInputStyle, display: 'block', maxWidth: 560, marginTop: 6 }} value={layout.heroImageAlt ?? ''} maxLength={200} onChange={e => setField('heroImageAlt', e.target.value)} />
+            <span style={{ ...helpStyle, display: 'block' }}>A short description of the campaign for customers using screen readers.</span>
+          </label>
+
+          <div className="hero-image-controls">
+            {[
+              { title: 'Desktop image', key: 'heroDesktopImage', x: 'heroFocalX', y: 'heroFocalY', help: 'Choose a landscape photograph. Leave blank to use the original campaign.' },
+              { title: 'Mobile image', key: 'heroMobileImage', x: 'heroMobileFocalX', y: 'heroMobileFocalY', help: 'Choose a portrait crop of the same campaign. Leave blank to use the desktop image.' },
+            ].map(({ title, key, x, y, help }) => <fieldset key={key} className="hero-image-control">
+              <legend>{title}</legend>
+              <label style={labelStyle}>
+                Cloudinary image URL
+                <input type="url" style={{ ...textInputStyle, display: 'block', maxWidth: '100%', marginTop: 6 }} value={layout[key] ?? ''} maxLength={1000} onChange={e => setField(key, e.target.value)} disabled={!!uploading || status.type === 'saving'} />
+              </label>
+              <p style={helpStyle}>{help}</p>
+              <label className="hero-upload-label">
+                {uploading === key ? 'Uploading…' : 'Upload image'}
+                <input type="file" accept="image/jpeg,image/png,image/webp,image/avif" onChange={e => handleUpload(e, key)} disabled={!!uploading || status.type === 'saving'} />
+              </label>
+              <button type="button" className="text-action" onClick={() => setField(key, '')} disabled={!layout[key] || !!uploading || status.type === 'saving'}>
+                {key === 'heroDesktopImage' ? 'Use original campaign' : 'Use desktop image'}
+              </button>
+              <label className="hero-focus-label">
+                Left–right focus: {layout[x]}%
+                <input type="range" min="0" max="100" value={layout[x]} onChange={e => setField(x, Number(e.target.value))} />
+              </label>
+              <label className="hero-focus-label">
+                Up–down focus: {layout[y]}%
+                <input type="range" min="0" max="100" value={layout[y]} onChange={e => setField(y, Number(e.target.value))} />
+              </label>
+            </fieldset>)}
           </div>
+
           <div>
-            <label style={labelStyle}>
-              Photo focus point (up-down): {layout.heroFocalY}
-            </label>
-            <input
-              type="range"
-              min="0"
-              max="100"
-              value={layout.heroFocalY}
-              onChange={(e) => setField('heroFocalY', Number(e.target.value))}
-              style={{ width: 280 }}
-            />
-            <p style={helpStyle}>
-              Controls which part of the big homepage photo stays visible on small screens.
-            </p>
+            <h3 style={{ ...labelStyle, marginBottom: 8 }}>Preview your campaign</h3>
+            <p style={{ ...helpStyle, marginBottom: 16 }}>Changes appear here before saving. These sample frames show the photo and caption; check the storefront for the navigation and other screen sizes.</p>
+            <div className="hero-preview-grid">
+              <figure><figcaption>Desktop · 16:9</figcaption><CampaignHero layout={layout} preview="desktop" /></figure>
+              <figure><figcaption>Mobile · 9:19.5</figcaption><CampaignHero layout={layout} preview="mobile" /></figure>
+            </div>
           </div>
+        </div>
+      </section>
+
+      <section style={sectionStyle}>
+        <h2 style={sectionTitleStyle}>Collection introduction & brand story</h2>
+        <p style={helpStyle}>The sections below the campaign photo. Your fonts and imagery stay consistent.</p>
+        <div style={{ display: 'grid', gap: 20, marginTop: 20 }}>
+          {[
+            ['collectionEyebrow', 'Collection small heading', 80],
+            ['collectionHeadline', 'Collection headline', 200],
+            ['collectionDescription', 'Collection description', 600],
+            ['storyEyebrow', 'Story small heading', 80],
+            ['storyHeadline', 'Story headline', 200],
+            ['storyDescription', 'Story description', 600],
+          ].map(([key, label, maxLength]) => <label key={key} style={labelStyle}>
+            {label}
+            <input style={{ ...textInputStyle, display: 'block', maxWidth: 560, marginTop: 6 }} value={layout[key] ?? ''} maxLength={maxLength} onChange={e => setField(key, e.target.value)} />
+          </label>)}
         </div>
       </section>
 
       {/* ================= STICKY SAVE BAR ================= */}
       <div
+        className="admin-save-bar"
         style={{
           position: 'fixed',
           bottom: 0,
@@ -202,7 +265,7 @@ export default function LandingEditor({ defaultLayout }) {
       >
         <button
           onClick={handleSave}
-          disabled={status.type === 'saving'}
+          disabled={status.type === 'saving' || !!uploading}
           style={{
             background: '#1A202C',
             color: '#ffffff',
@@ -217,12 +280,14 @@ export default function LandingEditor({ defaultLayout }) {
           {status.type === 'saving' ? 'Saving…' : 'Save changes'}
         </button>
 
+        <div role="status" aria-live="polite">
         {status.type === 'success' && (
           <span style={{ color: '#2F855A', fontSize: 13 }}>{status.message}</span>
         )}
         {status.type === 'error' && (
           <span style={{ color: '#C53030', fontSize: 13 }}>{status.message}</span>
         )}
+        </div>
       </div>
     </div>
   )

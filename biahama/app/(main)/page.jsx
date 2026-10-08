@@ -1,6 +1,8 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { getSiteSettings } from '@/lib/site-settings'
+import { STOREFRONT_COLLECTIONS } from '@/lib/collections'
+import CampaignHero from '@/components/layout/CampaignHero'
 
 export const metadata = {
   title: { absolute: 'Biahama — Luxury Linen' },
@@ -9,73 +11,17 @@ export const metadata = {
 }
 
 export default async function HomePage() {
-  // Headline, button text, and image focus point are editable
-  // in the admin panel (they fall back to sensible defaults).
   const settings = await getSiteSettings()
-  const { heroHeadline, heroButtonText, heroFocalX, heroFocalY } = settings.layout
-
-  // The headline can have line breaks — each line becomes its own row.
-  const headlineLines = heroHeadline.split('\n')
 
   return (
-    // Hero size: always fills the whole screen (footer only appears after
-    // scrolling). Monitors come in different shapes, so the image edges must
-    // crop — but object-position on the image below anchors the crop to the
-    // model, and the admin panel controls that focus point (X/Y percent).
-    <div className="relative w-full h-[100svh] overflow-hidden bg-zinc-900">
-      {/* Background Campaign Image */}
-      <div className="absolute inset-0 w-full h-full">
-        <Image
-          src="https://res.cloudinary.com/dc30t7io2/image/upload/w_1920,c_scale,q_auto,f_auto/v1781048357/biahama/biahama_homepage_hero_v2.jpg"
-          alt="Biahama campaign hero"
-          fill
-          priority
-          sizes="100vw"
-          className="object-cover pointer-events-none"
-          style={{ objectPosition: `${heroFocalX}% ${heroFocalY}%` }}
-        />
-        {/* Soft shadow overlay for text legibility */}
-        <div className="absolute inset-0 bg-black/15" />
-      </div>
-
-      {/* Caption Overlay — Middle Left */}
-      <div
-        className="absolute inset-y-0 left-0 flex flex-col justify-center z-10 text-white max-w-xl"
-        style={{ paddingLeft: 'clamp(48px, 10vw, 144px)', paddingRight: '48px' }}
-      >
-        <h1
-          className="mb-8 leading-[1.2]"
-          style={{
-            fontFamily: 'Cormorant Garamond, serif',
-            fontWeight: 300,
-            fontSize: 'clamp(2rem, 5vw, 3rem)',
-            fontStyle: 'italic',
-            color: '#ffffff',
-          }}
-        >
-          {headlineLines.map((line, i) => (
-            <span key={i}>
-              {line}
-              {i < headlineLines.length - 1 && <br />}
-            </span>
-          ))}
-        </h1>
-        <div>
-          <Link
-            href="/shop"
-            className="group inline-flex items-center gap-3 text-xs tracking-widest uppercase pb-1 hover:opacity-85 transition-opacity"
-            style={{
-              fontFamily: 'var(--font-ui)',
-              fontWeight: 400,
-              color: '#ffffff',
-              borderBottom: '1px solid #ffffff',
-            }}
-          >
-            {heroButtonText}
-            <span className="transition-transform duration-300 group-hover:translate-x-1">→</span>
-          </Link>
-        </div>
-      </div>
+    <div>
+      <CampaignHero layout={settings.layout} />
+    <section className="home-collections">
+      <div className="home-section-intro"><p className="eyebrow">{settings.layout.collectionEyebrow}</p><h2>{settings.layout.collectionHeadline}</h2><p>{settings.layout.collectionDescription}</p></div>
+      <div className="home-collection-grid">{STOREFRONT_COLLECTIONS.map(collection => <Link className="home-collection" href={'/shop?cat=' + collection.slug} key={collection.slug}><div><Image src={collection.image} alt={collection.alt} width={600} height={800} sizes="(max-width: 767px) 50vw, 25vw" /></div><span>{collection.name}<span aria-hidden="true">↗</span></span></Link>)}</div>
+    </section>
+    <section className="home-story"><p className="eyebrow">{settings.layout.storyEyebrow}</p><h2>{settings.layout.storyHeadline}</h2><p>{settings.layout.storyDescription}</p><Link className="text-action" href="/about">Discover our story →</Link></section>
+    <section className="home-services" aria-label="Customer services"><Link href="/sizing"><p className="eyebrow">Finding your fit</p><h3>Made for your everyday.</h3><span>Explore the size guide →</span></Link><Link href="/shipping"><p className="eyebrow">Delivered with care</p><h3>A little closer to you.</h3><span>Shipping within India →</span></Link><Link href="/contact"><p className="eyebrow">A personal conversation</p><h3>We’re here for you.</h3><span>Speak to customer care →</span></Link></section>
     </div>
   )
 }

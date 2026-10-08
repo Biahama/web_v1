@@ -99,3 +99,134 @@ The final local preview was started at http://localhost:3100 using a disposable
 Docker database and 25 public products. No customer/order/settings data was
 copied. It still needs the terminal process and biahama-checkout-tests container;
 stopping/removing that named container only discards local test/preview fixtures.
+
+7. CUSTOMER SERVICE AND ADMIN RELEASE — OCTOBER 7, 2026
+This release is implemented locally for review. It has not been deployed and the
+customer-service schema has not been applied to production.
+
+Customer changes: saved-address create/edit/remove/default selection, profile
+name/contact-mobile editing, order return/size-exchange requests with item
+quantities, request progress/customer messages, catalog size/colour/stock filters
+and sorting. Existing campaign, fonts and palette are retained. Homepage adds
+collection photography, a brand story and service links. New collection/story
+copy is editable in Admin → Landing page.
+
+Admin changes: 7/30/90-day IST paid-order reporting, previous-period comparison,
+paid orders/average order/new customers, fulfillment and stock alerts, product
+unit sales, sales CSV, customer search/history, inventory edits with stale-stock
+conflict protection, and a returns queue with customer/private notes and manual
+resolution references. Existing product/order/content/coupon/operations tools
+remain linked. Mobile administration has a collapsible menu and responsive save
+bars.
+
+REQUIRED SCHEMA BEFORE RELEASE
+Review prisma/rollouts/20261007_customer_service.sql and obtain a backup.
+The transaction adds Order.deliveredAt and ReturnRequest with indexes, checks,
+row security and no browser-role access. It normalizes saved-address default
+flags (preserving an existing default where possible) and enforces at most one
+default per customer. It does not change product stock or payment amounts.
+Apply the earlier checkout rollout first if it has not already been applied.
+Then, after explicit production approval, run ONCE:
+  node scripts/apply-launch-rollout.mjs --env /secure/path/.env.local --customer-service
+This customer-service SQL is not idempotent: a repeated run fails and rolls back.
+Do not infer historical delivery dates from updatedAt. Older delivered orders
+without a recorded delivery date can submit a request for manual eligibility
+review; the admin queue flags that case. New delivered transitions record dates.
+If reverting application code, retain the additive schema and customer requests.
+Existing customized Returns content should be updated in Admin → Content pages
+because saved content takes precedence over the new default account instructions.
+
+OPERATIONAL LIMITS
+Returns are one request per order, with selected quantities; additional changes
+or pieces go through customer care. Approval is a request decision, not a refund.
+Complete refunds in Razorpay (or the COD refund method), arrange exchanges and
+record the resulting reference. Inventory is adjusted manually after inspection.
+Request changes appear in the customer's order page; there is no new return
+notification email automation. Paid order value is not accounting revenue/profit
+or settlements and does not deduct manual partial/full return refunds. Reconcile
+those with the gateway until refund-ledger integration is implemented.
+Customer names/contact mobile can be edited; changing the sign-in email goes
+through support rather than an unverified email change.
+
+VALIDATION
+32 tests passed, including 22 integration tests, with no skips against a local,
+disposable PostgreSQL engine (PGlite via its socket server). The new SQL was also
+executed against an isolated pre-release schema: delivery column, return RLS,
+default normalization and unique default enforcement passed. Lint and production
+build passed, including a clean-cache production rebuild after detecting stale
+incremental CSS. Use a fresh build cache for the release. Browser checks covered address CRUD/default/profile, delivered-order
+request → admin approval → receipt → resolution → customer status, private-note
+separation, stock edit, customer search/history, CSV download, catalog filters,
+admin copy update/cache refresh and desktop/mobile layouts. Test concurrency is
+serialized across files because existing checkout fixtures truncate shared data.
+
+CURRENT PREVIEW
+http://127.0.0.1:3100 uses isolated sample products/orders/customer details and a
+localhost mock Supabase Auth service. Sign in: reviewer@example.test / password:
+local-preview-only. These are disposable preview credentials, not a live account.
+No production authorization bypass was added. Payment/email/upload provider keys
+are cleared in preview processes. Its database/auth processes must stay running.
+The earlier Docker preview instructions in section 6 describe the prior release;
+this preview uses temporary PGlite/socket and mock-auth scripts under /private/tmp.
+
+ARCHITECTURE AND COST
+The service split is suitable: Supabase database/auth → server-side storefront
+on Vercel → GoDaddy domain; Cloudinary serves garment imagery, Brevo sends email,
+Razorpay takes INR payments. Browser code must never receive database credentials,
+Cloudinary API secrets or payment/email secrets. Existing server APIs enforce
+customer ownership and admin allowlisting.
+Vercel Hobby is restricted to personal/noncommercial use, so a clothing store
+needs a commercially permitted plan. Supabase Free has no automatic backups and
+may pause after one inactive week: arrange explicit exports/backups and monitor
+limits. Cloudinary Free currently has 25 monthly credits; Brevo Free allows 300
+sends per day. Domain renewals, shipping, gateway fees and commercial hosting
+mean an entirely free operating store is not realistic.
+Sources: https://vercel.com/docs/plans/hobby
+https://supabase.com/pricing
+https://cloudinary.com/pricing
+https://help.brevo.com/hc/en-us/articles/208580669-FAQs-What-are-the-limits-of-the-Free-plan
+
+USA-ISSUED CARDS FOR INDIA DELIVERY
+Keep the checkout currency INR. Razorpay international-card acceptance must be
+activated separately even if domestic payments work. With live-account KYC ready,
+open Account & Settings → International payments → Activate International cards,
+submit the requested business/site documents and wait for approval. Razorpay's
+requirements for tangible products mention an IEC; confirm with Razorpay which
+documents apply to overseas-issued cards where delivery remains within India.
+Publish working terms/privacy/refund/cancellation/shipping pages before applying.
+The customer's issuer handles INR-to-card-currency conversion and may charge a
+fee. No USD storefront or overseas shipping flow is needed for this launch.
+Source: https://razorpay.com/docs/payments/international-payments/international-debit-credit-cards/
+
+NEXT PHASE (NOT INCLUDED IN THIS LOCAL RELEASE)
+Integrated post-delivery refunds and a refund ledger/net-sales report, automated
+return notifications/pickups/exchange shipments, receipt/invoice workflows,
+back-in-stock/customer-service tools, admin audit history and granular staff
+permissions, and a fuller luxury-brand parity audit. Do not promise complete
+Brunello Cucinelli feature parity or all operations from one admin screen yet.
+The live Shirts category currently has no published products; populate it through
+the product editor or keep its honest coming-soon state before launch.
+
+RESPONSIVE CAMPAIGN HERO — OCTOBER 7, 2026
+Admin → Landing page now supports desktop/mobile Cloudinary image URLs or uploads,
+independent crop focus, image description, and sample frames that update before
+saving. Blank desktop uses the original campaign; blank mobile uses the desktop
+image. Desktop focus is retained; the default mobile focus is 80% / 25% for
+the current model composition and can be customized. No schema migration is needed; the fields live in the existing layout JSON setting.
+The storefront uses a single responsive picture with Next image optimization,
+a 767px breakpoint and a lower mobile caption. Both previews use the storefront
+component, at representative 16:9 desktop and 9:19.5 phone proportions; navigation
+is excluded. Review the actual page at different heights as well as these frames.
+Cloudinary uploads store the asset before Save changes publishes the selection.
+This remains a local change; no campaign/settings were changed in the live store.
+Design direction: retain Biahama fonts/palette/campaign, Brunello Cucinelli's
+immersive imagery, and the restrained image/label hierarchy studied in TOTEME,
+Saint Laurent and COS. Crop/spacing changes preserve the garment as the focus.
+Hero validation: lint and production build passed. In the isolated preview,
+unsupported image URLs were rejected, a separate portrait URL and mobile focus
+saved/reloaded, desktop/mobile image selection worked, and removing the mobile
+image restored the desktop-photo fallback. Reviewed 320×568, 390×844, 768×1024,
+1280×720 and 1440×900 with no horizontal overflow. The landscape fallback's
+responsive sizes account for its rendered height so phone crops load enough
+pixels. Provider upload credentials remain cleared in this isolated preview;
+real Cloudinary uploads were not exercised during this check.

@@ -102,6 +102,7 @@ export default function StoreSettingsEditor({ defaultCommerce }) {
 
       {/* ================= STICKY SAVE BAR ================= */}
       <div
+        className="admin-save-bar"
         style={{
           position: 'fixed',
           bottom: 0,

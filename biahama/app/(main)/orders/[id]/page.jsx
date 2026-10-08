@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
+import ReturnRequestForm from '@/components/account/ReturnRequestForm'
 
 function formatPrice(paise) {
   return `₹${(paise / 100).toLocaleString('en-IN')}`
@@ -63,18 +64,18 @@ export default function OrderPage() {
   const addr = order.shippingAddress
 
   return (
-    <div style={{
+    <div className="order-detail-page" style={{
       maxWidth: 720,
       margin: '0 auto',
-      padding: '80px 48px',
-      fontFamily: 'var(--font-jost)',
+      padding: '80px 24px',
+      fontFamily: 'var(--font-ui)',
     }}>
       {/* Header */}
       <div style={{ marginBottom: 56 }}>
         <div style={{ width: 40, height: 1, background: 'var(--black)', marginBottom: 32 }} />
 
         <p style={{ fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--gray)', marginBottom: 12 }}>
-          {order.paymentMethod === 'cod' ? 'Cash on Delivery' : 'Paid Online'} · #{id.slice(-8).toUpperCase()}
+          {order.paymentMethod === 'cod' ? 'Cash on Delivery' : order.paymentStatus === 'paid' ? 'Paid Online' : 'Online Payment'} · #{id.slice(-8).toUpperCase()}
         </p>
 
         <h1 style={{
@@ -93,9 +94,9 @@ export default function OrderPage() {
         </h1>
 
         <p style={{ fontSize: 13, color: 'var(--gray)', letterSpacing: '0.03em', lineHeight: 1.6 }}>
-          {order.paymentStatus === 'refund_pending' ? 'Your payment arrived after stock became unavailable. A full refund is being arranged. Please contact hello@biahama.com if you need help.' : order.paymentStatus === 'refunded' ? 'Your full refund has been processed by the payment provider.' : order.status === 'cancelled' ? 'This order has been cancelled. Please contact us with any questions about your payment.' : order.paymentMethod === 'cod'
+          {order.paymentStatus === 'refund_pending' ? 'A full refund is being arranged. Please contact hello@biahama.com if you need help.' : order.paymentStatus === 'refunded' ? 'Your full refund has been processed by the payment provider.' : order.status === 'cancelled' ? 'This order has been cancelled. Please contact us with any questions about your payment.' : order.status === 'delivered' ? 'Your pieces have arrived. We hope they become a part of your everyday.' : order.status === 'shipped' ? 'Your pieces are on their way. Find your delivery details below.' : order.paymentMethod === 'cod'
             ? 'Your order has been placed. Payment will be collected on delivery.'
-            : "Your payment was successful. We’ll start preparing your order right away."}
+            : order.paymentStatus === 'paid' ? "Your payment was successful. We’ll start preparing your order right away." : 'Your payment is awaiting confirmation. Please contact customer care if you need help.'}
         </p>
       </div>
 
@@ -137,6 +138,8 @@ export default function OrderPage() {
           </div>
         )}
       </div>
+
+      <ReturnRequestForm key={order.id} order={order} />
 
       {/* Items */}
       <div style={{ marginBottom: 40 }}>

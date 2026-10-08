@@ -13,6 +13,7 @@
 
 import { prisma } from './prisma'
 import { logError } from './logger'
+import { DEFAULT_HERO_IMAGE } from './hero'
 
 // ---- The knobs the theme editor shows, with friendly labels. ----
 // type: 'color' -> color picker, 'size' -> text field like "36px",
@@ -28,8 +29,8 @@ export const EDITABLE_TOKENS = [
   { group: 'Product cards', var: '--text-product-name-size', label: 'Product name size', type: 'size', default: '16px' },
   { group: 'Product cards', var: '--text-product-name-tracking', label: 'Product name letter spacing', type: 'size', default: '0.8px' },
   { group: 'Product cards', var: '--text-price-size', label: 'Price size', type: 'size', default: '14px' },
-  { group: 'Grid', var: '--grid-col-gap', label: 'Gap between product columns', type: 'size', default: '8px' },
-  { group: 'Grid', var: '--grid-row-gap', label: 'Gap between product rows', type: 'size', default: '32px' },
+  { group: 'Grid', var: '--grid-col-gap', label: 'Gap between product columns', type: 'size', default: '16px' },
+  { group: 'Grid', var: '--grid-row-gap', label: 'Gap between product rows', type: 'size', default: '48px' },
 ]
 
 // ---- Fonts: type any Google Font name (fonts.google.com). ----
@@ -45,10 +46,20 @@ export const DEFAULT_LAYOUT = {
     'Free shipping on orders above ₹3,000  ·  New collection arriving this season',
   heroHeadline: 'Quiet forms\nfor modern movement.',
   heroButtonText: 'Step Inside',
-  // Where the hero image crop is anchored (percent). 65/25 keeps
-  // the model framed on all screens.
+  heroDesktopImage: DEFAULT_HERO_IMAGE,
+  heroMobileImage: '',
+  heroImageAlt: 'The Biahama linen collection',
+  collectionEyebrow: 'The linen wardrobe',
+  collectionHeadline: 'Considered pieces. Everyday ease.',
+  collectionDescription: 'Explore the shapes, textures, and quiet details of Biahama.',
+  storyEyebrow: 'The Biahama way',
+  storyHeadline: 'Room to breathe.',
+  storyDescription: 'Linen clothing crafted in India, with an eye for the details that make a piece your own.',
+  // Desktop and mobile crops can be composed independently.
   heroFocalX: 65,
   heroFocalY: 25,
+  heroMobileFocalX: 80,
+  heroMobileFocalY: 25,
   // Collection pages: big banner on the 'right' or 'left' of the cards
   collectionBannerSide: 'right',
 }
@@ -100,7 +111,11 @@ export async function getSiteSettings() {
       overrides: saved.theme?.overrides ?? {},
       fonts: { ...DEFAULT_FONTS, ...(saved.theme?.fonts ?? {}) },
     },
-    layout: { ...DEFAULT_LAYOUT, ...(saved.layout ?? {}) },
+    layout: {
+      ...DEFAULT_LAYOUT, ...(saved.layout ?? {}),
+      heroMobileFocalX: saved.layout?.heroMobileFocalX ?? DEFAULT_LAYOUT.heroMobileFocalX,
+      heroMobileFocalY: saved.layout?.heroMobileFocalY ?? DEFAULT_LAYOUT.heroMobileFocalY,
+    },
     commerce: { ...DEFAULT_COMMERCE, ...(saved.commerce ?? {}) },
     pdp: { ...DEFAULT_PDP, ...(saved.pdp ?? {}) },
     collections,

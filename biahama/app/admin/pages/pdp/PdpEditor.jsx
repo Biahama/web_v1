@@ -113,6 +113,7 @@ export default function PdpEditor({ defaultPdp }) {
 
       {/* ================= STICKY SAVE BAR ================= */}
       <div
+        className="admin-save-bar"
         style={{
           position: 'fixed',
           bottom: 0,

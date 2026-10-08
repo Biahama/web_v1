@@ -1,4 +1,6 @@
 import Link from 'next/link'
+import Image from 'next/image'
+import { STOREFRONT_COLLECTIONS } from '@/lib/collections'
 import ProductCard from '@/components/ui/ProductCard'
 
 // collectionSettings (from the admin panel, per category):
@@ -27,83 +29,15 @@ export default function ProductGrid({
     </div>
   )
 
-  // Shirts Category Layout (3 + 1)
+  // An actual campaign image replaces the old empty, screen-height block.
   if (cat === 'shirts') {
-    return (
-      <>
-        {/* Desktop Layout */}
-        <div className="hidden lg:block space-y-14">
-          <div style={{
-            aspectRatio: '9/16',
-            width: '100%',
-            background: '#f2f2f2',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'flex-end',
-            padding: '40px 32px'
-          }}>
-            <p style={{
-              fontFamily: 'var(--font-ui)',
-              fontSize: '10px',
-              fontWeight: 500,
-              letterSpacing: '2px',
-              textTransform: 'uppercase',
-              color: '#6f6f6f',
-              marginBottom: '12px'
-            }}>New Arrival</p>
-            <h2 style={{
-              fontFamily: 'var(--font-display)',
-              fontSize: '32px',
-              fontWeight: 300,
-              fontStyle: 'italic',
-              color: '#262626',
-              lineHeight: '1.2'
-            }}>Linen Column<br/>Shirts</h2>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '32px 8px', marginTop: 'var(--space-5)' }}>
-            {displayProducts.map((p, i) => (
-              <ProductCard key={p.id} product={p} index={i} />
-            ))}
-          </div>
-        </div>
-
-        {/* Mobile Layout */}
-        <div className="block lg:hidden space-y-10">
-          <div style={{
-            aspectRatio: '9/16',
-            width: '100%',
-            background: '#f2f2f2',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'flex-end',
-            padding: '40px 32px'
-          }}>
-            <p style={{
-              fontFamily: 'var(--font-ui)',
-              fontSize: '10px',
-              fontWeight: 500,
-              letterSpacing: '2px',
-              textTransform: 'uppercase',
-              color: '#6f6f6f',
-              marginBottom: '12px'
-            }}>New Arrival</p>
-            <h2 style={{
-              fontFamily: 'var(--font-display)',
-              fontSize: '32px',
-              fontWeight: 300,
-              fontStyle: 'italic',
-              color: '#262626',
-              lineHeight: '1.2'
-            }}>Linen Column<br/>Shirts</h2>
-          </div>
-          <div className="grid grid-cols-2 mt-10" style={{ columnGap: 'var(--grid-col-gap)', rowGap: 'var(--grid-row-gap)' }}>
-            {displayProducts.map((p, i) => (
-              <ProductCard key={p.id} product={p} index={i} />
-            ))}
-          </div>
-        </div>
-      </>
-    )
+    const campaign = banner.bannerImage || STOREFRONT_COLLECTIONS.find(c => c.slug === 'shirts').image
+    return <>
+      <div className="collection-campaign"><Image src={campaign} alt="The Biahama linen shirt collection" fill sizes="100vw" /><div><p className="eyebrow">The linen collection</p><h2>Shirts, with ease.</h2></div></div>
+      <div className="grid grid-cols-2 lg:grid-cols-3" style={{ columnGap: 'var(--grid-col-gap)', rowGap: 'var(--grid-row-gap)' }}>
+        {displayProducts.map((product, i) => <ProductCard key={product.id} product={product} priority={i < 3} />)}
+      </div>
+    </>
   }
 
   // Kurta & Pant Asymmetric Layouts (10 + 1)
@@ -144,7 +78,7 @@ export default function ProductGrid({
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
-            gap: '32px 8px'
+            columnGap: 'var(--grid-col-gap)', rowGap: 'var(--grid-row-gap)'
           }}>
             {/* The three pieces of the top row: two product cards and
                 one big campaign banner. The admin panel decides whether
@@ -184,7 +118,7 @@ export default function ProductGrid({
 
           {/* Bottom Section: Remaining products in a standard 3-column grid */}
           {displayProducts.length > 4 && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '32px 8px', marginTop: 'var(--space-5)' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', columnGap: 'var(--grid-col-gap)', rowGap: 'var(--grid-row-gap)', marginTop: 'var(--space-5)' }}>
               {displayProducts.slice(4).map((p, i) => (
                 <ProductCard key={p.id} product={p} index={i + 4} />
               ))}
@@ -205,7 +139,7 @@ export default function ProductGrid({
   // Default Tunics & General Layout (3 + 0 / standard grid)
   return (
     <>
-      <div className="grid grid-cols-2 lg:grid-cols-3" style={{ gap: '32px 8px' }}>
+      <div className="grid grid-cols-2 lg:grid-cols-3" style={{ columnGap: 'var(--grid-col-gap)', rowGap: 'var(--grid-row-gap)' }}>
         {displayProducts.map((product, i) => (
           <ProductCard key={product.id} product={product} priority={i < 4} index={i} />
         ))}

@@ -20,6 +20,7 @@ export async function updateOrderStatus(db, id, data) {
     if (data.status === 'shipped' && existing.status !== 'shipped') { changes.shippingStatus = 'in_transit'; tasks.push({ orderId: id, kind: 'shipped' }) }
     if (data.status === 'delivered' && existing.status !== 'delivered') {
       changes.shippingStatus = 'delivered'
+      changes.deliveredAt = new Date()
       if (existing.paymentMethod === 'cod') { changes.paymentStatus = 'paid'; tasks.push({ orderId: id, kind: 'loyalty' }) }
     }
     const order = await tx.order.update({ where: { id }, data: changes })

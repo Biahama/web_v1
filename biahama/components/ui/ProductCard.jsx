@@ -84,7 +84,8 @@ export default function ProductCard({ product, priority = false }) {
         <button
           onClick={handleWardrobe}
           className="biahama-hanger-btn z-10 transition-colors"
-          aria-label="Save to wardrobe"
+          aria-label={wishlisted ? `Remove ${product.name} from wardrobe` : `Save ${product.name} to wardrobe`}
+          aria-pressed={wishlisted}
           style={{
             width: 'var(--icon-hanger-btn)',
             height: 'var(--icon-hanger-btn)',

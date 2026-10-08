@@ -17,18 +17,35 @@ import { prisma } from '@/lib/prisma'
 import { requireAdmin } from '@/lib/admin-auth'
 import { getSiteSettings } from '@/lib/site-settings'
 import { withErrorLogging } from '@/lib/logger'
+import { isHeroImageUrl } from '@/lib/hero'
 
 // ---- What a valid "save settings" request looks like. ----
 // Everything is optional: the editor only sends what it manages.
 // Unknown layout keys are quietly dropped (Zod strips them), so
 // a bad request can never write junk into the database.
+const heroImageSchema = z.string().trim().max(1000).refine(
+  value => value === '' || isHeroImageUrl(value),
+  'Use a Cloudinary image URL (https://res.cloudinary.com/…/image/upload/…) or leave it blank.',
+)
+
 const layoutSchema = z.object({
   showAnnouncementBar: z.boolean().optional(),
   announcementText: z.string().max(300).optional(),
   heroHeadline: z.string().max(200).optional(),
   heroButtonText: z.string().max(60).optional(),
+  heroDesktopImage: heroImageSchema.optional(),
+  heroMobileImage: heroImageSchema.optional(),
+  heroImageAlt: z.string().trim().max(200).optional(),
+  collectionEyebrow: z.string().max(80).optional(),
+  collectionHeadline: z.string().max(200).optional(),
+  collectionDescription: z.string().max(600).optional(),
+  storyEyebrow: z.string().max(80).optional(),
+  storyHeadline: z.string().max(200).optional(),
+  storyDescription: z.string().max(600).optional(),
   heroFocalX: z.number().min(0).max(100).optional(),
   heroFocalY: z.number().min(0).max(100).optional(),
+  heroMobileFocalX: z.number().min(0).max(100).optional(),
+  heroMobileFocalY: z.number().min(0).max(100).optional(),
   collectionBannerSide: z.enum(['left', 'right']).optional(),
 })
 

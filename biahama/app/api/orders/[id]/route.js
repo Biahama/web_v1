@@ -3,6 +3,7 @@ import { createClient } from '@/utils/supabase/server'
 
 import { prisma } from '@/lib/prisma'
 import { withErrorLogging } from '@/lib/logger'
+import { CUSTOMER_RETURN_SELECT } from '@/lib/return-service'
 
 // Returns one order — only if it belongs to the logged-in customer
 // (the userId in the query makes sure of that).
@@ -16,7 +17,7 @@ export const GET = withErrorLogging('api/orders/[id] GET', async (req, { params 
 
   const order = await prisma.order.findFirst({
     where: { id, userId: user.id },
-    include: { items: true },
+    include: { items: true, returnRequest: { select: CUSTOMER_RETURN_SELECT } },
   })
 
   if (!order) return NextResponse.json({ error: 'Not found' }, { status: 404 })
