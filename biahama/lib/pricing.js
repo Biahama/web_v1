@@ -10,13 +10,13 @@
 //
 // PRICING MODEL: prices are GST-INCLUSIVE.
 // The price shown on the product page is the final price.
-// GST is displayed at checkout as an informational line only
-// ("includes 5% GST") — it is NOT added on top.
+// Tax is already included, never added on top. A rate/amount
+// breakdown requires approved item classifications; do not infer
+// one catalogue-wide rate from these inclusive selling prices.
 // ============================================================
 
 export const SHIPPING_THRESHOLD = 300000 // free shipping at ₹3,000 and above
 export const SHIPPING_COST = 9900 // ₹99 otherwise
-export const GST_RATE = 0.05 // 5% GST (informational — already inside the price)
 
 /**
  * Compute order totals from cart items.
@@ -25,16 +25,13 @@ export const GST_RATE = 0.05 // 5% GST (informational — already inside the pri
  * Returns (all in paise):
  *   subtotal    - sum of item prices (GST already included)
  *   shipping    - 0 or SHIPPING_COST
- *   gstIncluded - the GST portion already inside the subtotal (info only)
  *   total       - what the customer actually pays = subtotal + shipping
  */
 export function computeTotals(items) {
   const subtotal = items.reduce((sum, item) => sum + item.variant.price * item.quantity, 0)
   const shipping = subtotal === 0 || subtotal >= SHIPPING_THRESHOLD ? 0 : SHIPPING_COST
-  // Price is 105% of the base amount, so GST inside = price - price/1.05
-  const gstIncluded = Math.round(subtotal - subtotal / (1 + GST_RATE))
   const total = subtotal + shipping
-  return { subtotal, shipping, gstIncluded, total }
+  return { subtotal, shipping, total }
 }
 
 /** Format paise as rupees for display, e.g. 245000 -> "₹2,450" */

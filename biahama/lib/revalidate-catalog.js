@@ -1,7 +1,7 @@
 import { revalidatePath } from 'next/cache'
 
 export function revalidateCatalog(slug) {
-  revalidatePath('/')
+  revalidatePath('/', 'layout')
   revalidatePath('/shop')
   revalidatePath('/sitemap.xml')
   if (slug) revalidatePath(`/products/${slug}`)

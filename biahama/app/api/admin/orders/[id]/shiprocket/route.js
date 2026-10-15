@@ -22,6 +22,7 @@ import { updateOrderStatus } from '@/lib/order-status-service'
 import { processOrderTasks } from '@/lib/order-tasks'
 import { after } from 'next/server'
 import { createShiprocketOrder, assignAwb, trackByShipmentId } from '@/lib/shiprocket'
+import { isSuccessfulDelivery } from '@/lib/shiprocket-status'
 
 const bodySchema = z.object({
   action: z.enum(['create', 'awb', 'track']),
@@ -120,7 +121,7 @@ export const POST = withErrorLogging('api/admin/orders/[id]/shiprocket POST', as
 
       // If Shiprocket says it's delivered, update our order too.
       let orderUpdated = false
-      if (currentStatus.toLowerCase().includes('delivered') && order.status !== 'delivered') {
+      if (isSuccessfulDelivery(currentStatus) && order.status !== 'delivered') {
         await updateOrderStatus(prisma, id, { status: 'delivered' })
         after(() => processOrderTasks(id))
         orderUpdated = true

@@ -49,11 +49,11 @@ High-resolution campaign imagery and our brand story are available on request. I
 
   sizing: {
     title: 'Sizing Guide',
-    body: `Biahama garments are cut with an easy, relaxed silhouette. If you prefer a closer fit, we suggest taking your usual size; for a roomier drape, size up.
+    body: `Available sizes are shown on each product page. Our current collection offers S, M, L, XL, 2XL and 3XL, subject to availability.
 
-Our sizes run from XS to XXL. As a general guide: XS fits chest 34", S fits 36", M fits 38", L fits 40", XL fits 42", and XXL fits 44". Kurtas and tunics are measured flat across the chest; trousers are measured at the waist with a drawstring allowance.
+Fit and measurements vary by garment. For measurements of a particular piece, email hello@biahama.com or message us on WhatsApp at +91 95853 33004 with the product name and size you are considering.
 
-Linen relaxes slightly with wear and washing, so a garment that feels crisp on day one will soften and ease within a few wears. If you are between sizes or unsure, write to us — we are glad to help you choose.`,
+Tell us whether you prefer a closer or roomier fit, and we will help you choose before you order.`,
   },
 
   shipping: {
@@ -115,7 +115,7 @@ GSTIN: 33CEQPG6044A1ZU`,
 
   faq: {
     title: 'FAQs',
-    body: `How do I choose a size? Our pieces are cut with an easy, relaxed silhouette — take your usual size for that fit, or size up for a roomier drape. The Size Guide page has flat measurements for every size.
+    body: `How do I choose a size? Available sizes are listed on each product page. Visit the Size Guide for help, or contact us with the product name for garment-specific measurements and fit advice before you order.
 
 When will my order arrive? Orders are dispatched within 2–4 working days and usually arrive within 5–7 working days after that. You will receive a tracking link by email as soon as your parcel leaves us.
 

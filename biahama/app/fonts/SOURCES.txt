@@ -1,0 +1,15 @@
+The established Biahama typefaces, served locally for reliable builds.
+
+Original sources (Google Fonts, retrieved 15 October 2026):
+https://github.com/google/fonts/tree/main/ofl/cormorantgaramond
+https://github.com/google/fonts/tree/main/ofl/dmsans
+
+CormorantGaramond[wght].ttf
+CormorantGaramond-Italic[wght].ttf
+DMSans[opsz,wght].ttf
+
+Converted to WOFF2 with FontTools, retaining Latin, Latin extended,
+combining marks, punctuation, currency symbols (including INR), and symbols.
+DM Sans optical size is fixed at 14, the Google Fonts default; weight remains
+variable. Original outlines are retained. Other scripts use browser fallback.
+Both families use the SIL Open Font License 1.1; copies are included here.

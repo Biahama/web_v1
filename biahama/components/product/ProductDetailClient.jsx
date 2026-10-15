@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useAuth } from '@/components/providers/AuthProvider'
 import { useRouter } from 'next/navigation'
 import { useCart } from '@/lib/cart'
@@ -36,7 +36,13 @@ export default function ProductDetailClient({
   const [shippingExpanded, setShippingExpanded] = useState(false)
   const [packagingExpanded, setPackagingExpanded] = useState(false)
   const [returnExpanded, setReturnExpanded] = useState(false)
-  // Stacked vertically images
+  const galleryRef = useRef(null)
+  const [activeImage, setActiveImage] = useState(0)
+  function moveImage(index) {
+    const gallery = galleryRef.current
+    if (gallery) gallery.scrollTo({ left: gallery.clientWidth * index })
+  }
+  // Desktop keeps the editorial stack; phones get a swipeable gallery.
   const displayImages = []
   if (product.images && product.images.length > 0) {
     product.images.forEach(img => {
@@ -86,17 +92,20 @@ export default function ProductDetailClient({
 
 
       <div 
-        className="w-full max-w-none pl-6 pr-0 md:pl-12 md:pr-0 pb-24"
+        className="product-detail w-full max-w-none pl-6 pr-0 md:pl-12 md:pr-0 pb-24"
         style={{ paddingTop: '0px' }}
       >
-        <div className="flex flex-col lg:flex-row items-start justify-between gap-16 lg:gap-12">
+        <div className="product-detail-columns flex flex-col lg:flex-row items-start justify-between gap-16 lg:gap-12">
           
-          {/* Left Column — Stacked Image Gallery */}
-          <div className="w-full lg:w-[53%] flex flex-col gap-0">
+          <div className="product-gallery-column w-full lg:w-[53%]">
+          <div id="product-gallery" className="product-gallery" ref={galleryRef} role="region" aria-label="Product photographs" tabIndex={0} onScroll={event => {
+            const gallery = event.currentTarget
+            setActiveImage(Math.round(gallery.scrollLeft / gallery.clientWidth))
+          }}>
             {displayImages.map((imgUrl, i) => (
               <div 
                 key={i}
-                className="w-full overflow-hidden relative"
+                className="product-gallery-slide w-full overflow-hidden relative"
                 style={{ width: '100%', marginBottom: '0' }}
               >
                 <Image
@@ -143,10 +152,16 @@ export default function ProductDetailClient({
               </div>
             ))}
           </div>
+          {displayImages.length > 1 && <div className="product-gallery-controls">
+            <button type="button" aria-label="Previous photograph" aria-controls="product-gallery" disabled={activeImage === 0} onClick={() => moveImage(activeImage - 1)}>←</button>
+            <span aria-live="polite">{activeImage + 1} / {displayImages.length} <span className="muted">— Swipe to explore</span></span>
+            <button type="button" aria-label="Next photograph" aria-controls="product-gallery" disabled={activeImage >= displayImages.length - 1} onClick={() => moveImage(activeImage + 1)}>→</button>
+          </div>}
+          </div>
 
           {/* Right Column — Sticky Product Info */}
           <div 
-            className="w-full lg:w-[44%] flex flex-col gap-6 bg-white lg:sticky lg:top-[56px]"
+            className="product-purchase-info w-full lg:w-[44%] flex flex-col gap-6 bg-white lg:sticky lg:top-[56px]"
             style={{ paddingTop: 'var(--space-5)', paddingLeft: '48px', paddingRight: '48px' }} // 48px top padding on the info column
           >
             
@@ -235,9 +250,9 @@ export default function ProductDetailClient({
 
             {/* Section 4: Size Selection */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}>
-              <span className="biahama-tag" style={{ textTransform: 'uppercase' }}>
+              <div className="product-size-heading"><span className="biahama-tag" style={{ textTransform: 'uppercase' }}>
                 SELECT SIZE
-              </span>
+              </span><Link href="/sizing">Size & fit guide</Link></div>
               <div className="flex flex-wrap gap-2 mt-2">
                 {availableSizes.map(size => {
                   const isInStock = inStockSizes.includes(size.toUpperCase())

@@ -4,3 +4,10 @@ export const STOREFRONT_COLLECTIONS = [
   { name: 'Tunics', slug: 'tunics', image: 'https://res.cloudinary.com/dc30t7io2/image/upload/q_auto,f_auto,w_600,h_800,c_fill/v1781050259/biahama/collection_hover_tunic.png', alt: 'Biahama linen tunic' },
   { name: 'Pant', slug: 'trousers', image: 'https://res.cloudinary.com/dc30t7io2/image/upload/q_auto,f_auto,w_600,h_800,c_fill/v1781050260/biahama/collection_hover_pant.png', alt: 'Biahama linen trousers' },
 ]
+
+export function publishedCollections(categories) {
+  const names = new Set(categories.map(category => category.toLowerCase().trim()))
+  return STOREFRONT_COLLECTIONS.filter(collection =>
+    [collection.slug, collection.slug.replace(/s$/, ''), collection.name.toLowerCase()].some(name => names.has(name))
+  )
+}

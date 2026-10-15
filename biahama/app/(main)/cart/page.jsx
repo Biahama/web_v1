@@ -8,7 +8,7 @@ import { useCart } from '@/lib/cart'
 import ProductCard from '@/components/ui/ProductCard'
 // Pricing rules live in ONE shared file so the cart, checkout and
 // payment server can never disagree about the total.
-import { computeTotals, SHIPPING_THRESHOLD, SHIPPING_COST, GST_RATE } from '@/lib/pricing'
+import { computeTotals, SHIPPING_THRESHOLD, SHIPPING_COST } from '@/lib/pricing'
 
 function formatPrice(paise) {
   return `₹${(paise / 100).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
@@ -128,9 +128,7 @@ export default function CartPage() {
 
   const discountedSubtotal = subtotal - discount
   const shipping = discountedSubtotal >= SHIPPING_THRESHOLD || items.length === 0 ? 0 : SHIPPING_COST
-  // GST is already INSIDE the prices — this is the portion of the
-  // total that is GST, shown for information only (never added on top).
-  const gstIncluded = Math.round(discountedSubtotal - discountedSubtotal / (1 + GST_RATE))
+  // Prices are tax inclusive; shipping is the only added charge.
   const total = discountedSubtotal + shipping
 
   if (cartLoading) return <p className="purchase-page" role="status">Loading your bag…</p>
@@ -557,10 +555,9 @@ export default function CartPage() {
                 )}
               </div>
 
-              {/* Total — GST is already inside the prices, so it is
-                  shown as information only, never added on top */}
+              {/* Total — prices already include taxes */}
               <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid var(--border)', paddingTop: 16, marginBottom: 24 }}>
-                <span style={{ fontFamily: 'var(--font-ui)', fontSize: 13, fontWeight: 400, color: 'var(--black)' }}>Total <span style={{ fontSize: 10, color: 'var(--gray)' }}>Includes {formatPrice(gstIncluded)} GST</span></span>
+                <span style={{ fontFamily: 'var(--font-ui)', fontSize: 13, fontWeight: 400, color: 'var(--black)' }}>Total <span style={{ fontSize: 10, color: 'var(--gray)' }}>Inclusive of taxes</span></span>
                 <span style={{ fontFamily: 'var(--font-ui)', fontSize: 14, fontWeight: 500, color: 'var(--black)' }}>{formatPrice(total)}</span>
               </div>
 

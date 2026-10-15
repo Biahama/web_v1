@@ -127,11 +127,7 @@ async function uploadImage(filePath, publicId) {
       public_id: publicId,
       folder: 'biahama/kurtas',
       overwrite: true,
-      format: 'webp',
-      transformation: [
-        { width: 800, height: 1200, crop: 'fill', gravity: 'auto' },
-        { quality: 'auto:best', fetch_format: 'auto' }
-      ]
+      // Preserve original framing; optimise responsive copies at delivery time.
     })
     return res.secure_url
   } catch (err) {
