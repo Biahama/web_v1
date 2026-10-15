@@ -197,7 +197,7 @@ button:disabled { cursor: not-allowed; }
 .account-form { display: flex; flex-direction: column; gap: 20px; max-width: 740px; padding: 24px 0; }
 .account-form h3 { font: inherit; font-size: 18px; }
 .account-form label, .search-field { display: flex; flex-direction: column; gap: 8px; font-size: 12px; line-height: 1.6; }
-.account-form input, .account-form textarea, .account-form select, .search-field input, .stock-editor input, .catalog-controls select { min-height: 46px; padding: 12px; font-family: var(--font-ui); font-size: 16px; color: var(--black); background: white; border: 1px solid var(--border); border-radius: 0; width: 100%; }
+.account-form input, .account-form textarea, .account-form select, .search-field input, .stock-editor input { min-height: 46px; padding: 12px; font-family: var(--font-ui); font-size: 16px; color: var(--black); background: white; border: 1px solid var(--border); border-radius: 0; width: 100%; }
 .account-form textarea { resize: vertical; }
 .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
 .form-wide { grid-column: 1 / -1; }
@@ -242,9 +242,6 @@ button:disabled { cursor: not-allowed; }
 .collection-campaign img { object-fit: cover; object-position: 50% 35%; }
 .collection-campaign > div { position: absolute; bottom: 32px; left: 32px; background: rgba(255,255,255,.9); padding: 24px 32px; }
 .collection-campaign h2 { font-family: var(--font-display); font-size: 36px; margin-top: 8px; }
-.catalog-controls { display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between; align-items: end; padding: 16px 24px 32px; max-width: 1600px; margin: auto; }
-.catalog-controls label { display: flex; flex-direction: column; gap: 8px; font-size: 11px; }
-.catalog-controls select { min-width: 130px; font-size: 13px; }
 
 /* Administration uses the same typography with denser operational hierarchy. */
 .admin-shell { display: flex; min-height: 100svh; font-family: var(--font-ui); }
