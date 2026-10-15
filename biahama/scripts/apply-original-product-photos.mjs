@@ -5,7 +5,7 @@
 // Add --rollback to restore previous URLs. Rebuild/revalidate product pages afterward.
 import { readFile } from 'node:fs/promises'
 import { config } from 'dotenv'
-import { PrismaClient } from '@prisma/client'
+import { Prisma, PrismaClient } from '@prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'
 
 const args = process.argv.slice(2)
@@ -42,11 +42,15 @@ try {
     changes.push({ id: image.id, productId: image.productId, expected, destination })
   }
   const apply = args.includes('--apply')
-  if (apply) await db.$transaction(async tx => {
-    for (const change of changes) {
-      const result = await tx.productImage.updateMany({ where: { id: change.id, productId: change.productId, url: change.expected }, data: { url: change.destination } })
-      if (result.count !== 1) throw new Error('Photo changed during update; all URL changes rolled back')
-    }
+  if (apply && changes.length) await db.$transaction(async tx => {
+    // One parameterized statement avoids a network round trip per photograph.
+    const values = Prisma.join(changes.map(change => Prisma.sql`(${change.id}::text, ${change.productId}::text, ${change.expected}::text, ${change.destination}::text)`))
+    const updated = await tx.$executeRaw`
+      UPDATE "ProductImage" AS photo SET url = changes.destination
+      FROM (VALUES ${values}) AS changes(id, "productId", expected, destination)
+      WHERE photo.id = changes.id AND photo."productId" = changes."productId" AND photo.url = changes.expected
+    `
+    if (updated !== changes.length) throw new Error('Photo changed during update; all URL changes rolled back')
   }, { timeout: 30000 })
   console.log(JSON.stringify({ target: local ? 'isolated local preview' : project, mode: apply ? 'applied' : 'dry run', action: rollback ? 'restore previous URLs' : 'restore original framing', photos: changes.length, existingAssetsDeleted: false }))
 } finally {

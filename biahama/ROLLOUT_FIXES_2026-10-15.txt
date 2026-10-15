@@ -82,15 +82,35 @@ Product photo correction after owner review
 - Uploaded 118 untouched originals under new Cloudinary IDs; existing assets
   remain available. No generated/reconstructed imagery was used. Verified all
   uploaded dimensions and an exact source/delivery byte match for the example.
-- The isolated local preview now uses these originals. Fresh build and browser
-  review verify original proportions. Production photo URLs are NOT changed yet.
+- The isolated local preview uses these originals. Fresh build and browser
+  review verify original proportions. Production application is recorded below.
 - scripts/data/uncropped-product-photos-20261015.json records original/new URLs
   and source hashes. scripts/apply-original-product-photos.mjs is dry-run by
   default, checks image identity and expected previous URL, updates atomically,
   supports rollback, and requires an explicit matching project for production.
-  Repeated application and rollback were verified only in the isolated database.
+  Repeated application and rollback were verified in the isolated database.
 - Removed incoming cropping/format conversion from the historical import scripts.
   Admin uploads already preserve source framing. Delivery can resize/compress
   copies while preserving originals.
-- For release, review the restored photos, apply the manifest to the confirmed
-  production project, and rebuild/revalidate pages so cached photos are refreshed.
+
+Production photo release after owner approval, 2026-10-15
+- Saved a private snapshot of all 128 ProductImage rows before applying changes.
+- Applied the reviewed manifest to Biahama01 (nbucpibesxmfsamlqyln): 118 photo
+  URLs restored across all 25 published products; five already-correct active
+  photos and all inactive product photos were preserved.
+- The initial sequential update exceeded its timeout and rolled back fully.
+  Replaced it with one parameterized bulk update inside the guarded transaction;
+  verified local rollback, apply and repeat/no-op, then applied successfully live.
+- Verified every image ID, product link, sort order and primary flag stayed the
+  same. Product counts, prices, variant counts, stock and order totals match the
+  pre-change baseline. No existing Cloudinary assets were deleted or overwritten.
+- Verified all 25 public product pages return 200 and include every expected
+  original URL after normal cache refresh. Live collection pages also use the
+  new URLs. Browser verified all four Beige A-Line Kurta originals load.
+- Cloudinary's sole current upload preset, ml_default, is signed and has no
+  incoming transformation. Admin uploads already preserve originals. Historical
+  import script fixes remain in the pending code PR, which is not merged.
+- Recommend 4:5 portrait originals for consistent collection cards. Card frames
+  may crop other aspect ratios even though the stored originals remain intact.
+- This release changes live photo data only. Broader code deployment remains
+  pending; Vercel access still returns 403 and its preview build reports failure.
