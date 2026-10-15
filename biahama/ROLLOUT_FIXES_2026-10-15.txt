@@ -72,3 +72,25 @@ Remaining launch acceptance / account access
   Public copy avoids unsupported measurements and tax-rate disclosures meanwhile.
 
 Deployment status will be verified on the public site after the code is released.
+
+Product photo correction after owner review
+- Original files were found locally and compared against Cloudinary metadata.
+  118 of 123 active product photos had been cropped to a different aspect ratio
+  on upload, affecting all 25 products. The example back-view source is 1600x2000;
+  its stored cropped copy was 800x1200. The page was faithfully displaying the
+  already-cropped copy. Restoring the original corrects the framing.
+- Uploaded 118 untouched originals under new Cloudinary IDs; existing assets
+  remain available. No generated/reconstructed imagery was used. Verified all
+  uploaded dimensions and an exact source/delivery byte match for the example.
+- The isolated local preview now uses these originals. Fresh build and browser
+  review verify original proportions. Production photo URLs are NOT changed yet.
+- scripts/data/uncropped-product-photos-20261015.json records original/new URLs
+  and source hashes. scripts/apply-original-product-photos.mjs is dry-run by
+  default, checks image identity and expected previous URL, updates atomically,
+  supports rollback, and requires an explicit matching project for production.
+  Repeated application and rollback were verified only in the isolated database.
+- Removed incoming cropping/format conversion from the historical import scripts.
+  Admin uploads already preserve source framing. Delivery can resize/compress
+  copies while preserving originals.
+- For release, review the restored photos, apply the manifest to the confirmed
+  production project, and rebuild/revalidate pages so cached photos are refreshed.

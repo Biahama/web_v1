@@ -93,11 +93,7 @@ for (const [oldName, folder, newName, kind] of MAP) {
       public_id: `${slug}-${i + 1}`,
       folder: `biahama/${cloudFolder}`,
       overwrite: true,
-      format: 'webp',
-      transformation: [
-        { width: 800, height: 1200, crop: 'fill', gravity: 'auto' },
-        { quality: 'auto:best', fetch_format: 'auto' }
-      ]
+      // Preserve original framing; optimise responsive copies at delivery time.
     })
     urls.push(res.secure_url)
   }
