@@ -1,6 +1,5 @@
  'use client'
 import Link from 'next/link'
-import { STOREFRONT_COLLECTIONS } from '@/lib/collections'
 import Image from 'next/image'
 import { useAuth } from '@/components/providers/AuthProvider'
 import { Suspense, useState, useEffect, useCallback } from 'react'
@@ -12,8 +11,7 @@ import { useDialog } from '@/components/ui/useDialog'
 import { safeReturnPath } from '@/lib/auth-redirect'
 import { useCart } from '@/lib/cart'
 
-const CATEGORIES = STOREFRONT_COLLECTIONS.map(c => ({ ...c, img: c.image }))
-export default function Navbar() {
+export default function Navbar({ collections = [] }) {
   const { session } = useAuth()
   const { count } = useCart()
   const pathname = usePathname()
@@ -43,7 +41,7 @@ export default function Navbar() {
         <div className="collection-menu" onMouseEnter={() => setDropdownOpen(true)} onMouseLeave={() => setDropdownOpen(false)} onKeyDown={e => { if (e.key === 'Escape') setDropdownOpen(false) }}>
           <Link href="/shop" onFocus={() => setDropdownOpen(true)} onClick={() => setDropdownOpen(false)}>Collection</Link>
           {dropdownOpen && <div className="collection-dropdown" onBlur={e => { if (!e.currentTarget.contains(e.relatedTarget)) setDropdownOpen(false) }}>
-            {CATEGORIES.map(cat => <Link key={cat.slug} href={`/shop?cat=${cat.slug}`} onClick={() => setDropdownOpen(false)}><Image width={400} height={600} sizes="25vw" src={cat.img} alt="" /><span>{cat.name}</span></Link>)}
+            {collections.map(cat => <Link key={cat.slug} href={`/shop?cat=${cat.slug}`} onClick={() => setDropdownOpen(false)}><Image width={400} height={600} sizes="33vw" src={cat.image} alt="" /><span>{cat.name}</span></Link>)}
           </div>}
         </div>
         <Link href="/contact">Contact us</Link>
@@ -59,7 +57,7 @@ export default function Navbar() {
     {panel === 'menu' && <div className="mobile-menu-overlay" ref={menuRef} role="dialog" aria-modal="true" aria-label="Navigation menu">
       <button className="nav-icon menu-close" onClick={() => setPanel(null)} aria-label="Close menu">×</button>
       <Link href="/" onClick={() => setPanel(null)}>Home</Link>
-      {CATEGORIES.map(cat => <Link key={cat.slug} href={`/shop?cat=${cat.slug}`} onClick={() => setPanel(null)}>{cat.name}</Link>)}
+      {collections.map(cat => <Link key={cat.slug} href={`/shop?cat=${cat.slug}`} onClick={() => setPanel(null)}>{cat.name}</Link>)}
       <Link href="/contact" onClick={() => setPanel(null)}>Contact us</Link>
       <button onClick={() => { if (session) { setPanel(null); router.push('/account') } else login() }}>{session ? 'My account' : 'Log in / Register'}</button>
       <button onClick={() => { if (session) { setPanel(null); router.push('/account/wardrobe') } else login() }}>My wardrobe</button>

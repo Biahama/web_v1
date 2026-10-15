@@ -5,6 +5,7 @@ import { logError } from '@/lib/logger'
 import { getSiteSettings } from '@/lib/site-settings'
 import Link from 'next/link'
 import { filterCatalog } from '@/lib/catalog-filters'
+import { getStorefrontCollections } from '@/lib/storefront-collections'
 
 export const revalidate = 3600
 
@@ -142,7 +143,7 @@ export default async function ShopPage({ searchParams }) {
   return (
     <div>
       {/* Category subheader bar */}
-      <FilterTabBar />
+      <FilterTabBar collections={await getStorefrontCollections()} />
 
       {/* Category centered title */}
       <div

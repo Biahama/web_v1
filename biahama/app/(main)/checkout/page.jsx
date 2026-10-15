@@ -9,7 +9,7 @@ import Link from 'next/link'
 // Pricing rules live in ONE shared file so the cart, checkout and
 // payment server can never disagree about the total.
 import { STORE_POLICY } from '@/lib/store-policy'
-import { computeTotals, SHIPPING_THRESHOLD, SHIPPING_COST, GST_RATE } from '@/lib/pricing'
+import { computeTotals, SHIPPING_THRESHOLD, SHIPPING_COST } from '@/lib/pricing'
 
 function formatPrice(paise) {
   return `₹${(paise / 100).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
@@ -306,8 +306,7 @@ export default function CheckoutPage() {
   const discount = Math.min(checkoutData?.discount || 0, subtotal)
   const discountedSubtotal = subtotal - discount
   const shipping = checkoutData?.shipping ?? (discountedSubtotal >= SHIPPING_THRESHOLD || items.length === 0 ? 0 : SHIPPING_COST)
-  // GST is already INSIDE the prices — shown for information only.
-  const gstIncluded = Math.round(discountedSubtotal - discountedSubtotal / (1 + GST_RATE))
+  // Prices are tax inclusive; shipping is the only added charge.
   const total = checkoutData?.amount ?? discountedSubtotal + shipping
 
   if (loading || cartLoading) return <p className="purchase-page" role="status">Loading your checkout…</p>
@@ -821,7 +820,7 @@ export default function CheckoutPage() {
                 </div>
 
                 {/* Subtotal */}
-                <div style={{ display: 'flex', justifyBetween: 'space-between', marginBottom: 12, borderTop: '1px solid var(--border)', paddingTop: 16 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12, borderTop: '1px solid var(--border)', paddingTop: 16 }}>
                   <span style={{ fontFamily: 'var(--font-ui)', fontSize: 12, color: 'var(--gray)' }}>SUBTOTAL</span>
                   <span style={{ fontFamily: 'var(--font-ui)', fontSize: 12, color: 'var(--black)', marginLeft: 'auto' }}>{formatPrice(subtotal)}</span>
                 </div>
@@ -840,7 +839,7 @@ export default function CheckoutPage() {
 
                 {/* Shipment */}
                 <div style={{ display: 'flex', flexDirection: 'column', borderBottom: '1px solid var(--border)', paddingBottom: 16, marginBottom: 16 }}>
-                  <div style={{ display: 'flex', justifyBetween: 'space-between', marginBottom: 4 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
                     <span style={{ fontFamily: 'var(--font-ui)', fontSize: 12, color: 'var(--gray)' }}>Shipment</span>
                     <span style={{ fontFamily: 'var(--font-ui)', fontSize: 12, color: 'var(--black)', marginLeft: 'auto' }}>{shipping === 0 ? 'Free' : formatPrice(shipping)}</span>
                   </div>
@@ -849,10 +848,9 @@ export default function CheckoutPage() {
                   </span>
                 </div>
 
-                {/* Total — GST is already inside the prices, so it is
-                    shown as information only, never added on top */}
-                <div style={{ display: 'flex', justifyBetween: 'space-between', marginBottom: 8 }}>
-                  <span style={{ fontFamily: 'var(--font-ui)', fontSize: 13, fontWeight: 400, color: 'var(--black)' }}>TOTAL <span style={{ fontSize: 10, color: 'var(--gray)' }}>Includes {formatPrice(gstIncluded)} GST</span></span>
+                {/* Total — prices already include taxes */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                  <span style={{ fontFamily: 'var(--font-ui)', fontSize: 13, fontWeight: 400, color: 'var(--black)' }}>TOTAL <span style={{ fontSize: 10, color: 'var(--gray)' }}>Inclusive of taxes</span></span>
                   <span style={{ fontFamily: 'var(--font-ui)', fontSize: 14, fontWeight: 500, color: 'var(--black)', marginLeft: 'auto' }}>{formatPrice(total)}</span>
                 </div>
 

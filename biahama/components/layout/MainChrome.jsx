@@ -17,7 +17,7 @@ import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
 import { usePathname } from 'next/navigation'
 
-export default function MainChrome({ showAnnouncementBar, announcementText, children }) {
+export default function MainChrome({ showAnnouncementBar, announcementText, collections, children }) {
   const pathname = usePathname()
   const isHome = pathname === '/'
   const { error: cartError } = useCart()
@@ -29,7 +29,7 @@ export default function MainChrome({ showAnnouncementBar, announcementText, chil
     <div className="flex flex-col min-h-screen">
       {/* The admin can switch the announcement bar off entirely. */}
       {announcement && <AnnouncementBar text={announcementText} />}
-      <Navbar />
+      <Navbar collections={collections} />
       <main className="flex-1" style={{ paddingTop: isHome || announcement ? 0 : '56px' }}>
         {error && <div className="cart-error" role="alert">{error}</div>}
         {children}

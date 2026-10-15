@@ -1,0 +1,74 @@
+BIAHAMA ROLLOUT FIXES — 15 OCTOBER 2026
+
+Production database
+- Saved and verified a private pg_dump custom-format archive of the public
+  application schema and data before changing the database. Archive listing,
+  size and SHA-256 were checked; this is not a backup of Supabase Auth/Storage
+  or proof of a full restore rehearsal. Backup stays outside the repository.
+- Applied prisma/rollouts/20261007_customer_service.sql once through the confirmed
+  Biahama01 project. Supabase migration name: customer_service_rollout_20261007.
+- Verified Order.deliveredAt, ReturnRequest with RLS and no browser-role grants,
+  Address_one_default_per_user, and no duplicate default addresses.
+- Existing order count, item count and summed order amount stayed unchanged.
+- Read-only Prisma order/return queries now pass against production.
+
+Website and admin code
+- Fresh builds clear generated .next output, then verify that the stylesheet
+  actually linked by the generated homepage contains campaign, collection,
+  navigation and admin styles. Vercel uses this guarded build command.
+- Serve the same Cormorant Garamond and DM Sans typefaces locally, with included
+  licenses. This avoids a reproduced intermittent next/font/google build error.
+- Hide collections without active, priced products from the home/navigation/tabs.
+  New published collections appear automatically after catalog revalidation.
+- Use a swipeable phone/tablet product gallery with accessible previous/next
+  controls. Desktop keeps the vertical gallery. Link sizing beside size selection.
+- Per the owner's instruction, retain inclusive prices and remove unverified
+  GST rates/amounts from bag, checkout and order detail. Do not invent HSN codes
+  or a tax invoice. Accountant-approved invoicing remains an operational step.
+- Remove unverified size measurements; show S through 3XL and offer fit assistance.
+- Only exact successful Shiprocket delivery labels can mark an order delivered.
+  Undelivered, RTO Delivered and Partial_Delivered cannot trigger COD payment,
+  loyalty credit or delivery dates through tracking.
+- Recovery now returns failure status for failed email/refund/loyalty tasks, with
+  separate task/checkout counts. Admin shows queue and retry times in IST.
+- Patch source-map-js to 1.2.2. Production npm audit reports zero vulnerabilities.
+  Five development-only findings remain in the ESLint braces/fast-glob chain;
+  the suggested automated fix downgrades Next tooling across major versions and
+  was not applied. These lint tools are not exposed as storefront endpoints.
+
+Verification
+- 37 automated tests passed; zero skipped, using an isolated PGlite database.
+  External payment/email handlers are mocked. No real charges/refunds or emails.
+- Lint and a fresh production build pass. Homepage-linked CSS guard passes.
+- Browser checked at 320, 390, 768 and 1440px widths: hero proportions/caption
+  and page width pass. At 390x844 the hero is 844px high, position relative,
+  image object-fit cover, caption absolute and within the frame.
+- Phone gallery navigates; selecting M and adding to the guest bag works.
+  Bag shows Rs 2450 + Rs 99 shipping = Rs 2549, inclusive of taxes.
+- Only Kurta, Tunics and Pant are promoted in the current public catalog.
+- Local preview uses a separate test database, public catalog data and a fake
+  guest auth endpoint; production customer/account data was not copied.
+- Found existing Supabase biahama-maintenance cron: active every five minutes,
+  canonical www.biahama.com endpoint, authorization configured. Latest five
+  recorded HTTP responses were 200 with no timeout. No new scheduler installed.
+- Local Brevo sender setting now matches the active verified biahama.com sender.
+  No live email sent; deployed sender still needs checking through Vercel access.
+
+Remaining launch acceptance / account access
+- Reconnect Vercel with an account that can access biahamas-projects/web-v1.
+  The plugin and CLI currently return 403 for that team. Confirm production
+  environment, plan, logs, deployment source, sender and abuse controls afterward.
+- Owner-controlled live Razorpay payment/capture/webhook, refund and actual
+  inbox delivery acceptance still required. International cards require provider
+  activation/eligibility confirmation. A successful test payment is insufficient.
+- Confirm Supabase auth callback/recovery redirects and real signup/reset email.
+  Leaked-password protection remains disabled in the security advisor; enabling
+  depends on available plan/settings. Preserve server-only RLS deny-by-default.
+- Arrange recurring protected backups and rehearse restore; the one-time public
+  schema archive is not a complete ongoing backup strategy.
+- Use manual return refunds/exchange shipments/restocking with recorded references.
+  Admin reports gross paid-order value, not net revenue after manual returns.
+- Obtain approved garment measurements and tax classifications/invoice process.
+  Public copy avoids unsupported measurements and tax-rate disclosures meanwhile.
+
+Deployment status will be verified on the public site after the code is released.

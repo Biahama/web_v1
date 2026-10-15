@@ -3,14 +3,7 @@
 import Link from 'next/link'
 import { usePathname, useSearchParams } from 'next/navigation'
 
-const CATEGORIES = [
-  { name: 'KURTA', slug: 'kurtas' },
-  { name: 'SHIRTS', slug: 'shirts' },
-  { name: 'TUNICS', slug: 'tunics' },
-  { name: 'PANT', slug: 'trousers' },
-]
-
-export default function FilterTabBar() {
+export default function FilterTabBar({ collections = [] }) {
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const activeCategory = searchParams.get('cat') || 'kurtas'
@@ -34,7 +27,7 @@ export default function FilterTabBar() {
       }}
     >
       <div style={{ display: 'flex', gap: '48px' }}>
-        {CATEGORIES.map(cat => {
+        {collections.map(cat => {
           const isActive = activeCategory === cat.slug
           return (
             <Link

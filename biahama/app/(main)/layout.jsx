@@ -9,12 +9,14 @@
 
 import { getSiteSettings } from '@/lib/site-settings'
 import MainChrome from '@/components/layout/MainChrome'
+import { getStorefrontCollections } from '@/lib/storefront-collections'
 
 export default async function MainLayout({ children }) {
-  const settings = await getSiteSettings()
+  const [settings, collections] = await Promise.all([getSiteSettings(), getStorefrontCollections()])
 
   return (
     <MainChrome
+      collections={collections}
       showAnnouncementBar={settings.layout.showAnnouncementBar}
       announcementText={settings.layout.announcementText}
     >

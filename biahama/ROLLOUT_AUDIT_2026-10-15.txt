@@ -1,0 +1,177 @@
+BIAHAMA ROLLOUT AUDIT — 15 OCTOBER 2026
+Decision: NO-GO for accepting real customer orders in the current live state.
+
+Scope and evidence
+Audited commit ad4cef860d8e3444e32e78b013355bab61ac1ec4, also current origin/main.
+Read-only checks of https://www.biahama.com and the confirmed Biahama01 Supabase
+project nbucpibesxmfsamlqyln. No production migrations, deployments, customer/order
+changes, payment charges/refunds, or email sends were performed. Browser visits
+can generate the site's normal analytics. Tests and migration rehearsal used
+separate disposable PGlite databases without production customer data.
+
+CONFIRMED FINDINGS, IN RELEASE ORDER
+
+1. P0 — The deployed application and live database schema do not match.
+The live database has neither Order.deliveredAt nor ReturnRequest, and lacks
+Address_one_default_per_user. The checkout rollout tables already exist, so do
+not blindly rerun the earlier checkout rollout. A read-only Prisma query for a
+nonexistent probe order's deliveredAt failed with P2022, confirming the mismatch
+without reading an actual customer's order. Default ORM order reads and order
+creation return the new model fields, so payment completion, customer orders,
+admin order handling and returns can fail even while product browsing works.
+References: prisma/schema.prisma; lib/checkout-service.js:141 and :149;
+app/api/orders/[id]/route.js; app/admin/returns/page.jsx.
+Action: obtain a backup, review and apply exactly
+prisma/rollouts/20261007_customer_service.sql, then verify columns, table, RLS,
+indexes, order reads and an owner-controlled checkout before accepting orders.
+The migration is transactional but not idempotent: applying it again fails.
+An isolated rehearsal reproduced the missing-column error, then successfully
+added the delivery column/return RLS and normalized two default addresses to one.
+
+2. P1 — The live homepage is missing the new campaign and collection CSS.
+At 390×844, .campaign-hero is 48px high with position:static and overflow:visible;
+the image has object-fit:fill and the caption is position:static. The photo is
+visibly stretched, and the headline/Step Inside action are not visibly presented.
+The live loaded CSS asset has zero .campaign-hero or .home-collections rules:
+https://www.biahama.com/_next/static/immutable/chunks/2zelzqfa3wups.css
+The current local production build DOES contain campaign, collection and admin
+rules in .next/static/chunks/43ki119ddgnat.css. This confirms an output difference;
+it does not establish whether caching or another deployment condition caused it.
+References: app/globals.css:20; components/layout/CampaignHero.jsx.
+Action: rebuild the intended source without the previous build cache, verify the
+produced CSS contains these selectors, redeploy through the intended project,
+and inspect desktop and phone screenshots plus the actual loaded CSS afterward.
+Do not rely on a green deployment badge as visual verification.
+Screenshot: /Users/soundariyanvenkatachalam/.codex/visualizations/2026/10/07/01a117f6-b079-7e42-9df5-38e187c5b3de/biahama-audit-live-hero-mobile-20261015.png
+
+3. P1 — GST display/calculation uses one rate for the entire catalogue.
+lib/pricing.js:19 hard-codes 5%; app/(main)/checkout/page.jsx:310 applies it to the
+whole discounted subtotal. The live catalogue includes tunics priced up to
+Rs 3,200. Official apparel guidance distinguishes the 5% and 18% bands by sale
+value and classification. This is an inclusive-tax disclosure/accounting issue;
+it does not mean the code adds an extra tax charge to the customer's total.
+Action: have the accountant confirm HSN codes, the sale-value basis, discounts
+and shipping treatment; implement item-level tax data and correct checkout/
+invoice reporting. Confirm a manual GST invoice process if automated invoicing
+is not included at launch. Do not select the rate solely from total cart value.
+Sources:
+https://www.pib.gov.in/PressReleasePage.aspx?PRID=2163555&lang=2&reg=3
+https://courier.cbic.gov.in/advisory/2025/NOTIFICATION%20NO.%209_2025-INTEGRATED%20TAX%20%28RATE%29%20-1759486719.pdf
+
+4. P1 if Shiprocket is enabled — Delivery detection accepts negative statuses.
+app/api/admin/orders/[id]/shiprocket/route.js:123 uses
+currentStatus.toLowerCase().includes('delivered'). Both 'Undelivered' and
+'RTO Delivered' pass that expression. Clicking Track can therefore mark an
+unsuccessful delivery as delivered, set a return-window date, and, for a COD
+order, mark it paid and queue loyalty credit (lib/order-status-service.js:24).
+Action: use verified provider status codes/exact successful-delivery mappings;
+keep failed delivery and returned-to-origin states separate. Regression-test
+Delivered, Undelivered, RTO Delivered and ordinary in-transit statuses. Manual
+fulfilment can be used while this integration remains disabled.
+
+5. P2 — A transitive production dependency needs a security update.
+npm audit --omit=dev reports one high-severity advisory for source-map-js 1.2.1,
+introduced through the Tailwind/PostCSS build tooling. The patched release is
+1.2.2. The issue involves malicious source-map input; this audit did not establish
+a public application route exposing that input to attackers. It is not evidence
+of a demonstrated remote compromise of this storefront.
+Action: update the resolved dependency/lockfile and repeat audit, lint and build.
+Source: https://github.com/advisories/GHSA-68fv-2mgg-jv7q
+
+6. P2 — Size guidance does not match available product sizes.
+The live Beige Long Kurta offers S/M/L/XL/2XL/3XL, while lib/content-pages.js:54
+states XS–XXL and provides no 3XL measurement. No saved ContentPage overrides
+were present in the database. Replace generic measurements with approved garment
+measurements, explain body versus flat measurements, and link the guide beside
+the size selector. Do not invent garment measurements.
+
+7. P2 — Mobile purchase controls follow the entire stacked photo gallery.
+components/product/ProductDetailClient.jsx:95 renders all photos before the
+product details in the mobile column. The inspected product has five photos,
+so price/size/Add to bag require substantial scrolling. Consider a phone gallery
+with fewer initial images or a suitable sticky purchase action.
+
+8. P2 — Shirts is advertised but has no published products.
+The database contains 10 active kurtas, 9 trousers and 6 tunics; no shirts.
+The live Shirts page has an honest coming-soon message and a working link back
+to available pieces. This is a merchandising decision, not a checkout failure.
+Populate the collection or reduce its launch prominence.
+
+9. Operational limitation — Returns are a service queue, not gateway automation.
+Resolving a request does not issue a refund, create an exchange shipment or
+restock inventory. The admin paid-order-value chart explicitly does not deduct
+manual return refunds. Use the documented manual workflow, record gateway/
+shipment references, inspect returns before restocking and reconcile finances
+outside the gross paid-order dashboard. Automated returns and net-sales
+accounting are not complete launch features.
+
+10. Monitoring limitation — HTTP success is not proof that all tasks succeeded.
+lib/order-tasks.js:25 stores task errors and returns a processed count.
+lib/maintenance.js counts checkout reconciliation failures separately; the
+maintenance HTTP status therefore need not fail for an email/refund task error.
+Monitor pending tasks, lastError, task age and payment reconciliation as well as
+HTTP status. No pending order tasks were present during this audit.
+
+PRODUCTION GATES THAT REMAIN UNVERIFIED
+- Vercel project access returned 403 from both connected plugin and CLI. GitHub
+  reports a successful Vercel deployment for ad4cef8, and new sections are visible
+  publicly, but exact serving commit, production env, logs, billing plan, firewall
+  rules and deployment configuration could not be independently inspected.
+- vercel.json contains a region only, with no maintenance schedule. An external
+  scheduler may exist; evidence of a working authenticated five-minute recovery
+  schedule was unavailable. Verify scheduled executions and retry recovery.
+- Local preflight fails on missing Razorpay key ID, secret and webhook secret and
+  the schema mismatch. These local env omissions do NOT establish that the
+  deployed Vercel environment lacks those credentials.
+- Brevo accepted the local API key and showed an active biahama.com sender.
+  The locally configured sender did not match the account's sender list.
+  Verify the production sender and actual inbox delivery; no test email was sent.
+  Domain MX, SPF and DMARC records exist; DKIM/alignment and receipt were not proven.
+- Verify live Razorpay mode, automatic capture, signed payment.captured webhook
+  delivery/retries, bank settlement and owner-controlled payment/refund acceptance.
+  International-card activation must be checked in Razorpay if required for launch;
+  domestic test success does not establish US-issued-card acceptance.
+- Verify Supabase auth callback/recovery redirects, real signup/reset email delivery,
+  an appropriate backup/restore process, and a commercially permitted hosting plan.
+  Vercel Hobby is restricted to personal/noncommercial use; this audit could not
+  establish the plan currently used. Source: https://vercel.com/docs/plans/hobby
+- Supabase security advisor reports leaked-password protection disabled. Treat
+  enabling it as auth hardening, subject to the project's available plan/settings.
+- The public analytics POST endpoint has bounded payload fields but no explicit
+  app-level rate limit. Confirm platform abuse controls and storage monitoring;
+  no flooding or load test was performed.
+
+VERIFIED PASSES
+- origin/main and audited worktree are at ad4cef8; no later source commits found.
+- npm run lint passes. npm run build passes with isolated audit configuration.
+  Do not deploy that prebuilt test-config artifact as production.
+- All 32 automated tests pass, zero skipped, against a disposable PGlite PostgreSQL
+  engine, serialized across files. Tests cover payment snapshots/retries,
+  stock/coupon contention, cancellation/refund retry safeguards, ownership,
+  address defaults, return stages, CSV safety and filters. PGlite is not a full
+  production PostgreSQL deployment; external services are mocked in tests.
+- Customer-service migration rehearsal passes on an isolated pre-release schema.
+- Live HTTPS responds 200 with HSTS and framing/content-type security headers.
+- Live orders and addresses APIs reject anonymous requests with 401; admin settings
+  returns 403; unauthenticated maintenance returns 401.
+- robots.txt and sitemap.xml return 200 and exclude private routes from crawling.
+- All 21 existing public store tables have RLS enabled and no anon/authenticated
+  SELECT grants. Advisor notices about no RLS policies are consistent with this
+  server-only access model; granting broad browser policies is not a fix.
+- All 25 active products have product images. All 150 active variants have positive
+  prices and stock; no negative variant stock/prices found across the table.
+- Live collection, product details, policy accordions, mobile navigation and the
+  Shirts empty state render. Product/collection phone checks showed no horizontal
+  overflow. The homepage styling failure is separately recorded above.
+
+RELEASE SEQUENCE
+1. Keep rollout on hold; avoid accepting real orders with the schema mismatch.
+2. Back up, apply/verify the reviewed customer-service migration once.
+3. Fix the GST handling and delivery-status mapping; patch the dependency.
+4. Produce a fresh deployment with the expected CSS and correct production env.
+5. Verify signup/reset email, addresses, one owner-controlled paid checkout,
+   duplicate webhook replay, abandoned-payment reconciliation, order email,
+   stock, manual/automated fulfilment, cancellation/refund, and a return request.
+6. Confirm schedule, backups, provider identities/keys and staff procedures.
+7. Open launch only after the above evidence is green. No production release,
+   migration or financial transaction was executed by this audit.

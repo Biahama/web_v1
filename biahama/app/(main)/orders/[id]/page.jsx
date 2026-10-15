@@ -183,7 +183,6 @@ export default function OrderPage() {
           { label: 'Subtotal (includes GST)', value: order.totalAmount - order.shippingAmount + (order.discountAmount || 0) },
           ...(order.discountAmount ? [{ label: 'Discount', value: -order.discountAmount }] : []),
           { label: 'Shipping', value: order.shippingAmount, zero: 'Free' },
-          { label: 'Included GST (5%)', value: Math.round((order.totalAmount - order.shippingAmount) * (5/105)) },
         ].map(row => (
           <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
             <span style={{ fontSize: 12, color: 'var(--gray)', letterSpacing: '0.04em' }}>{row.label}</span>

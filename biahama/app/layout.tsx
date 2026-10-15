@@ -1,22 +1,27 @@
 import type { Metadata } from 'next'
-import { Cormorant_Garamond, DM_Sans } from 'next/font/google'
+import localFont from 'next/font/local'
 import Script from 'next/script'
 import Providers from '@/components/providers'
 import PageViewTracker from '@/components/analytics/PageViewTracker'
 import { getSiteSettings, buildThemeCss, googleFontsUrl } from '@/lib/site-settings'
 import './globals.css'
 
-const cormorant = Cormorant_Garamond({
+// Keep the established typefaces local: fresh builds must not depend on a
+// successful Google Fonts response. Licenses and sources are in app/fonts.
+const cormorant = localFont({
+  src: [
+    { path: './fonts/cormorant-garamond.woff2', weight: '300 500', style: 'normal' },
+    { path: './fonts/cormorant-garamond-italic.woff2', weight: '300 500', style: 'italic' },
+  ],
   variable: '--font-cormorant',
-  subsets: ['latin'],
-  weight: ['300', '400', '500'],
-  style: ['normal', 'italic'],
+  display: 'swap',
 })
 
-const dmSans = DM_Sans({
+const dmSans = localFont({
+  src: './fonts/dm-sans.woff2',
   variable: '--font-dm-sans',
-  subsets: ['latin'],
-  weight: ['300', '400', '500', '700'],
+  weight: '300 700',
+  display: 'swap',
 })
 
 export const metadata: Metadata = {
